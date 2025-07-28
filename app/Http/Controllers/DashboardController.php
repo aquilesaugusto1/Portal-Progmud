@@ -78,14 +78,18 @@ class DashboardController extends Controller
             }
 
         } else {
+            $meusContratosCount = 0;
+            if ($user->funcao === 'techlead') {
+                $meusContratosCount = Contrato::where('tech_lead_id', $user->id)->count();
+            }
+
             $stats = [
-                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('inicio_previsto', today())->count(),
-                'Meus Contratos' => Contrato::where('tech_lead_id', $user->id)->count(),
-                'Apontamentos Pendentes' => Apontamento::where('consultor_id', $user->id)->where('status', 'Pendente')->count(),
+                'Minhas Agendas Hoje' => Agenda::where('consultor_id', 'like', '%' . $user->id . '%')->whereDate('inicio_previsto', today())->count(),
+                'Meus Contratos' => $meusContratosCount,
+                'Apontamentos Pendentes' => Apontamento::where('consultor_id', 'like', '%' . $user->id . '%')->where('status_aprovacao', 'Pendente')->count(),
             ];
 
-            $ultimas_agendas = Agenda::where('consultor_id', $user->id)
-                ->orWhereIn('contrato_id', Contrato::where('tech_lead_id', $user->id)->pluck('id'))
+            $ultimas_agendas = Agenda::where('consultor_id', 'like', '%' . $user->id . '%')
                 ->with(['consultor', 'contrato.cliente'])
                 ->where('inicio_previsto', '>=', today())
                 ->orderBy('inicio_previsto', 'asc')

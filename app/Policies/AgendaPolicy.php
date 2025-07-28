@@ -8,42 +8,42 @@ use Illuminate\Auth\Access\Response;
 
 class AgendaPolicy
 {
-    public function viewAlocacao(User $user): bool
-    {
-        return $user->funcao === 'admin' || $user->funcao === 'techlead';
-    }
-
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
-
-    public function view(User $user, Agenda $agenda): bool
-    {
-        if ($user->funcao === 'admin' || $user->funcao === 'techlead') {
-            return true;
-        }
-
-        return $user->consultor && $user->consultor->id === $agenda->consultor_id;
-    }
-
-    public function create(User $user): bool
-    {
-        return $user->funcao === 'admin' || $user->funcao === 'techlead';
-    }
-
-    public function update(User $user, Agenda $agenda): bool
+    public function before(User $user, string $ability): bool|null
     {
         if ($user->funcao === 'admin') {
             return true;
         }
+ 
+        return null;
+    }
 
-        if ($user->funcao === 'techlead') {
-            return $user->consultoresLiderados()->where('consultores.id', $agenda->consultor_id)->exists();
+    public function viewAny(User $user): bool
+    {
+        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead']);
+    }
+
+    public function view(User $user, Agenda $agenda): bool
+    {
+        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead'])) {
+            return true;
         }
 
-        if ($user->funcao === 'consultor') {
-            return $user->consultor && $user->consultor->id === $agenda->consultor_id;
+        return $user->id === $agenda->consultor_id;
+    }
+
+    public function create(User $user): bool
+    {
+        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead']);
+    }
+
+    public function update(User $user, Agenda $agenda): bool
+    {
+        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico'])) {
+            return true;
+        }
+
+        if ($user->funcao === 'techlead') {
+            return $user->consultoresLiderados()->where('id', $agenda->consultor_id)->exists();
         }
 
         return false;
@@ -51,14 +51,6 @@ class AgendaPolicy
 
     public function delete(User $user, Agenda $agenda): bool
     {
-        if ($user->funcao === 'admin') {
-            return true;
-        }
-
-        if ($user->funcao === 'techlead') {
-            return $user->consultoresLiderados()->where('consultores.id', $agenda->consultor_id)->exists();
-        }
-        
-        return false;
+        return $this->update($user, $agenda);
     }
 }
