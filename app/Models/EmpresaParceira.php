@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class EmpresaParceira extends Model
 {
@@ -14,35 +13,29 @@ class EmpresaParceira extends Model
 
     protected $fillable = [
         'nome_empresa',
+        'cnpj',
+        'saldo_horas',
+        'status',
+        'endereco_completo',
         'contato_principal',
-        'telefone',
-        'email',
-        'ramo_atividade',
-        'horas_contratadas',
+        'contato_comercial',
+        'contato_financeiro',
+        'contato_tecnico',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'endereco_completo' => 'array',
+            'contato_principal' => 'array',
+            'contato_comercial' => 'array',
+            'contato_financeiro' => 'array',
+            'contato_tecnico' => 'array',
+        ];
+    }
 
     public function projetos()
     {
         return $this->hasMany(Projeto::class);
-    }
-
-    public function apontamentosAprovados()
-    {
-        
-        return Apontamento::where('status', 'Aprovado')
-            ->where('faturado', true) 
-            ->whereHas('agenda.projeto', function ($query) {
-                $query->where('empresa_parceira_id', $this->id);
-            });
-    }
-
-    public function getHorasGastasAttribute()
-    {
-        return $this->apontamentosAprovados()->sum(DB::raw('ABS(horas_gastas)'));
-    }
-
-    public function getSaldoTotalAttribute()
-    {
-        return $this->horas_contratadas - $this->getHorasGastasAttribute();
     }
 }

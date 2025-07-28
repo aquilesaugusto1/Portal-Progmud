@@ -8,19 +8,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('agendas', function (Blueprint $table) {
+        Schema::create('colaborador_tech_lead', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('projeto_id')->constrained('projetos')->onDelete('cascade');
             $table->foreignId('consultor_id')->constrained('usuarios')->onDelete('cascade');
-            $table->dateTime('data_hora');
-            $table->string('assunto');
-            $table->string('status')->default('Agendada');
+            $table->foreignId('tech_lead_id')->constrained('usuarios')->onDelete('cascade');
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('agendas');
+        Schema::dropIfExists('colaborador_tech_lead');
     }
 };

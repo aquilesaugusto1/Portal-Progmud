@@ -2,9 +2,7 @@
     <div class="alert alert-danger mb-4 rounded-md bg-red-50 p-4">
         <div class="flex">
             <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
-                </svg>
+                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" /></svg>
             </div>
             <div class="ml-3">
                 <h3 class="text-sm font-medium text-red-800">Foram encontrados {{ count($errors->all()) }} erros:</h3>
@@ -56,13 +54,18 @@
                 </div>
                 <div><x-input-label for="cargo" :value="__('Cargo')" /><x-text-input id="cargo" name="cargo" type="text" class="mt-1 block w-full" :value="old('cargo', $colaborador->cargo ?? '')" /></div>
                 <div>
-                    <x-input-label for="subordinado_a" :value="__('Subordinado a')" />
-                    <select name="subordinado_a" id="subordinado_a" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                        <option value="">Ninguém</option>
-                        @foreach($gestores as $gestor)
-                            <option value="{{ $gestor->id }}" @selected(old('subordinado_a', $colaborador->subordinado_a ?? '') == $gestor->id)>{{ $gestor->nome }}</option>
+                    <x-input-label for="tech_leads" :value="__('Subordinado a (Tech Leads)')" />
+                    <select name="tech_leads[]" id="tech_leads" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" multiple>
+                        @php
+                            $selectedLeads = old('tech_leads', isset($colaborador) ? $colaborador->techLeads->pluck('id')->toArray() : []);
+                        @endphp
+                        @foreach($techLeads as $lead)
+                            <option value="{{ $lead->id }}" @selected(in_array($lead->id, $selectedLeads))>
+                                {{ $lead->nome }}
+                            </option>
                         @endforeach
                     </select>
+                    <small class="text-gray-500">Segure Ctrl (ou Cmd) para selecionar mais de um.</small>
                 </div>
             </div>
             <div class="space-y-4">
@@ -148,7 +151,6 @@
         const tipoContratoSelect = document.getElementById('tipo_contrato');
         const dadosEmpresaContainer = document.getElementById('dados_empresa_prestador_container');
         const pjTypes = ['PJ Mensal', 'PJ Horista'];
-
         function toggleDadosEmpresa() {
             if (pjTypes.includes(tipoContratoSelect.value)) {
                 dadosEmpresaContainer.classList.remove('hidden');
@@ -156,7 +158,6 @@
                 dadosEmpresaContainer.classList.add('hidden');
             }
         }
-
         tipoContratoSelect.addEventListener('change', toggleDadosEmpresa);
         toggleDadosEmpresa();
     });

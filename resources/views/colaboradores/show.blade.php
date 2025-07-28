@@ -11,26 +11,11 @@
                         <div>
                             <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Dados Pessoais e Endereço</h3>
                             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Nome Completo</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $colaborador->nome }} {{ $colaborador->sobrenome }}</dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Data de Nascimento</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $colaborador->data_nascimento ? $colaborador->data_nascimento->format('d/m/Y') : 'N/A' }}</dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Nacionalidade</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $colaborador->nacionalidade ?? 'N/A' }}</dd>
-                                </div>
-                                <div class="sm:col-span-1">
-                                    <dt class="text-sm font-medium text-gray-500">Naturalidade</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $colaborador->naturalidade ?? 'N/A' }}</dd>
-                                </div>
-                                 <div class="sm:col-span-2">
-                                    <dt class="text-sm font-medium text-gray-500">Endereço</dt>
-                                    <dd class="mt-1 text-sm text-gray-900">{{ $colaborador->endereco['rua'] ?? '' }}, {{ $colaborador->endereco['bairro'] ?? '' }} - {{ $colaborador->endereco['cidade'] ?? '' }}/{{ $colaborador->endereco['estado'] ?? '' }}</dd>
-                                </div>
+                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Nome Completo</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->nome }} {{ $colaborador->sobrenome }}</dd></div>
+                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Data de Nascimento</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->data_nascimento ? $colaborador->data_nascimento->format('d/m/Y') : 'N/A' }}</dd></div>
+                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Nacionalidade</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->nacionalidade ?? 'N/A' }}</dd></div>
+                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Naturalidade</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->naturalidade ?? 'N/A' }}</dd></div>
+                                <div class="sm:col-span-2"><dt class="text-sm font-medium text-gray-500">Endereço</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->endereco['rua'] ?? '' }}, {{ $colaborador->endereco['bairro'] ?? '' }} - {{ $colaborador->endereco['cidade'] ?? '' }}/{{ $colaborador->endereco['estado'] ?? '' }}</dd></div>
                             </dl>
                         </div>
                         
@@ -43,7 +28,16 @@
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Tipo de Contrato</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->tipo_contrato ?? 'N/A' }}</dd></div>
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Cargo</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->cargo ?? 'N/A' }}</dd></div>
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Nível</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->nivel ?? 'N/A' }}</dd></div>
-                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Subordinado à</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->superior->nome ?? 'N/A' }}</dd></div>
+                                <div class="sm:col-span-2">
+                                    <dt class="text-sm font-medium text-gray-500">Subordinado a (Tech Leads)</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        @forelse($colaborador->techLeads as $lead)
+                                            <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-medium mr-2 px-2.5 py-0.5 rounded-full">{{ $lead->nome }}</span>
+                                        @empty
+                                            Nenhum
+                                        @endforelse
+                                    </dd>
+                                </div>
                             </dl>
                         </div>
 
@@ -56,7 +50,6 @@
                             </dl>
                         </div>
                         @endif
-
                     </div>
 
                     <div class="flex items-center justify-end mt-6 pt-5 border-t">

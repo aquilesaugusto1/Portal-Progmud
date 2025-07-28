@@ -10,48 +10,63 @@ use Illuminate\Validation\Rules;
 
 class ColaboradorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $colaboradores = User::latest()->paginate(10);
+        $query = User::query();
+        if ($request->filled('nome')) {
+            $query->where('nome', 'like', '%' . $request->nome . '%');
+        }
+        if ($request->filled('funcao')) {
+            $query->where('funcao', $request->funcao);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+        $colaboradores = $query->latest()->paginate(10)->withQueryString();
         return view('colaboradores.index', compact('colaboradores'));
     }
 
     public function create()
     {
-        $gestores = User::whereIn('funcao', ['admin', 'techlead', 'coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->get();
-        return view('colaboradores.create', compact('gestores'));
+        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+        return view('colaboradores.create', compact('techLeads'));
     }
 
     public function store(Request $request)
     {
         $request->validate($this->getValidationRules());
-
         DB::transaction(function () use ($request) {
-            User::create($this->getData($request));
+            $colaborador = User::create($this->getData($request));
+            if ($request->has('tech_leads')) {
+                $colaborador->techLeads()->sync($request->input('tech_leads'));
+            }
         });
-
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador criado com sucesso.');
     }
 
     public function show(User $colaborador)
     {
+        // CORREÇÃO: O método show não precisa enviar a lista de todos os techleads,
+        // pois a view já acessa os techleads específicos deste colaborador através de $colaborador->techLeads
         return view('colaboradores.show', compact('colaborador'));
     }
 
     public function edit(User $colaborador)
     {
-        $gestores = User::whereIn('funcao', ['admin', 'techlead', 'coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->where('id', '!=', $colaborador->id)->get();
-        return view('colaboradores.edit', compact('colaborador', 'gestores'));
+        // CORREÇÃO: Garante que a variável com a lista de todos os tech leads se chame $techLeads
+        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+        return view('colaboradores.edit', compact('colaborador', 'techLeads'));
     }
 
+    // ... Os outros métodos (update, toggleStatus, etc.) permanecem os mesmos ...
     public function update(Request $request, User $colaborador)
     {
         $request->validate($this->getValidationRules($colaborador->id));
-
         DB::transaction(function () use ($request, $colaborador) {
             $colaborador->update($this->getData($request, false));
+            $techLeads = $request->input('tech_leads', []);
+            $colaborador->techLeads()->sync($techLeads);
         });
-
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador atualizado com sucesso.');
     }
 
@@ -59,7 +74,7 @@ class ColaboradorController extends Controller
     {
         $novoStatus = $colaborador->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $colaborador->update(['status' => $novoStatus]);
-        $mensagem = $novoStatus === 'Ativo' ? 'Colaborador habilitado com sucesso.' : 'Colaborador desabilitado com sucesso.';
+        $mensagem = $novoStatus === 'Ativo' ? 'Colaborador habilitado.' : 'Colaborador desabilitado.';
         return redirect()->route('colaboradores.index')->with('success', $mensagem);
     }
 
@@ -83,42 +98,36 @@ class ColaboradorController extends Controller
             'status' => ['required', 'string'],
             'cargo' => ['nullable', 'string', 'max:255'],
             'nivel' => ['nullable', 'string'],
-            'subordinado_a' => ['nullable', 'exists:usuarios,id'],
+            'tech_leads' => ['nullable', 'array'],
+            'tech_leads.*' => ['exists:usuarios,id'],
             'dados_empresa_prestador.razao_social' => ['nullable', 'string', 'max:255'],
             'dados_empresa_prestador.cnpj' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.banco' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.agencia' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.conta' => ['nullable', 'string', 'max:255'],
         ];
-
         if (!$id || request()->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
         }
-
         return $rules;
     }
 
     private function getData(Request $request)
     {
-        $data = $request->except(['_token', '_method', 'password_confirmation']);
-        
+        $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);
         $perfilSelecionado = $request->input('funcao');
-
         $data['funcao'] = match ($perfilSelecionado) {
             'administrativo' => 'admin',
             'consultor' => 'consultor',
             'techlead' => 'techlead',
             default => 'admin',
         };
-
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         } else {
             unset($data['password']);
         }
-
         $data['dados_empresa_prestador'] = in_array($request->tipo_contrato, ['PJ Mensal', 'PJ Horista']) ? $request->dados_empresa_prestador : null;
-        
         return $data;
     }
 }

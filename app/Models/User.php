@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany; // Importe a classe correta aqui
 
 class User extends Authenticatable
 {
@@ -27,11 +29,10 @@ class User extends Authenticatable
         'endereco',
         'cargo',
         'nivel',
-        'subordinado_a',
         'dados_empresa_prestador',
         'dados_bancarios',
         'termos_aceite_em',
-        'ip_aceite', // Adicione esta linha
+        'ip_aceite',
     ];
 
     protected $hidden = [
@@ -52,8 +53,18 @@ class User extends Authenticatable
         ];
     }
 
-    public function superior()
+    public function techLeads(): BelongsToMany
     {
-        return $this->belongsTo(User::class, 'subordinado_a');
+        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'consultor_id', 'tech_lead_id');
+    }
+
+    public function consultores(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id');
+    }
+
+    public function apontamentos(): HasMany
+    {
+        return $this->hasMany(Apontamento::class, 'consultor_id');
     }
 }

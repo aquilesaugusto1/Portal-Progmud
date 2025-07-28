@@ -58,7 +58,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::middleware('role:admin')->group(function () {
         Route::patch('colaboradores/{colaborador}/toggle-status', [ColaboradorController::class, 'toggleStatus'])->name('colaboradores.toggleStatus');
         Route::resource('colaboradores', ColaboradorController::class)->except(['destroy'])->parameters(['colaboradores' => 'colaborador']);
-        Route::resource('empresas', EmpresaParceiraController::class);
+        
+        // ROTAS DE CLIENTES ATUALIZADAS
+        Route::patch('empresas/{empresa}/toggle-status', [EmpresaParceiraController::class, 'toggleStatus'])->name('empresas.toggleStatus');
+        Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
+
         Route::resource('projetos', ProjetoController::class);
     });
 });

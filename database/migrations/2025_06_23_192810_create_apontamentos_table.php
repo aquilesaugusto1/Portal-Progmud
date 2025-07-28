@@ -10,16 +10,15 @@ return new class extends Migration
     {
         Schema::create('apontamentos', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('agenda_id');
-            $table->unsignedBigInteger('consultor_id');
-            $table->decimal('horas_gastas', 5, 2);
-            $table->text('descricao');
-            $table->boolean('faturado')->default(false);
-            $table->date('data_apontamento');
+            $table->foreignId('consultor_id')->constrained('usuarios')->onDelete('cascade');
+            $table->foreignId('agenda_id')->constrained('agendas')->onDelete('cascade');
+            $table->decimal('horas_trabalhadas', 8, 2);
+            $table->text('descricao_atividades')->nullable();
+            $table->string('status_aprovacao')->default('pendente');
+            $table->foreignId('aprovado_por')->nullable()->constrained('usuarios')->onDelete('set null');
+            $table->timestamp('aprovado_em')->nullable();
+            $table->text('comentarios_aprovacao')->nullable();
             $table->timestamps();
-
-            $table->foreign('agenda_id')->references('id')->on('agendas')->onDelete('cascade');
-            $table->foreign('consultor_id')->references('id')->on('consultores')->onDelete('cascade');
         });
     }
 

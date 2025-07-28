@@ -1,3 +1,4 @@
+@csrf
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
     <div>
         <label for="data_hora" class="block font-medium text-sm text-gray-700">Data e Hora</label>
@@ -15,7 +16,7 @@
             <option value="">Selecione um consultor</option>
             @foreach ($consultores as $consultor)
                 <option value="{{ $consultor->id }}" {{ old('consultor_id', $agenda->consultor_id ?? '') == $consultor->id ? 'selected' : '' }}>
-                    {{ $consultor->nome }}
+                    {{ $consultor->nome }} {{ $consultor->sobrenome }}
                 </option>
             @endforeach
         </select>
@@ -45,7 +46,7 @@
 
 <div class="flex items-center justify-end mt-6">
     <a href="{{ route('agendas.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">Cancelar</a>
-    <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
         {{ isset($agenda) ? 'Atualizar' : 'Salvar' }}
     </button>
 </div>

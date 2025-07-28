@@ -11,11 +11,14 @@ return new class extends Migration
         Schema::create('empresas_parceiras', function (Blueprint $table) {
             $table->id();
             $table->string('nome_empresa');
-            $table->string('contato_principal')->nullable();
-            $table->string('telefone')->nullable();
-            $table->string('email')->nullable();
-            $table->string('ramo_atividade')->nullable();
-            $table->decimal('horas_contratadas', 10, 2)->default(0.00);
+            $table->string('cnpj')->unique();
+            $table->decimal('saldo_horas', 8, 2)->default(0);
+            $table->string('status')->default('Ativo');
+            $table->json('endereco_completo')->nullable();
+            $table->json('contato_principal')->nullable();
+            $table->json('contato_comercial')->nullable();
+            $table->json('contato_financeiro')->nullable();
+            $table->json('contato_tecnico')->nullable();
             $table->timestamps();
         });
     }

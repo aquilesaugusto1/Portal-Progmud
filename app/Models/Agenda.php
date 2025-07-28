@@ -10,29 +10,28 @@ class Agenda extends Model
     use HasFactory;
 
     protected $fillable = [
+        'consultor_id',
+        'projeto_id',
         'data_hora',
         'assunto',
         'status',
-        'consultor_id',
-        'projeto_id',
     ];
 
-    protected $casts = [
-        'data_hora' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'data_hora' => 'datetime',
+        ];
+    }
 
     public function consultor()
     {
-        return $this->belongsTo(Consultor::class);
+        // Importante: Aponte para o modelo User
+        return $this->belongsTo(User::class, 'consultor_id');
     }
 
     public function projeto()
     {
         return $this->belongsTo(Projeto::class);
-    }
-
-    public function apontamento()
-    {
-        return $this->hasOne(Apontamento::class);
     }
 }
