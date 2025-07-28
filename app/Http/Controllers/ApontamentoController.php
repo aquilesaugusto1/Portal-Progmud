@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class ApontamentoController extends Controller
 {
@@ -26,7 +27,7 @@ class ApontamentoController extends Controller
         $user = Auth::user();
 
         $query = Agenda::with(['consultor', 'contrato.cliente', 'apontamento'])
-                       ->whereBetween('inicio_previsto', [$start, $end]);
+                       ->whereBetween('data_hora', [$start, $end]);
 
         if ($user->funcao === 'consultor') {
             $query->where('consultor_id', $user->id);
@@ -45,8 +46,9 @@ class ApontamentoController extends Controller
             'agenda_id' => 'required|exists:agendas,id',
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fim' => 'required|date_format:H:i|after:hora_inicio',
-            'descricao' => 'required|string|max:1000',
-            'anexo' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,png|max:2048',
+            'descricao' => 'required|string|max:2000',
+            'anexo' => ['required_without:apontamento_id', 'file', 'mimes:pdf', 'max:2048'],
+            'faturavel' => 'nullable|boolean',
         ]);
 
         $agenda = Agenda::findOrFail($validated['agenda_id']);
@@ -61,40 +63,27 @@ class ApontamentoController extends Controller
         $inicio = Carbon::createFromTimeString($validated['hora_inicio']);
         $fim = Carbon::createFromTimeString($validated['hora_fim']);
         
-        $dataToSave = [
-            'consultor_id' => $agenda->consultor_id,
-            'contrato_id' => $agenda->contrato_id,
-            'data_apontamento' => $agenda->inicio_previsto->format('Y-m-d'),
-            'hora_inicio' => $validated['hora_inicio'],
-            'hora_fim' => $validated['hora_fim'],
-            'horas_gastas' => round($fim->diffInMinutes($inicio) / 60, 2),
-            'descricao' => $validated['descricao'],
-            'status' => 'Pendente',
-            'motivo_rejeicao' => null,
-        ];
+        $apontamento->consultor_id = $agenda->consultor_id;
+        $apontamento->contrato_id = $agenda->contrato_id;
+        $apontamento->data_apontamento = $agenda->data_hora->format('Y-m-d');
+        $apontamento->hora_inicio = $validated['hora_inicio'];
+        $apontamento->hora_fim = $validated['hora_fim'];
+        $apontamento->horas_gastas = round($fim->diffInMinutes($inicio) / 60, 2);
+        $apontamento->descricao = $validated['descricao'];
+        $apontamento->status = 'Pendente';
+        $apontamento->faturavel = $request->has('faturavel');
+        $apontamento->motivo_rejeicao = null;
 
         if ($request->hasFile('anexo')) {
             if ($apontamento->caminho_anexo) {
                 Storage::disk('public')->delete($apontamento->caminho_anexo);
             }
-            $dataToSave['caminho_anexo'] = $request->file('anexo')->store('anexos', 'public');
+            $apontamento->caminho_anexo = $request->file('anexo')->store('anexos', 'public');
         }
 
-        $apontamento->fill($dataToSave)->save();
+        $apontamento->save();
 
         return response()->json(['message' => 'Apontamento salvo e enviado para aprovação!']);
-    }
-
-    public function destroy(Apontamento $apontamento)
-    {
-        $this->authorize('delete', $apontamento);
-
-        if ($apontamento->caminho_anexo) {
-            Storage::disk('public')->delete($apontamento->caminho_anexo);
-        }
-        $apontamento->delete();
-
-        return response()->json(['message' => 'Apontamento removido com sucesso.']);
     }
 
     private function formatEvents($agendas)
@@ -102,31 +91,29 @@ class ApontamentoController extends Controller
         return $agendas->map(function ($agenda) {
             $apontamento = $agenda->apontamento;
             $status = 'Não Apontado';
-            $color = '#6B7280';
+            $color = '#6B7280'; // Cinza
 
             if ($agenda->status === 'Cancelada') {
                 $status = 'Cancelada';
-                $color = '#EF4444';
+                $color = '#EF4444'; // Vermelho
             } elseif ($apontamento) {
                  $status = $apontamento->status;
                  switch ($status) {
-                    case 'Pendente': $color = '#F59E0B'; break;
-                    case 'Aprovado': $color = '#10B981'; break;
-                    case 'Rejeitado': $color = '#EF4444'; break;
+                    case 'Pendente': $color = '#F59E0B'; break; // Amarelo
+                    case 'Aprovado': $color = '#10B981'; break; // Verde
+                    case 'Rejeitado': $color = '#EF4444'; break; // Vermelho
                  }
             } else {
                 $status = 'Agendada';
-                $color = '#3B82F6';
+                $color = '#3B82F6'; // Azul
             }
 
             return [
                 'id' => $agenda->id,
                 'title' => $agenda->contrato->cliente->nome_empresa,
-                'start' => $agenda->inicio_previsto,
-                'end' => $agenda->fim_previsto,
+                'start' => $agenda->data_hora,
                 'color' => $color,
                 'extendedProps' => [
-                    'apontamento_id' => $apontamento->id ?? null,
                     'consultor' => $agenda->consultor->nome,
                     'assunto' => $agenda->assunto,
                     'contrato' => $agenda->contrato->numero_contrato ?? 'N/A',
@@ -134,6 +121,7 @@ class ApontamentoController extends Controller
                     'hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
                     'hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
                     'descricao' => $apontamento->descricao ?? '',
+                    'faturavel' => $apontamento->faturavel ?? true,
                     'anexo_url' => $apontamento && $apontamento->caminho_anexo ? Storage::url($apontamento->caminho_anexo) : null,
                     'motivo_rejeicao' => $apontamento->motivo_rejeicao ?? null,
                 ]

@@ -33,25 +33,23 @@ class DashboardController extends Controller
                 'Clientes' => EmpresaParceira::count(),
             ];
 
-            // $contratosCriticos = Contrato::where('baseline_horas_mes', '<', 10)->get();
-
             $consultoresAtivos = User::where('funcao', 'consultor')
                 ->withSum(['apontamentos' => function ($query) {
-                    $query->where('created_at', '>=', now()->subDays(30));
-                }], 'horas_trabalhadas')
+                    $query->where('data_apontamento', '>=', now()->subDays(30));
+                }], 'horas_gastas') // Corrigido para 'horas_gastas'
                 ->get()
-                ->sortByDesc('apontamentos_sum_horas_trabalhadas')
+                ->sortByDesc('apontamentos_sum_horas_gastas') // Corrigido para 'horas_gastas'
                 ->map(function ($consultor) {
-                    $consultor->horas_30_dias = $consultor->apontamentos_sum_horas_trabalhadas ?? 0;
+                    $consultor->horas_30_dias = $consultor->apontamentos_sum_horas_gastas ?? 0; // Corrigido para 'horas_gastas'
                     return $consultor;
                 });
 
             $agendasPorMes = Agenda::select(
-                DB::raw('DATE_FORMAT(inicio_previsto, "%Y-%m") as mes'),
+                DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'), // Corrigido para 'data_hora'
                 'status',
                 DB::raw('count(*) as total')
             )
-            ->where('inicio_previsto', '>=', now()->subMonths(5)->startOfMonth())
+            ->where('data_hora', '>=', now()->subMonths(5)->startOfMonth()) // Corrigido para 'data_hora'
             ->groupBy('mes', 'status')
             ->orderBy('mes', 'asc')
             ->get();
@@ -78,21 +76,17 @@ class DashboardController extends Controller
             }
 
         } else {
-            $meusContratosCount = 0;
-            if ($user->funcao === 'techlead') {
-                $meusContratosCount = Contrato::where('tech_lead_id', $user->id)->count();
-            }
-
+            // Lógica para outros usuários (Tech Lead, Coordenador, Consultor)
             $stats = [
-                'Minhas Agendas Hoje' => Agenda::where('consultor_id', 'like', '%' . $user->id . '%')->whereDate('inicio_previsto', today())->count(),
-                'Meus Contratos' => $meusContratosCount,
-                'Apontamentos Pendentes' => Apontamento::where('consultor_id', 'like', '%' . $user->id . '%')->where('status_aprovacao', 'Pendente')->count(),
+                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('data_hora', today())->count(),
+                'Meus Contratos' => $user->contratos()->count(),
+                'Apontamentos Pendentes' => Apontamento::where('consultor_id', $user->id)->where('status', 'Pendente')->count(),
             ];
 
-            $ultimas_agendas = Agenda::where('consultor_id', 'like', '%' . $user->id . '%')
-                ->with(['consultor', 'contrato.cliente'])
-                ->where('inicio_previsto', '>=', today())
-                ->orderBy('inicio_previsto', 'asc')
+            $ultimas_agendas = Agenda::where('consultor_id', $user->id)
+                ->with(['contrato.cliente'])
+                ->where('data_hora', '>=', today())
+                ->orderBy('data_hora', 'asc')
                 ->limit(5)
                 ->get();
         }

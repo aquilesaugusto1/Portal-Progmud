@@ -11,29 +11,68 @@ class Apontamento extends Model
 
     protected $table = 'apontamentos';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'agenda_id',
         'consultor_id',
-        'horas_gastas',
-        'descricao',
-        'faturado',
+        'agenda_id',
+        'contrato_id',
         'data_apontamento',
         'hora_inicio',
         'hora_fim',
+        'horas_gastas',
+        'descricao',
+        'caminho_anexo',
+        'status',
+        'faturavel',
+        'aprovado_por_id',
+        'data_aprovacao',
+        'motivo_rejeicao',
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
     protected $casts = [
         'data_apontamento' => 'date',
-        'faturado' => 'boolean',
+        'faturavel' => 'boolean',
+        'data_aprovacao' => 'datetime',
     ];
 
+    /**
+     * Get the agenda for the time entry.
+     */
     public function agenda()
     {
         return $this->belongsTo(Agenda::class);
     }
 
+    /**
+     * Get the consultant for the time entry.
+     */
     public function consultor()
     {
-        return $this->belongsTo(Consultor::class);
+        return $this->belongsTo(User::class, 'consultor_id');
+    }
+
+    /**
+     * Get the contract for the time entry.
+     */
+    public function contrato()
+    {
+        return $this->belongsTo(Contrato::class);
+    }
+
+    /**
+     * Get the user who approved the time entry.
+     */
+    public function aprovador()
+    {
+        return $this->belongsTo(User::class, 'aprovado_por_id');
     }
 }
