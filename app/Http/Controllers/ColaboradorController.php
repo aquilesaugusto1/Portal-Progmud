@@ -46,19 +46,15 @@ class ColaboradorController extends Controller
 
     public function show(User $colaborador)
     {
-        // CORREÇÃO: O método show não precisa enviar a lista de todos os techleads,
-        // pois a view já acessa os techleads específicos deste colaborador através de $colaborador->techLeads
         return view('colaboradores.show', compact('colaborador'));
     }
 
     public function edit(User $colaborador)
     {
-        // CORREÇÃO: Garante que a variável com a lista de todos os tech leads se chame $techLeads
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         return view('colaboradores.edit', compact('colaborador', 'techLeads'));
     }
 
-    // ... Os outros métodos (update, toggleStatus, etc.) permanecem os mesmos ...
     public function update(Request $request, User $colaborador)
     {
         $request->validate($this->getValidationRules($colaborador->id));

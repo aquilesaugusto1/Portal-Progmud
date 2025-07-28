@@ -9,7 +9,7 @@
                     <form action="{{ route('colaboradores.update', $colaborador) }}" method="POST">
                         @csrf
                         @method('PUT')
-                        @include('colaboradores.partials.form', ['colaborador' => $colaborador, 'gestores' => $gestores])
+                        @include('colaboradores.partials.form', ['colaborador' => $colaborador, 'techLeads' => $techLeads])
                     </form>
                 </div>
             </div>
