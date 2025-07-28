@@ -1,0 +1,112 @@
+<x-app-layout>
+    <div class="py-12">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <div class="bg-white shadow-lg rounded-sm border border-slate-200 p-6 md:p-8">
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">{{ $contrato->cliente->nome_empresa }}</h1>
+                        <span class="text-sm text-slate-500">Contrato #{{ $contrato->numero_contrato ?? $contrato->id }}</span>
+                    </div>
+                    <div class="px-3 py-1 text-xs font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">
+                        {{ $contrato->status }}
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <!-- Detalhes Principais -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Detalhes Principais</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Tipo de Contrato:</span>
+                                <span class="text-slate-800">{{ $contrato->tipo_contrato }}</span>
+                            </div>
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Contato Principal:</span>
+                                <span class="text-slate-800">{{ $contrato->contato_principal ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Data de Início:</span>
+                                <span class="text-slate-800">{{ $contrato->data_inicio->format('d/m/Y') }}</span>
+                            </div>
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Data de Término:</span>
+                                <span class="text-slate-800">{{ $contrato->data_termino ? $contrato->data_termino->format('d/m/Y') : 'Indeterminado' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Equipe do Contrato -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Equipe do Contrato</h3>
+                        <div class="space-y-4 text-sm">
+                            <div>
+                                <span class="font-medium text-slate-600">Coordenador(es):</span>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @forelse($contrato->coordenadores as $coordenador)
+                                        <span class="px-2 py-1 bg-sky-100 text-sky-800 text-xs font-semibold rounded-full">{{ $coordenador->nome }}</span>
+                                    @empty
+                                        <span class="text-slate-500">Nenhum coordenador associado.</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                            <div>
+                                <span class="font-medium text-slate-600">Tech Lead(s):</span>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @forelse($contrato->techLeads as $techLead)
+                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">{{ $techLead->nome }}</span>
+                                    @empty
+                                        <span class="text-slate-500">Nenhum Tech Lead associado.</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                             <div>
+                                <span class="font-medium text-slate-600">Consultor(es):</span>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @forelse($contrato->consultores as $consultor)
+                                        <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">{{ $consultor->nome }}</span>
+                                    @empty
+                                        <span class="text-slate-500">Nenhum consultor associado.</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Escopo e Financeiro -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Escopo e Financeiro</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                            <div class="md:col-span-2">
+                                <span class="font-medium text-slate-600">Produtos Contratados:</span>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @foreach($contrato->produtos as $produto)
+                                        <span class="px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-semibold rounded-full">{{ $produto }}</span>
+                                    @endforeach
+                                    @if($contrato->especifique_outro)
+                                        <span class="px-2 py-1 bg-slate-100 text-slate-800 text-xs font-semibold rounded-full">{{ $contrato->especifique_outro }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Baseline (Horas/mês):</span>
+                                <span class="text-slate-800">{{ $contrato->baseline_horas_mes ?? 'N/A' }}</span>
+                            </div>
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Permite Antecipar Baseline:</span>
+                                <span class="text-slate-800">{{ $contrato->permite_antecipar_baseline ? 'Sim' : 'Não' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end mt-8 pt-5 border-t border-slate-200">
+                    <a href="{{ route('contratos.index') }}" class="btn bg-white border-slate-200 hover:border-slate-300 text-slate-600">Voltar para a Lista</a>
+                    @can('update', $contrato)
+                        <a href="{{ route('contratos.edit', $contrato) }}" class="btn bg-indigo-500 hover:bg-indigo-600 text-white ml-3">Editar Contrato</a>
+                    @endcan
+                </div>
+            </div>
+        </div>
+    </div>
+</x-app-layout>

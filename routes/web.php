@@ -33,17 +33,20 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/apontamentos', [ApontamentoController::class, 'index'])->name('apontamentos.index');
-    Route::post('/apontamentos', [ApontamentoController::class, 'storeOrUpdate'])->name('apontamentos.storeOrUpdate');
-    Route::get('/api/agendas', [ApontamentoController::class, 'getAgendasAsEvents'])->name('api.agendas');
+    Route::post('/apontamentos', [ApontamentoController::class, 'store'])->name('apontamentos.store');
+    Route::delete('/apontamentos/{apontamento}', [ApontamentoController::class, 'destroy'])->name('apontamentos.destroy');
+    Route::get('/api/agendas', [ApontamentoController::class, 'events'])->name('api.agendas');
 
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::post('/relatorios', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
 
-    Route::get('agendas/alocacao', [AgendaController::class, 'alocacao'])->name('agendas.alocacao');
+    // Rota da API para buscar consultores de um contrato
+    Route::get('/api/contratos/{contrato}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
+
     Route::resource('agendas', AgendaController::class);
 
-    // Subgrupo para rotas de Admin e TechLead
-    Route::middleware('role:admin,techlead')->group(function () {
+    // Subgrupo para rotas de Admin, Coordenadores e TechLead
+    Route::middleware('role:admin,coordenador_operacoes,coordenador_tecnico,techlead')->group(function () {
         Route::get('/enviar-agendas', [EmailController::class, 'create'])->name('email.agendas.create');
         Route::post('/enviar-agendas', [EmailController::class, 'send'])->name('email.agendas.send');
 
@@ -54,18 +57,19 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
         Route::resource('sugestoes', SugestaoController::class)->except(['show', 'edit', 'update', 'destroy']);
     });
 
+    // Subgrupo apenas para rotas de Admin e Coordenadores
+     Route::middleware('role:admin,coordenador_operacoes,coordenador_tecnico')->group(function () {
+        Route::patch('contratos/{contrato}/toggle-status', [ContratoController::class, 'toggleStatus'])->name('contratos.toggleStatus');
+        Route::resource('contratos', ContratoController::class)->except(['destroy']);
+    });
+
     // Subgrupo apenas para rotas de Admin
     Route::middleware('role:admin')->group(function () {
         Route::patch('colaboradores/{colaborador}/toggle-status', [ColaboradorController::class, 'toggleStatus'])->name('colaboradores.toggleStatus');
         Route::resource('colaboradores', ColaboradorController::class)->except(['destroy'])->parameters(['colaboradores' => 'colaborador']);
         
-        // ROTAS DE CLIENTES ATUALIZADAS
         Route::patch('empresas/{empresa}/toggle-status', [EmpresaParceiraController::class, 'toggleStatus'])->name('empresas.toggleStatus');
         Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
-
-        // ROTAS DE CONTRATOS
-        Route::patch('contratos/{contrato}/toggle-status', [ContratoController::class, 'toggleStatus'])->name('contratos.toggleStatus');
-        Route::resource('contratos', ContratoController::class)->except(['destroy']);
     });
 });
 

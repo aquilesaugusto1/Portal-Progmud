@@ -20,8 +20,6 @@ class Contrato extends Model
         'tipo_contrato',
         'produtos',
         'especifique_outro',
-        'coordenador_id',
-        'tech_lead_id',
         'status',
         'data_inicio',
         'data_termino',
@@ -51,18 +49,36 @@ class Contrato extends Model
     }
 
     /**
-     * Get the coordinator for the contract.
+     * The users that belong to the contract.
      */
-    public function coordenador()
+    public function usuarios()
     {
-        return $this->belongsTo(User::class, 'coordenador_id');
+        return $this->belongsToMany(User::class, 'contrato_usuario', 'contrato_id', 'usuario_id')
+                    ->withPivot('funcao_contrato')
+                    ->withTimestamps();
     }
 
     /**
-     * Get the tech lead for the contract.
+     * Get the coordinators for the contract.
      */
-    public function techLead()
+    public function coordenadores()
     {
-        return $this->belongsTo(User::class, 'tech_lead_id');
+        return $this->usuarios()->wherePivot('funcao_contrato', 'coordenador');
+    }
+
+    /**
+     * Get the tech leads for the contract.
+     */
+    public function techLeads()
+    {
+        return $this->usuarios()->wherePivot('funcao_contrato', 'tech_lead');
+    }
+
+    /**
+     * Get the consultants for the contract.
+     */
+    public function consultores()
+    {
+        return $this->usuarios()->wherePivot('funcao_contrato', 'consultor');
     }
 }

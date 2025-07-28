@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('tipo_contrato');
             $table->json('produtos');
             $table->string('especifique_outro')->nullable();
-            $table->foreignId('coordenador_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->foreignId('tech_lead_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('coordenador_id')->nullable()->constrained('usuarios')->onDelete('set null');
+            $table->foreignId('tech_lead_id')->nullable()->constrained('usuarios')->onDelete('set null');
             $table->string('status')->default('Ativo');
             $table->date('data_inicio');
             $table->date('data_termino')->nullable();

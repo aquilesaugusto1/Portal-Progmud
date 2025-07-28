@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany; // Importe a classe correta aqui
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -58,7 +58,7 @@ class User extends Authenticatable
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'consultor_id', 'tech_lead_id');
     }
 
-    public function consultores(): BelongsToMany
+    public function consultoresLiderados(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id');
     }
@@ -66,5 +66,15 @@ class User extends Authenticatable
     public function apontamentos(): HasMany
     {
         return $this->hasMany(Apontamento::class, 'consultor_id');
+    }
+
+    /**
+     * The contracts that the user belongs to.
+     */
+    public function contratos(): BelongsToMany
+    {
+        return $this->belongsToMany(Contrato::class, 'contrato_usuario', 'usuario_id', 'contrato_id')
+                    ->withPivot('funcao_contrato')
+                    ->withTimestamps();
     }
 }

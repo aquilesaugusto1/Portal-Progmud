@@ -1,3 +1,7 @@
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
+@endpush
+
 @if ($errors->any())
     <div class="mb-6 rounded-md bg-red-50 p-4 border border-red-200">
         <div class="flex">
@@ -52,39 +56,6 @@
                     <option value="Inativo" @selected(old('status', $contrato->status ?? '') == 'Inativo')>Inativo</option>
                 </select>
             </div>
-        </div>
-    </div>
-
-    <!-- Seção 2: Prazos e Responsáveis -->
-    <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
-        <h3 class="text-lg font-semibold text-slate-800 mb-4">Prazos e Responsáveis</h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-                <x-input-label for="data_inicio" value="Data de Início *" />
-                <x-text-input id="data_inicio" name="data_inicio" type="date" class="mt-1 block w-full" :value="old('data_inicio', isset($contrato) ? $contrato->data_inicio->format('Y-m-d') : '')" required />
-            </div>
-            <div>
-                <x-input-label for="data_termino" value="Data de Término" />
-                <x-text-input id="data_termino" name="data_termino" type="date" class="mt-1 block w-full" :value="old('data_termino', isset($contrato) && $contrato->data_termino ? $contrato->data_termino->format('Y-m-d') : '')" />
-            </div>
-            <div>
-                <x-input-label for="coordenador_id" value="Coordenador" />
-                <select name="coordenador_id" id="coordenador_id" class="form-select mt-1 block w-full">
-                    <option value="">Selecione um coordenador</option>
-                    @foreach($coordenadores as $coordenador)
-                        <option value="{{ $coordenador->id }}" @selected(old('coordenador_id', $contrato->coordenador_id ?? '') == $coordenador->id)>{{ $coordenador->nome }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div id="tech_lead_container" class="{{ old('tipo_contrato', $contrato->tipo_contrato ?? '') === 'ACT+' ? '' : 'hidden' }}">
-                <x-input-label for="tech_lead_id" value="Tech Lead *" />
-                <select name="tech_lead_id" id="tech_lead_id" class="form-select mt-1 block w-full">
-                    <option value="">Selecione um Tech Lead</option>
-                    @foreach($techLeads as $techLead)
-                        <option value="{{ $techLead->id }}" @selected(old('tech_lead_id', $contrato->tech_lead_id ?? '') == $techLead->id)>{{ $techLead->nome }}</option>
-                    @endforeach
-                </select>
-            </div>
              <div class="md:col-span-2">
                 <x-input-label for="contato_principal" value="Contato Principal no Cliente" />
                 <x-text-input id="contato_principal" name="contato_principal" type="text" class="mt-1 block w-full" :value="old('contato_principal', $contrato->contato_principal ?? '')" />
@@ -92,7 +63,53 @@
         </div>
     </div>
 
-    <!-- Seção 3: Escopo e Detalhes Financeiros -->
+    <!-- Seção 2: Prazos e Datas -->
+     <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Prazos e Datas</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <x-input-label for="data_inicio" value="Data de Início *" />
+                <x-text-input id="data_inicio" name="data_inicio" type="date" class="mt-1 block w-full" :value="old('data_inicio', $contrato->data_inicio ? $contrato->data_inicio->format('Y-m-d') : '')" required />
+            </div>
+            <div>
+                <x-input-label for="data_termino" value="Data de Término" />
+                <x-text-input id="data_termino" name="data_termino" type="date" class="mt-1 block w-full" :value="old('data_termino', $contrato->data_termino ? $contrato->data_termino->format('Y-m-d') : '')" />
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 3: Equipe do Contrato -->
+    <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
+        <h3 class="text-lg font-semibold text-slate-800 mb-4">Equipe do Contrato</h3>
+        <div class="space-y-6">
+            <div>
+                <x-input-label for="coordenadores" value="Coordenador(es)" />
+                <select name="coordenadores[]" id="coordenadores" class="form-select mt-1 block w-full" multiple>
+                    @foreach($coordenadores as $coordenador)
+                        <option value="{{ $coordenador->id }}" @selected(in_array($coordenador->id, old('coordenadores', $contrato->coordenadores->pluck('id')->toArray() ?? [])))>{{ $coordenador->nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <x-input-label for="tech_leads" value="Tech Lead(s)" />
+                <select name="tech_leads[]" id="tech_leads" class="form-select mt-1 block w-full" multiple>
+                    @foreach($techLeads as $techLead)
+                        <option value="{{ $techLead->id }}" @selected(in_array($techLead->id, old('tech_leads', $contrato->techLeads->pluck('id')->toArray() ?? [])))>{{ $techLead->nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <x-input-label for="consultores" value="Consultor(es)" />
+                <select name="consultores[]" id="consultores" class="form-select mt-1 block w-full" multiple>
+                    @foreach($consultores as $consultor)
+                        <option value="{{ $consultor->id }}" @selected(in_array($consultor->id, old('consultores', $contrato->consultores->pluck('id')->toArray() ?? [])))>{{ $consultor->nome }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Seção 4: Escopo e Detalhes Financeiros -->
     <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Escopo e Detalhes Financeiros</h3>
         <div>
@@ -128,25 +145,20 @@
 
 <div class="flex items-center justify-end mt-8 pt-5 border-t border-slate-200">
     <a href="{{ route('contratos.index') }}" class="btn bg-white border-slate-200 hover:border-slate-300 text-slate-600">Cancelar</a>
-    <x-primary-button class="ml-4">{{ isset($contrato) ? 'Atualizar Contrato' : 'Salvar Contrato' }}</x-primary-button>
+    <x-primary-button class="ml-4">{{ $contrato->exists ? 'Atualizar Contrato' : 'Salvar Contrato' }}</x-primary-button>
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const tipoContratoSelect = document.getElementById('tipo_contrato');
-        const techLeadContainer = document.getElementById('tech_lead_container');
+        new TomSelect('#coordenadores',{ create: false, sortField: { field: "text", direction: "asc" } });
+        new TomSelect('#tech_leads',{ create: false, sortField: { field: "text", direction: "asc" } });
+        new TomSelect('#consultores',{ create: false, sortField: { field: "text", direction: "asc" } });
+
         const produtosCheckboxes = document.querySelectorAll('input[name="produtos[]"]');
         const especifiqueOutroContainer = document.getElementById('especifique_outro_container');
         const outroCheckbox = document.querySelector('input[value="Outro"]');
-
-        function toggleTechLead() {
-            if (tipoContratoSelect.value === 'ACT+') {
-                techLeadContainer.classList.remove('hidden');
-            } else {
-                techLeadContainer.classList.add('hidden');
-            }
-        }
 
         function toggleEspecifiqueOutro() {
             if (outroCheckbox.checked) {
@@ -156,15 +168,12 @@
             }
         }
 
-        tipoContratoSelect.addEventListener('change', toggleTechLead);
         produtosCheckboxes.forEach(checkbox => {
             if (checkbox.value === 'Outro') {
                 checkbox.addEventListener('change', toggleEspecifiqueOutro);
             }
         });
         
-        // Initial checks on page load
-        toggleTechLead();
         toggleEspecifiqueOutro();
     });
 </script>

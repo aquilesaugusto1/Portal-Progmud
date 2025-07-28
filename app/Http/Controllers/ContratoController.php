@@ -6,6 +6,7 @@ use App\Models\Contrato;
 use App\Models\EmpresaParceira;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ContratoController extends Controller
 {
@@ -13,7 +14,7 @@ class ContratoController extends Controller
     {
         $this->authorize('viewAny', Contrato::class);
 
-        $query = Contrato::with(['cliente', 'coordenador', 'techLead']);
+        $query = Contrato::with(['cliente', 'coordenadores', 'techLeads']);
 
         if ($request->filled('cliente_id')) {
             $query->where('cliente_id', $request->cliente_id);
@@ -33,21 +34,24 @@ class ContratoController extends Controller
     {
         $this->authorize('create', Contrato::class);
 
-        $clientes = EmpresaParceira::where('status', 'Ativo')->get();
-        $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->get();
-        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->get();
+        $contrato = new Contrato();
+        $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
+        $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
+        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+        $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
 
-        return view('contratos.create', compact('clientes', 'coordenadores', 'techLeads'));
+        return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', Contrato::class);
-
         $validatedData = $request->validate($this->getValidationRules());
-        $preparedData = $this->prepareData($request, $validatedData);
 
-        Contrato::create($preparedData);
+        DB::transaction(function () use ($request, $validatedData) {
+            $contrato = Contrato::create($this->prepareData($request, $validatedData));
+            $this->syncUsuarios($contrato, $request);
+        });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato criado com sucesso.');
     }
@@ -55,6 +59,7 @@ class ContratoController extends Controller
     public function show(Contrato $contrato)
     {
         $this->authorize('view', $contrato);
+        $contrato->load(['cliente', 'coordenadores', 'techLeads', 'consultores']);
         return view('contratos.show', compact('contrato'));
     }
 
@@ -62,21 +67,24 @@ class ContratoController extends Controller
     {
         $this->authorize('update', $contrato);
 
-        $clientes = EmpresaParceira::where('status', 'Ativo')->get();
-        $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->get();
-        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->get();
+        $contrato->load(['coordenadores', 'techLeads', 'consultores']);
+        $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
+        $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
+        $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+        $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
 
-        return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads'));
+        return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
     public function update(Request $request, Contrato $contrato)
     {
         $this->authorize('update', $contrato);
-
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
-        $preparedData = $this->prepareData($request, $validatedData);
 
-        $contrato->update($preparedData);
+        DB::transaction(function () use ($request, $contrato, $validatedData) {
+            $contrato->update($this->prepareData($request, $validatedData));
+            $this->syncUsuarios($contrato, $request);
+        });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato atualizado com sucesso.');
     }
@@ -84,10 +92,9 @@ class ContratoController extends Controller
     public function toggleStatus(Contrato $contrato)
     {
         $this->authorize('toggleStatus', $contrato);
-
         $novoStatus = $contrato->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $contrato->update(['status' => $novoStatus]);
-        $mensagem = $novoStatus === 'Ativo' ? 'Contrato ativado com sucesso.' : 'Contrato inativado com sucesso.';
+        $mensagem = $novoStatus === 'Ativo' ? 'Contrato ativado com sucesso.' : 'Contrato desabilitado com sucesso.';
         return back()->with('success', $mensagem);
     }
 
@@ -100,29 +107,48 @@ class ContratoController extends Controller
             'produtos' => ['required', 'array'],
             'produtos.*' => ['string'],
             'especifique_outro' => ['nullable', 'string', 'max:255', 'required_if:produtos.*,Outro'],
-            'coordenador_id' => ['nullable', 'exists:users,id'],
-            'tech_lead_id' => ['nullable', 'exists:users,id', 'required_if:tipo_contrato,ACT+'],
             'status' => ['required', 'string'],
             'data_inicio' => ['required', 'date'],
             'data_termino' => ['nullable', 'date', 'after_or_equal:data_inicio'],
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
+            'coordenadores' => ['nullable', 'array'],
+            'coordenadores.*' => ['exists:usuarios,id'],
+            'tech_leads' => ['nullable', 'array'],
+            'tech_leads.*' => ['exists:usuarios,id'],
+            'consultores' => ['nullable', 'array'],
+            'consultores.*' => ['exists:usuarios,id'],
         ];
     }
 
     private function prepareData(Request $request, array $validatedData)
     {
         $validatedData['permite_antecipar_baseline'] = $request->has('permite_antecipar_baseline');
-
         if (!in_array('Outro', $validatedData['produtos'])) {
             $validatedData['especifique_outro'] = null;
         }
-
-        if ($validatedData['tipo_contrato'] !== 'ACT+') {
-            $validatedData['tech_lead_id'] = null;
-        }
-
         return $validatedData;
+    }
+
+    private function syncUsuarios(Contrato $contrato, Request $request)
+    {
+        $contrato->usuarios()->detach();
+
+        if ($request->has('coordenadores')) {
+            foreach ($request->coordenadores as $id) {
+                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'coordenador']);
+            }
+        }
+        if ($request->has('tech_leads')) {
+            foreach ($request->tech_leads as $id) {
+                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'tech_lead']);
+            }
+        }
+        if ($request->has('consultores')) {
+            foreach ($request->consultores as $id) {
+                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
+            }
+        }
     }
 }
