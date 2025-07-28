@@ -6,6 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
         Schema::create('agendas', function (Blueprint $table) {
@@ -14,13 +17,15 @@ return new class extends Migration
             $table->foreignId('contrato_id')->constrained('contratos')->onDelete('cascade');
             $table->string('assunto');
             $table->text('descricao')->nullable();
-            $table->dateTime('inicio_previsto');
-            $table->dateTime('fim_previsto');
-            $table->string('status')->default('Agendada'); // Ex: Agendada, Realizada, Cancelada
+            $table->dateTime('data_hora'); // Alterado para corresponder ao formulário antigo
+            $table->string('status')->default('Agendada');
             $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('agendas');

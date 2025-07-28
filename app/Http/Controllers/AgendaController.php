@@ -25,7 +25,7 @@ class AgendaController extends Controller
             $query->where('consultor_id', $user->id);
         }
 
-        $agendas = $query->latest()->paginate(15)->withQueryString();
+        $agendas = $query->latest('data_hora')->paginate(15)->withQueryString();
 
         return view('agendas.index', compact('agendas'));
     }
@@ -35,7 +35,7 @@ class AgendaController extends Controller
         $this->authorize('create', Agenda::class);
 
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
-        $consultores = collect();
+        $consultores = collect(); // Será carregado dinamicamente
 
         return view('agendas.create', compact('consultores', 'contratos'));
     }
@@ -48,9 +48,9 @@ class AgendaController extends Controller
             'consultor_id' => 'required|exists:usuarios,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
-            'inicio_previsto' => 'required|date',
-            'fim_previsto' => 'required|date|after_or_equal:inicio_previsto',
+            'data_hora' => 'required|date',
             'descricao' => 'nullable|string',
+            'status' => 'required|string|in:Agendada,Realizada,Cancelada',
         ]);
 
         $user = Auth::user();
@@ -74,7 +74,16 @@ class AgendaController extends Controller
         $this->authorize('update', $agenda);
         
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
-        $consultores = $agenda->contrato ? $agenda->contrato->consultores()->orderBy('nome')->get() : collect();
+        $consultores = collect();
+        if ($agenda->contrato) {
+            $query = $agenda->contrato->consultores();
+            $user = Auth::user();
+            if ($user->funcao === 'techlead') {
+                $lideradosIds = $user->consultoresLiderados()->pluck('id');
+                $query->whereIn('usuarios.id', $lideradosIds);
+            }
+            $consultores = $query->orderBy('nome')->get();
+        }
 
         return view('agendas.edit', compact('agenda', 'consultores', 'contratos'));
     }
@@ -87,15 +96,14 @@ class AgendaController extends Controller
             'consultor_id' => 'required|exists:usuarios,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
-            'inicio_previsto' => 'required|date',
-            'fim_previsto' => 'required|date|after_or_equal:inicio_previsto',
-            'status' => 'required|string',
+            'data_hora' => 'required|date',
             'descricao' => 'nullable|string',
+            'status' => 'required|string|in:Agendada,Realizada,Cancelada',
         ]);
 
         $user = Auth::user();
         if ($user->funcao === 'techlead' && !$user->consultoresLiderados()->where('id', $validated['consultor_id'])->exists()) {
-             return back()->withErrors(['consultor_id' => 'Você só pode atribuir agendas para consultores que você lidera.'])->withInput();
+             return back()->withErrors(['consultor_id' => 'Você só pode atribuir agendas a este consultor.'])->withInput();
         }
 
         $agenda->update($validated);
@@ -111,26 +119,37 @@ class AgendaController extends Controller
     }
 
     /**
-     * API endpoint to get consultants for a given contract.
+     * API endpoint to get consultants for a given contract, respecting user roles.
      */
-    public function getConsultoresPorContrato(Contrato $contrato)
+    public function getConsultoresPorContrato($contratoId)
     {
         try {
-            // Apenas usuários que podem criar agendas podem usar esta API
             $this->authorize('create', Agenda::class);
 
-            $consultores = $contrato->consultores()
-                                    ->where('status', 'Ativo')
-                                    ->orderBy('nome')
-                                    ->get(['id', 'nome', 'sobrenome']);
+            $contrato = Contrato::find($contratoId);
+            if (!$contrato) {
+                return response()->json([], 404);
+            }
+
+            $user = Auth::user();
+            $query = $contrato->consultores()->where('status', 'Ativo');
+
+            if ($user->funcao === 'techlead') {
+                $lideradosIds = $user->consultoresLiderados()->pluck('id');
+                $query->whereIn('usuarios.id', $lideradosIds);
+            }
+            
+            $consultores = $query->orderBy('nome')->get(['usuarios.id', 'nome', 'sobrenome']);
             
             return response()->json($consultores);
 
-        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            return response()->json(['message' => 'Você não tem permissão para ver estes consultores.'], 403);
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar consultores para o contrato ' . $contrato->id . ': ' . $e->getMessage());
-            return response()->json(['message' => 'Ocorreu um erro no servidor ao buscar consultores.'], 500);
+            Log::error('Erro ao buscar consultores para o contrato.', [
+                'contrato_id' => $contratoId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['message' => 'Ocorreu um erro no servidor.'], 500);
         }
     }
 }

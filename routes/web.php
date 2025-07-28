@@ -40,8 +40,8 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::post('/relatorios', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
 
-    // Rota da API para buscar consultores de um contrato
-    Route::get('/api/contratos/{contrato}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
+    // Rota da API para buscar consultores de um contrato (AJUSTADA)
+    Route::get('/api/contratos/{contratoId}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
 
     Route::resource('agendas', AgendaController::class);
 

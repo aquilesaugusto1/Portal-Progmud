@@ -26,11 +26,11 @@
 
                     <form action="{{ route('agendas.store') }}" method="POST">
                         @csrf
-                        <div class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="contrato_id" class="block text-sm font-medium text-gray-700">Contrato *</label>
+                                <label for="contrato_id" class="block font-medium text-sm text-gray-700">Contrato *</label>
                                 <select name="contrato_id" id="contrato_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="">Selecione um contrato primeiro...</option>
+                                    <option value="">Selecione um contrato</option>
                                     @foreach($contratos as $contrato)
                                         <option value="{{ $contrato->id }}" @selected(old('contrato_id') == $contrato->id)>
                                             {{ $contrato->cliente->nome_empresa }} (#{{ $contrato->numero_contrato ?? $contrato->id }})
@@ -40,30 +40,33 @@
                             </div>
 
                             <div>
-                                <label for="consultor_id" class="block text-sm font-medium text-gray-700">Consultor *</label>
+                                <label for="consultor_id" class="block font-medium text-sm text-gray-700">Consultor *</label>
                                 <select name="consultor_id" id="consultor_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required disabled>
                                     <option value="">Selecione um contrato para ver os consultores</option>
                                 </select>
                             </div>
 
-                            <div>
-                                <label for="assunto" class="block text-sm font-medium text-gray-700">Assunto *</label>
-                                <input type="text" name="assunto" id="assunto" value="{{ old('assunto') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                            <div class="md:col-span-2">
+                                <label for="assunto" class="block font-medium text-sm text-gray-700">Assunto *</label>
+                                <input type="text" name="assunto" id="assunto" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('assunto') }}" required>
                             </div>
-
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="inicio_previsto" class="block text-sm font-medium text-gray-700">Início Previsto *</label>
-                                    <input type="datetime-local" name="inicio_previsto" id="inicio_previsto" value="{{ old('inicio_previsto') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
-                                <div>
-                                    <label for="fim_previsto" class="block text-sm font-medium text-gray-700">Fim Previsto *</label>
-                                    <input type="datetime-local" name="fim_previsto" id="fim_previsto" value="{{ old('fim_previsto') }}" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                </div>
+                            
+                            <div>
+                                <label for="data_hora" class="block font-medium text-sm text-gray-700">Data e Hora *</label>
+                                <input type="datetime-local" name="data_hora" id="data_hora" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('data_hora') }}" required>
                             </div>
 
                             <div>
-                                <label for="descricao" class="block text-sm font-medium text-gray-700">Descrição</label>
+                                <label for="status" class="block font-medium text-sm text-gray-700">Status *</label>
+                                <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                    <option value="Agendada" @selected(old('status', 'Agendada') == 'Agendada')>Agendada</option>
+                                    <option value="Realizada" @selected(old('status') == 'Realizada')>Realizada</option>
+                                    <option value="Cancelada" @selected(old('status') == 'Cancelada')>Cancelada</option>
+                                </select>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <label for="descricao" class="block font-medium text-sm text-gray-700">Descrição</label>
                                 <textarea name="descricao" id="descricao" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('descricao') }}</textarea>
                             </div>
                         </div>
@@ -83,9 +86,9 @@
 document.addEventListener('DOMContentLoaded', function () {
     const contratoSelect = document.getElementById('contrato_id');
     const consultorSelect = document.getElementById('consultor_id');
+    const oldConsultorId = "{{ old('consultor_id') }}";
 
-    contratoSelect.addEventListener('change', function () {
-        const contratoId = this.value;
+    function fetchConsultores(contratoId, selectedConsultorId = null) {
         consultorSelect.innerHTML = '<option value="">Carregando...</option>';
         consultorSelect.disabled = true;
 
@@ -95,12 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         fetch(`/api/contratos/${contratoId}/consultores`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('A resposta da rede não foi boa');
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(consultores => {
                 consultorSelect.innerHTML = '<option value="">Selecione um consultor</option>';
                 if (consultores.length > 0) {
@@ -108,6 +106,9 @@ document.addEventListener('DOMContentLoaded', function () {
                         const option = document.createElement('option');
                         option.value = consultor.id;
                         option.textContent = `${consultor.nome} ${consultor.sobrenome || ''}`.trim();
+                        if (consultor.id == selectedConsultorId) {
+                            option.selected = true;
+                        }
                         consultorSelect.appendChild(option);
                     });
                     consultorSelect.disabled = false;
@@ -119,7 +120,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 console.error('Erro ao buscar consultores:', error);
                 consultorSelect.innerHTML = '<option value="">Erro ao carregar consultores</option>';
             });
+    }
+
+    contratoSelect.addEventListener('change', function () {
+        fetchConsultores(this.value);
     });
+
+    // If there's an old contract value (e.g., validation error), trigger the fetch
+    if (contratoSelect.value) {
+        fetchConsultores(contratoSelect.value, oldConsultorId);
+    }
 });
 </script>
 @endpush
