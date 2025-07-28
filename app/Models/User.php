@@ -60,7 +60,9 @@ class User extends Authenticatable
 
     public function consultoresLiderados(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id');
+        // Adicionado select() para resolver ambiguidade da coluna 'id' no join.
+        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id')
+                    ->select('usuarios.*');
     }
 
     public function apontamentos(): HasMany
