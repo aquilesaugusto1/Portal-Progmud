@@ -7,12 +7,12 @@ use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\ApontamentoController;
 use App\Http\Controllers\RelatorioController;
-use App\Http\Controllers\ProjetoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\AprovacaoController;
 use App\Http\Controllers\SugestaoController;
 use App\Http\Controllers\TermoAceiteController;
+use App\Http\Controllers\ContratoController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -63,7 +63,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
         Route::patch('empresas/{empresa}/toggle-status', [EmpresaParceiraController::class, 'toggleStatus'])->name('empresas.toggleStatus');
         Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
 
-        Route::resource('projetos', ProjetoController::class);
+        // ROTAS DE CONTRATOS
+        Route::patch('contratos/{contrato}/toggle-status', [ContratoController::class, 'toggleStatus'])->name('contratos.toggleStatus');
+        Route::resource('contratos', ContratoController::class)->except(['destroy']);
     });
 });
 

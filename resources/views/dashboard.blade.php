@@ -22,19 +22,21 @@
                 </div>
 
                 <div class="space-y-8">
+                    {{--
                     <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
-                        <h3 class="text-lg font-bold text-slate-800 mb-3">Projetos com Baixo Saldo de Horas</h3>
+                        <h3 class="text-lg font-bold text-slate-800 mb-3">Contratos com Baixo Saldo de Horas</h3>
                         <ul class="space-y-3">
-                            @forelse($projetosCriticos as $projeto)
+                            @forelse($contratosCriticos as $contrato)
                                 <li class="flex justify-between items-center text-sm">
-                                    <span class="font-medium text-slate-700">{{ $projeto->nome_projeto }}</span>
-                                    <span class="font-bold text-red-500">{{ number_format($projeto->empresaParceira->saldo_horas, 1) }}h</span>
+                                    <span class="font-medium text-slate-700">{{ $contrato->cliente->fantasia }}</span>
+                                    <span class="font-bold text-red-500">{{ number_format($contrato->baseline_horas_mes, 1) }}h</span>
                                 </li>
                             @empty
-                                <p class="text-sm text-slate-500">Nenhum projeto com saldo crítico.</p>
+                                <p class="text-sm text-slate-500">Nenhum contrato com saldo crítico.</p>
                             @endforelse
                         </ul>
                     </div>
+                    --}}
                     <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
                         <h3 class="text-lg font-bold text-slate-800 mb-3">Consultores Mais Ativos (Últimos 30 dias)</h3>
                         <ul class="space-y-3">
@@ -111,12 +113,12 @@
                             <div>
                                 <p class="font-semibold text-slate-800">{{ $agenda->assunto }}</p>
                                 <p class="text-sm text-slate-500">
-                                    {{ $agenda->consultor->nome }} para <strong>{{ $agenda->projeto->empresaParceira->nome_empresa }}</strong> (Projeto: {{ $agenda->projeto->nome_projeto }})
+                                    {{ $agenda->consultor->nome }} para <strong>{{ $agenda->contrato->cliente->fantasia }}</strong> (Contrato: {{ $agenda->contrato->numero_contrato }})
                                 </p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-slate-800">{{ $agenda->data_hora->format('d/m/Y') }}</p>
-                                <p class="text-sm text-slate-500">{{ $agenda->data_hora->format('H:i') }}</p>
+                                <p class="font-bold text-slate-800">{{ $agenda->inicio_previsto->format('d/m/Y') }}</p>
+                                <p class="text-sm text-slate-500">{{ $agenda->inicio_previsto->format('H:i') }}</p>
                             </div>
                         </div>
                     @empty

@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Projeto;
-use App\Models\EmpresaParceira;
 use App\Models\Agenda;
 use App\Models\Apontamento;
-use Illuminate\Http\Request;
+use App\Models\Contrato;
+use App\Models\EmpresaParceira;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
@@ -18,7 +17,7 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $stats = [];
-        $projetosCriticos = collect();
+        $contratosCriticos = collect();
         $consultoresAtivos = collect();
         $ultimas_agendas = collect();
         $chartLabels = [];
@@ -30,13 +29,11 @@ class DashboardController extends Controller
             $stats = [
                 'Consultores' => User::where('funcao', 'consultor')->count(),
                 'Tech Leads' => User::where('funcao', 'techlead')->count(),
-                'Projetos' => Projeto::count(),
+                'Contratos' => Contrato::count(),
                 'Clientes' => EmpresaParceira::count(),
             ];
 
-            $projetosCriticos = Projeto::whereHas('empresaParceira', function ($query) {
-                $query->where('saldo_horas', '<', 10);
-            })->with('empresaParceira')->get();
+            // $contratosCriticos = Contrato::where('baseline_horas_mes', '<', 10)->get();
 
             $consultoresAtivos = User::where('funcao', 'consultor')
                 ->withSum(['apontamentos' => function ($query) {
@@ -50,11 +47,11 @@ class DashboardController extends Controller
                 });
 
             $agendasPorMes = Agenda::select(
-                DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'),
+                DB::raw('DATE_FORMAT(inicio_previsto, "%Y-%m") as mes'),
                 'status',
                 DB::raw('count(*) as total')
             )
-            ->where('data_hora', '>=', now()->subMonths(5)->startOfMonth())
+            ->where('inicio_previsto', '>=', now()->subMonths(5)->startOfMonth())
             ->groupBy('mes', 'status')
             ->orderBy('mes', 'asc')
             ->get();
@@ -82,23 +79,23 @@ class DashboardController extends Controller
 
         } else {
             $stats = [
-                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('data_hora', today())->count(),
-                'Meus Projetos' => Projeto::where('tech_lead_id', $user->id)->count(),
-                'Apontamentos Pendentes' => Apontamento::where('consultor_id', $user->id)->where('status_aprovacao', 'pendente')->count(),
+                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('inicio_previsto', today())->count(),
+                'Meus Contratos' => Contrato::where('tech_lead_id', $user->id)->count(),
+                'Apontamentos Pendentes' => Apontamento::where('consultor_id', $user->id)->where('status', 'Pendente')->count(),
             ];
 
             $ultimas_agendas = Agenda::where('consultor_id', $user->id)
-                ->orWhereIn('projeto_id', Projeto::where('tech_lead_id', $user->id)->pluck('id'))
-                ->with(['consultor', 'projeto.empresaParceira'])
-                ->where('data_hora', '>=', today())
-                ->orderBy('data_hora', 'asc')
+                ->orWhereIn('contrato_id', Contrato::where('tech_lead_id', $user->id)->pluck('id'))
+                ->with(['consultor', 'contrato.cliente'])
+                ->where('inicio_previsto', '>=', today())
+                ->orderBy('inicio_previsto', 'asc')
                 ->limit(5)
                 ->get();
         }
 
         return view('dashboard', compact(
             'stats', 
-            'projetosCriticos', 
+            'contratosCriticos', 
             'consultoresAtivos',
             'ultimas_agendas',
             'chartLabels',
