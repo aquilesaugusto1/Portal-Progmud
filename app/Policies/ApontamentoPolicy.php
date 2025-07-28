@@ -62,4 +62,12 @@ class ApontamentoPolicy
 
         return false;
     }
+
+    /**
+     * Determine whether the user can view the approvals page link in the sidebar.
+     */
+    public function viewAprovacoes(User $user): bool
+    {
+        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead']);
+    }
 }

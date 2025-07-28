@@ -29,23 +29,24 @@
         </a>
 
         <!-- Menu de Gestão (Perfis específicos) -->
-        @if(in_array(auth()->user()->funcao, ['admin', 'coordenador_operacoes', 'coordenador_tecnico', 'techlead']))
-            <hr class="my-4 border-slate-700">
-            <p class="px-4 text-xs font-semibold uppercase text-slate-500">Gestão</p>
+        <hr class="my-4 border-slate-700">
+        <p class="px-4 text-xs font-semibold uppercase text-slate-500">Gestão</p>
 
-            @can('approve', App\Models\Apontamento::class)
-                <a href="{{ route('aprovacoes.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('aprovacoes.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
-                    <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Aprovações
-                </a>
-            @endcan
+        @can('viewAprovacoes', App\Models\Apontamento::class)
+            <a href="{{ route('aprovacoes.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('aprovacoes.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
+                <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                Aprovações
+            </a>
+        @endcan
+        
+        @if(in_array(auth()->user()->funcao, ['admin', 'coordenador_operacoes', 'coordenador_tecnico', 'techlead']))
             <a href="{{ route('email.agendas.create') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('email.agendas.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
                 <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                 Enviar Agendas
             </a>
         @endif
 
-        <!-- Menu de Administração (Acesso total para visualização) -->
+        <!-- Menu de Cadastros -->
         <hr class="my-4 border-slate-700">
         <p class="px-4 text-xs font-semibold uppercase text-slate-500">Cadastros</p>
         

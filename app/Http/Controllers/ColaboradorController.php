@@ -31,14 +31,15 @@ class ColaboradorController extends Controller
     public function create()
     {
         $this->authorize('create', User::class);
+        $colaborador = new User(); // Adicionado para consistência no formulário
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
-        return view('colaboradores.create', compact('techLeads'));
+        return view('colaboradores.create', compact('colaborador', 'techLeads'));
     }
 
     public function store(Request $request)
     {
         $this->authorize('create', User::class);
-        $request->validate($this->getValidationRules());
+        $request->validate($this->getValidationRules($request));
         DB::transaction(function () use ($request) {
             $colaborador = User::create($this->getData($request));
             if ($request->has('tech_leads')) {
@@ -64,7 +65,7 @@ class ColaboradorController extends Controller
     public function update(Request $request, User $colaborador)
     {
         $this->authorize('update', $colaborador);
-        $request->validate($this->getValidationRules($colaborador->id));
+        $request->validate($this->getValidationRules($request, $colaborador->id));
         DB::transaction(function () use ($request, $colaborador) {
             $colaborador->update($this->getData($request, false));
             $techLeads = $request->input('tech_leads', []);
@@ -82,13 +83,13 @@ class ColaboradorController extends Controller
         return redirect()->route('colaboradores.index')->with('success', $mensagem);
     }
 
-    private function getValidationRules($id = null)
+    private function getValidationRules(Request $request, $id = null)
     {
         $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'sobrenome' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,' . $id],
-            'funcao' => ['required', 'string', 'in:consultor,techlead,administrativo,coordenador_operacoes,coordenador_tecnico,comercial'],
+            'funcao' => ['required', 'string', 'in:consultor,techlead,admin,coordenador_operacoes,coordenador_tecnico,comercial'],
             'tipo_contrato' => ['nullable', 'string'],
             'data_nascimento' => ['nullable', 'date'],
             'nacionalidade' => ['nullable', 'string', 'max:255'],
