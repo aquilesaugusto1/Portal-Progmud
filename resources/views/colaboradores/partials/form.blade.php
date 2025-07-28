@@ -54,8 +54,8 @@
                 </div>
                 <div><x-input-label for="cargo" :value="__('Cargo')" /><x-text-input id="cargo" name="cargo" type="text" class="mt-1 block w-full" :value="old('cargo', $colaborador->cargo ?? '')" /></div>
                 <div>
-                    <x-input-label for="tech_leads" :value="__('Subordinado a (Tech Leads)')" />
-                    <select name="tech_leads[]" id="tech_leads" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" multiple>
+                    <x-input-label for="select-techleads" :value="__('Subordinado a (Tech Leads)')" />
+                    <select name="tech_leads[]" id="select-techleads" multiple>
                         @php
                             $selectedLeads = old('tech_leads', isset($colaborador) ? $colaborador->techLeads->pluck('id')->toArray() : []);
                         @endphp
@@ -65,7 +65,6 @@
                             </option>
                         @endforeach
                     </select>
-                    <small class="text-gray-500">Segure Ctrl (ou Cmd) para selecionar mais de um.</small>
                 </div>
             </div>
             <div class="space-y-4">
@@ -146,8 +145,16 @@
     </x-primary-button>
 </div>
 
+@push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        
+        new TomSelect('#select-techleads',{
+            plugins: ['remove_button'],
+            placeholder: 'Selecione os gestores...'
+        });
+
+       
         const tipoContratoSelect = document.getElementById('tipo_contrato');
         const dadosEmpresaContainer = document.getElementById('dados_empresa_prestador_container');
         const pjTypes = ['PJ Mensal', 'PJ Horista'];
@@ -162,3 +169,4 @@
         toggleDadosEmpresa();
     });
 </script>
+@endpush
