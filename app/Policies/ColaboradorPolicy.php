@@ -18,12 +18,12 @@ class ColaboradorPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico']);
+        return true;
     }
 
     public function view(User $user, User $model): bool
     {
-        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico']);
+        return true;
     }
 
     public function create(User $user): bool

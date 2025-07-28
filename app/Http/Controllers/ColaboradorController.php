@@ -12,6 +12,8 @@ class ColaboradorController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', User::class);
+
         $query = User::query();
         if ($request->filled('nome')) {
             $query->where('nome', 'like', '%' . $request->nome . '%');
@@ -28,12 +30,14 @@ class ColaboradorController extends Controller
 
     public function create()
     {
+        $this->authorize('create', User::class);
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         return view('colaboradores.create', compact('techLeads'));
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', User::class);
         $request->validate($this->getValidationRules());
         DB::transaction(function () use ($request) {
             $colaborador = User::create($this->getData($request));
@@ -46,17 +50,20 @@ class ColaboradorController extends Controller
 
     public function show(User $colaborador)
     {
+        $this->authorize('view', $colaborador);
         return view('colaboradores.show', compact('colaborador'));
     }
 
     public function edit(User $colaborador)
     {
+        $this->authorize('update', $colaborador);
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         return view('colaboradores.edit', compact('colaborador', 'techLeads'));
     }
 
     public function update(Request $request, User $colaborador)
     {
+        $this->authorize('update', $colaborador);
         $request->validate($this->getValidationRules($colaborador->id));
         DB::transaction(function () use ($request, $colaborador) {
             $colaborador->update($this->getData($request, false));
@@ -68,6 +75,7 @@ class ColaboradorController extends Controller
 
     public function toggleStatus(User $colaborador)
     {
+        $this->authorize('toggleStatus', $colaborador);
         $novoStatus = $colaborador->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $colaborador->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Colaborador habilitado.' : 'Colaborador desabilitado.';
@@ -102,27 +110,24 @@ class ColaboradorController extends Controller
             'dados_bancarios.agencia' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.conta' => ['nullable', 'string', 'max:255'],
         ];
-        if (!$id || request()->filled('password')) {
+        if (!$id || $request->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
         }
         return $rules;
     }
 
-    private function getData(Request $request)
+    private function getData(Request $request, $isCreate = true)
     {
         $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);
-        $perfilSelecionado = $request->input('funcao');
-        $data['funcao'] = match ($perfilSelecionado) {
-            'administrativo' => 'admin',
-            'consultor' => 'consultor',
-            'techlead' => 'techlead',
-            default => 'admin',
-        };
-        if ($request->filled('password')) {
+        
+        if ($isCreate) {
+            $data['password'] = Hash::make($request->password);
+        } elseif ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         } else {
             unset($data['password']);
         }
+
         $data['dados_empresa_prestador'] = in_array($request->tipo_contrato, ['PJ Mensal', 'PJ Horista']) ? $request->dados_empresa_prestador : null;
         return $data;
     }

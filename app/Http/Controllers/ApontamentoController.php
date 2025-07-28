@@ -6,42 +6,40 @@ use App\Models\Agenda;
 use App\Models\Apontamento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Storage;
 
 class ApontamentoController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index()
     {
+        $this->authorize('viewAny', Apontamento::class);
         return view('apontamentos.index');
     }
 
-    public function getAgendasAsEvents(Request $request)
+    public function events(Request $request)
     {
+        $this->authorize('viewAny', Apontamento::class);
+
         $start = Carbon::parse($request->start)->toDateTimeString();
         $end = Carbon::parse($request->end)->toDateTimeString();
-
-        $query = Agenda::with('consultor', 'projeto.empresaParceira', 'apontamento')
-                       ->whereBetween('data_hora', [$start, $end]);
-
         $user = Auth::user();
 
+        $query = Agenda::with(['consultor', 'contrato.cliente', 'apontamento'])
+                       ->whereBetween('inicio_previsto', [$start, $end]);
+
         if ($user->funcao === 'consultor') {
-            $query->where('consultor_id', $user->consultor->id);
+            $query->where('consultor_id', $user->id);
         } elseif ($user->funcao === 'techlead') {
-            $consultor_ids = $user->consultoresLiderados()->pluck('consultores.id');
+            $consultor_ids = $user->consultoresLiderados()->pluck('id');
             $query->whereIn('consultor_id', $consultor_ids);
         }
 
         $agendas = $query->get();
-
         return response()->json($this->formatEvents($agendas));
     }
 
-    public function storeOrUpdate(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'agenda_id' => 'required|exists:agendas,id',
@@ -52,65 +50,91 @@ class ApontamentoController extends Controller
         ]);
 
         $agenda = Agenda::findOrFail($validated['agenda_id']);
-        $this->authorize('update', $agenda);
-
         $apontamento = Apontamento::firstOrNew(['agenda_id' => $agenda->id]);
 
-        if ($apontamento->status === 'Aprovado') {
-            return response()->json(['message' => 'Apontamentos aprovados não podem ser alterados.'], 403);
+        if ($apontamento->exists) {
+            $this->authorize('update', $apontamento);
+        } else {
+            $this->authorize('create', Apontamento::class);
         }
 
         $inicio = Carbon::createFromTimeString($validated['hora_inicio']);
         $fim = Carbon::createFromTimeString($validated['hora_fim']);
         
-        $apontamento->fill([
+        $dataToSave = [
             'consultor_id' => $agenda->consultor_id,
-            'data_apontamento' => $agenda->data_hora->format('Y-m-d'),
+            'contrato_id' => $agenda->contrato_id,
+            'data_apontamento' => $agenda->inicio_previsto->format('Y-m-d'),
             'hora_inicio' => $validated['hora_inicio'],
             'hora_fim' => $validated['hora_fim'],
             'horas_gastas' => round($fim->diffInMinutes($inicio) / 60, 2),
             'descricao' => $validated['descricao'],
             'status' => 'Pendente',
             'motivo_rejeicao' => null,
-        ]);
+        ];
 
         if ($request->hasFile('anexo')) {
             if ($apontamento->caminho_anexo) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($apontamento->caminho_anexo);
+                Storage::disk('public')->delete($apontamento->caminho_anexo);
             }
-            $apontamento->caminho_anexo = $request->file('anexo')->store('anexos', 'public');
+            $dataToSave['caminho_anexo'] = $request->file('anexo')->store('anexos', 'public');
         }
 
-        $apontamento->save();
+        $apontamento->fill($dataToSave)->save();
 
         return response()->json(['message' => 'Apontamento salvo e enviado para aprovação!']);
+    }
+
+    public function destroy(Apontamento $apontamento)
+    {
+        $this->authorize('delete', $apontamento);
+
+        if ($apontamento->caminho_anexo) {
+            Storage::disk('public')->delete($apontamento->caminho_anexo);
+        }
+        $apontamento->delete();
+
+        return response()->json(['message' => 'Apontamento removido com sucesso.']);
     }
 
     private function formatEvents($agendas)
     {
         return $agendas->map(function ($agenda) {
             $apontamento = $agenda->apontamento;
-            $status = $apontamento->status ?? 'Não Apontado';
-            $color = '#3B82F6'; // Azul - Agendada
+            $status = 'Não Apontado';
+            $color = '#6B7280';
 
-            if ($agenda->status === 'Cancelada') $color = '#6b7280'; // Cinza
-            elseif ($status === 'Pendente') $color = '#F59E0B'; // Amarelo
-            elseif ($status === 'Aprovado') $color = '#10B981'; // Verde
-            elseif ($status === 'Rejeitado') $color = '#EF4444'; // Vermelho
+            if ($agenda->status === 'Cancelada') {
+                $status = 'Cancelada';
+                $color = '#EF4444';
+            } elseif ($apontamento) {
+                 $status = $apontamento->status;
+                 switch ($status) {
+                    case 'Pendente': $color = '#F59E0B'; break;
+                    case 'Aprovado': $color = '#10B981'; break;
+                    case 'Rejeitado': $color = '#EF4444'; break;
+                 }
+            } else {
+                $status = 'Agendada';
+                $color = '#3B82F6';
+            }
 
             return [
                 'id' => $agenda->id,
-                'title' => $agenda->projeto->empresaParceira->nome_empresa,
-                'start' => $agenda->data_hora,
+                'title' => $agenda->contrato->cliente->nome_empresa,
+                'start' => $agenda->inicio_previsto,
+                'end' => $agenda->fim_previsto,
                 'color' => $color,
                 'extendedProps' => [
+                    'apontamento_id' => $apontamento->id ?? null,
                     'consultor' => $agenda->consultor->nome,
-                    'assunto' => $agenda->assunto . ' (Projeto: ' . $agenda->projeto->nome_projeto . ')',
+                    'assunto' => $agenda->assunto,
+                    'contrato' => $agenda->contrato->numero_contrato ?? 'N/A',
                     'status' => $status,
                     'hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
                     'hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
                     'descricao' => $apontamento->descricao ?? '',
-                    'anexo_url' => $apontamento && $apontamento->caminho_anexo ? \Illuminate\Support\Facades\Storage::url($apontamento->caminho_anexo) : null,
+                    'anexo_url' => $apontamento && $apontamento->caminho_anexo ? Storage::url($apontamento->caminho_anexo) : null,
                     'motivo_rejeicao' => $apontamento->motivo_rejeicao ?? null,
                 ]
             ];

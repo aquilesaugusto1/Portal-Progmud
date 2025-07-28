@@ -19,12 +19,12 @@ class EmpresaParceiraPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico']);
+        return true;
     }
 
     public function view(User $user, EmpresaParceira $empresaParceira): bool
     {
-        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico']);
+        return true;
     }
 
     public function create(User $user): bool

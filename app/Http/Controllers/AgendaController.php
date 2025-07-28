@@ -7,26 +7,25 @@ use App\Models\Contrato;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Gate;
 
 class AgendaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $user = Auth::user();
-        
         $this->authorize('viewAny', Agenda::class);
+
+        $user = Auth::user();
+        $query = Agenda::with(['consultor', 'contrato.cliente']);
 
         if ($user->funcao === 'techlead') {
             $consultoresLideradosIds = $user->consultoresLiderados()->pluck('id');
-            $agendas = Agenda::whereIn('consultor_id', $consultoresLideradosIds)
-                ->with(['consultor', 'contrato.cliente'])
-                ->latest()
-                ->paginate(15);
-        } else {
-             $agendas = Agenda::with(['consultor', 'contrato.cliente'])->latest()->paginate(15);
+            $query->whereIn('consultor_id', $consultoresLideradosIds);
+        } elseif ($user->funcao === 'consultor') {
+            $query->where('consultor_id', $user->id);
         }
-        
+
+        $agendas = $query->latest()->paginate(15)->withQueryString();
+
         return view('agendas.index', compact('agendas'));
     }
 
@@ -34,7 +33,15 @@ class AgendaController extends Controller
     {
         $this->authorize('create', Agenda::class);
 
-        $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        $user = Auth::user();
+        $consultores = collect();
+
+        if ($user->funcao === 'techlead') {
+            $consultores = $user->consultoresLiderados()->where('status', 'Ativo')->orderBy('nome')->get();
+        } else {
+            $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        }
+
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
         return view('agendas.create', compact('consultores', 'contratos'));
     }
@@ -52,11 +59,15 @@ class AgendaController extends Controller
             'descricao' => 'nullable|string',
         ]);
 
+        $user = Auth::user();
+        if ($user->funcao === 'techlead' && !$user->consultoresLiderados()->where('id', $validated['consultor_id'])->exists()) {
+             return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para consultores que você lidera.'])->withInput();
+        }
+
         Agenda::create($validated);
 
         return redirect()->route('agendas.index')->with('success', 'Agenda criada com sucesso.');
     }
-
 
     public function show(Agenda $agenda)
     {
@@ -64,12 +75,19 @@ class AgendaController extends Controller
         return view('agendas.show', compact('agenda'));
     }
 
-
     public function edit(Agenda $agenda)
     {
         $this->authorize('update', $agenda);
 
-        $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        $user = Auth::user();
+        $consultores = collect();
+
+        if ($user->funcao === 'techlead') {
+            $consultores = $user->consultoresLiderados()->where('status', 'Ativo')->orderBy('nome')->get();
+        } else {
+            $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        }
+        
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
         return view('agendas.edit', compact('agenda', 'consultores', 'contratos'));
     }
@@ -88,8 +106,20 @@ class AgendaController extends Controller
             'descricao' => 'nullable|string',
         ]);
 
+        $user = Auth::user();
+        if ($user->funcao === 'techlead' && !$user->consultoresLiderados()->where('id', $validated['consultor_id'])->exists()) {
+             return back()->withErrors(['consultor_id' => 'Você só pode atribuir agendas para consultores que você lidera.'])->withInput();
+        }
+
         $agenda->update($validated);
 
         return redirect()->route('agendas.index')->with('success', 'Agenda atualizada com sucesso.');
+    }
+
+    public function destroy(Agenda $agenda)
+    {
+        $this->authorize('delete', $agenda);
+        $agenda->delete();
+        return redirect()->route('agendas.index')->with('success', 'Agenda excluída com sucesso.');
     }
 }

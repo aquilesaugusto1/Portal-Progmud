@@ -51,6 +51,14 @@ class AgendaPolicy
 
     public function delete(User $user, Agenda $agenda): bool
     {
-        return $this->update($user, $agenda);
+        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico'])) {
+            return true;
+        }
+
+        if ($user->funcao === 'techlead') {
+            return $user->consultoresLiderados()->where('id', $agenda->consultor_id)->exists();
+        }
+
+        return false;
     }
 }

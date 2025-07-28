@@ -5,9 +5,11 @@
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Cadastro de Colaboradores
                 </h2>
-                <a href="{{ route('colaboradores.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
-                    Novo Colaborador
-                </a>
+                @can('create', App\Models\User::class)
+                    <a href="{{ route('colaboradores.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
+                        Novo Colaborador
+                    </a>
+                @endcan
             </div>
 
             <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
@@ -21,9 +23,12 @@
                             <label for="funcao" class="block text-sm font-medium text-gray-700">Perfil (Função)</label>
                             <select name="funcao" id="funcao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                 <option value="">Todos</option>
-                                <option value="consultor" @selected(request('funcao') == 'consultor')>Consultor</option>
-                                <option value="techlead" @selected(request('funcao') == 'techlead')>Tech Lead</option>
                                 <option value="admin" @selected(request('funcao') == 'admin')>Admin</option>
+                                <option value="coordenador_operacoes" @selected(request('funcao') == 'coordenador_operacoes')>Coordenador de Operações</option>
+                                <option value="coordenador_tecnico" @selected(request('funcao') == 'coordenador_tecnico')>Coordenador Técnico</option>
+                                <option value="techlead" @selected(request('funcao') == 'techlead')>Tech Lead</option>
+                                <option value="consultor" @selected(request('funcao') == 'consultor')>Consultor</option>
+                                <option value="comercial" @selected(request('funcao') == 'comercial')>Comercial</option>
                             </select>
                         </div>
                         <div>
@@ -59,16 +64,20 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $colaborador->nome }} {{ $colaborador->sobrenome }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $colaborador->email }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ucfirst($colaborador->funcao) }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ str_replace('_', ' ', Str::title($colaborador->funcao)) }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $colaborador->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $colaborador->status }}</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('colaboradores.show', $colaborador) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
-                                        <a href="{{ route('colaboradores.edit', $colaborador) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Editar</a>
-                                        <form action="{{ route('colaboradores.toggleStatus', $colaborador) }}" method="POST" class="inline ml-4">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="{{ $colaborador->status === 'Ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}" onclick="return confirm('Tem certeza?')">{{ $colaborador->status === 'Ativo' ? 'Desabilitar' : 'Habilitar' }}</button>
-                                        </form>
+                                        @can('update', $colaborador)
+                                            <a href="{{ route('colaboradores.edit', $colaborador) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Editar</a>
+                                        @endcan
+                                        @can('toggleStatus', $colaborador)
+                                            <form action="{{ route('colaboradores.toggleStatus', $colaborador) }}" method="POST" class="inline ml-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="{{ $colaborador->status === 'Ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}" onclick="return confirm('Tem certeza que deseja alterar o status deste colaborador?')">{{ $colaborador->status === 'Ativo' ? 'Desabilitar' : 'Habilitar' }}</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

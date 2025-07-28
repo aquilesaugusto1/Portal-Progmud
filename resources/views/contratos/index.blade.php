@@ -1,69 +1,88 @@
 <x-app-layout>
-    <div class="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-9xl mx-auto">
-        <div class="sm:flex sm:justify-between sm:items-center mb-8">
-            <div class="mb-4 sm:mb-0">
-                <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">Contratos</h1>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                    Gestão de Contratos
+                </h2>
+                @can('create', App\Models\Contrato::class)
+                    <a href="{{ route('contratos.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
+                        Novo Contrato
+                    </a>
+                @endcan
             </div>
-            <div class="grid grid-flow-col sm:auto-cols-max justify-start sm:justify-end gap-2">
-                <a href="{{ route('contratos.create') }}" class="btn bg-indigo-500 hover:bg-indigo-600 text-white">
-                    <svg class="w-4 h-4 fill-current opacity-50 shrink-0" viewBox="0 0 16 16">
-                        <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
-                    </svg>
-                    <span class="hidden xs:block ml-2">Novo Contrato</span>
-                </a>
-            </div>
-        </div>
 
-        <div class="bg-white shadow-lg rounded-sm border border-slate-200">
-            <header class="px-5 py-4">
-                <h2 class="font-semibold text-slate-800">Todos os Contratos <span class="text-slate-400 font-medium">{{ $contratos->total() }}</span></h2>
-            </header>
-            <div>
-                <div class="overflow-x-auto">
-                    <table class="table-auto w-full">
-                        <thead class="text-xs font-semibold uppercase text-slate-500 bg-slate-50">
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
+                <form action="{{ route('contratos.index') }}" method="GET">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label for="cliente_id" class="block text-sm font-medium text-gray-700">Cliente</label>
+                            <select name="cliente_id" id="cliente_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Todos</option>
+                                @foreach($clientes as $cliente)
+                                    <option value="{{ $cliente->id }}" @selected(request('cliente_id') == $cliente->id)>{{ $cliente->nome_empresa }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                            <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                <option value="">Todos</option>
+                                <option value="Ativo" @selected(request('status') == 'Ativo')>Ativo</option>
+                                <option value="Inativo" @selected(request('status') == 'Inativo')>Inativo</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end col-span-1 md:col-span-2">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">Filtrar</button>
+                            <a href="{{ route('contratos.index') }}" class="ml-2 text-sm text-gray-600 hover:text-gray-900">Limpar Filtros</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Cliente</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Nº Contrato</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Tipo</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Status</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Data Início</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-left">Data Fim</div></th>
-                                <th class="p-2 whitespace-nowrap"><div class="font-semibold text-center">Ações</div></th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Contrato</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
+                                <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
                             </tr>
                         </thead>
-                        <tbody class="text-sm divide-y divide-slate-200">
+                        <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($contratos as $contrato)
                                 <tr>
-                                    <td class="p-2 whitespace-nowrap"><div class="font-medium text-slate-800">{{ $contrato->cliente->fantasia }}</div></td>
-                                    <td class="p-2 whitespace-nowrap"><div class="text-left">{{ $contrato->numero_contrato }}</div></td>
-                                    <td class="p-2 whitespace-nowrap"><div class="text-left">{{ $contrato->tipo_contrato }}</div></td>
-                                    <td class="p-2 whitespace-nowrap">
-                                        <div class="font-medium @if($contrato->status === 'Ativo') text-emerald-500 @else text-rose-500 @endif">{{ $contrato->status }}</div>
-                                    </td>
-                                    <td class="p-2 whitespace-nowrap"><div class="text-left">{{ $contrato->data_inicio->format('d/m/Y') }}</div></td>
-                                    <td class="p-2 whitespace-nowrap"><div class="text-left">{{ $contrato->data_termino ? $contrato->data_termino->format('d/m/Y') : 'N/A' }}</div></td>
-                                    <td class="p-2 whitespace-nowrap">
-                                        <div class="flex items-center justify-center space-x-2">
-                                            <a href="{{ route('contratos.edit', $contrato) }}" class="text-slate-400 hover:text-slate-500">
-                                                <span class="sr-only">Editar</span>
-                                                <svg class="w-8 h-8 fill-current" viewBox="0 0 32 32"><path d="M19.7 8.3c-.4-.4-1-.4-1.4 0l-10 10c-.2.2-.3.4-.3.7v4c0 .6.4 1 1 1h4c.3 0 .5-.1.7-.3l10-10c.4-.4.4-1 0-1.4l-4-4zM12.6 22H10v-2.6l6-6 2.6 2.6-6 6zm7.4-7.4L17.4 12l1.6-1.6 2.6 2.6-1.6 1.6z"/></svg>
-                                            </a>
-                                        </div>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $contrato->cliente->nome_empresa }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->numero_contrato ?? 'N/A' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $contrato->status }}</span></td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->data_inicio->format('d/m/Y') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <a href="{{ route('contratos.show', $contrato) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
+                                        @can('update', $contrato)
+                                            <a href="{{ route('contratos.edit', $contrato) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Editar</a>
+                                        @endcan
+                                        @can('toggleStatus', $contrato)
+                                            <form action="{{ route('contratos.toggleStatus', $contrato) }}" method="POST" class="inline ml-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="{{ $contrato->status === 'Ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}" onclick="return confirm('Tem certeza que deseja alterar o status deste contrato?')">{{ $contrato->status === 'Ativo' ? 'Inativar' : 'Ativar' }}</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="7" class="p-4 text-center text-slate-500">Nenhum contrato encontrado.</td>
-                                </tr>
+                                <tr><td colspan="5" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
+                    <div class="mt-4">
+                        {{ $contratos->links() }}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="mt-8">
-            {{ $contratos->links() }}
         </div>
     </div>
 </x-app-layout>

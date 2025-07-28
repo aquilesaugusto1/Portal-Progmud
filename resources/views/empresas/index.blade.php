@@ -5,9 +5,11 @@
                 <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                     Cadastro de Clientes
                 </h2>
-                <a href="{{ route('empresas.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
-                    Novo Cliente
-                </a>
+                @can('create', App\Models\EmpresaParceira::class)
+                    <a href="{{ route('empresas.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">
+                        Novo Cliente
+                    </a>
+                @endcan
             </div>
 
             <div class="bg-white p-4 rounded-lg shadow-sm mb-4">
@@ -56,12 +58,16 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $empresa->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $empresa->status }}</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('empresas.show', $empresa) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
-                                        <a href="{{ route('empresas.edit', $empresa) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Editar</a>
-                                        <form action="{{ route('empresas.toggleStatus', $empresa) }}" method="POST" class="inline ml-4">
-                                            @csrf
-                                            @method('PATCH')
-                                            <button type="submit" class="{{ $empresa->status === 'Ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}" onclick="return confirm('Tem certeza que deseja alterar o status deste cliente?')">{{ $empresa->status === 'Ativo' ? 'Desabilitar' : 'Habilitar' }}</button>
-                                        </form>
+                                        @can('update', $empresa)
+                                            <a href="{{ route('empresas.edit', $empresa) }}" class="ml-4 text-indigo-600 hover:text-indigo-900">Editar</a>
+                                        @endcan
+                                        @can('toggleStatus', $empresa)
+                                            <form action="{{ route('empresas.toggleStatus', $empresa) }}" method="POST" class="inline ml-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="{{ $empresa->status === 'Ativo' ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900' }}" onclick="return confirm('Tem certeza que deseja alterar o status deste cliente?')">{{ $empresa->status === 'Ativo' ? 'Desabilitar' : 'Habilitar' }}</button>
+                                            </form>
+                                        @endcan
                                     </td>
                                 </tr>
                             @empty

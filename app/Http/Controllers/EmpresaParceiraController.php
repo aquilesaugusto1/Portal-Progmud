@@ -9,6 +9,8 @@ class EmpresaParceiraController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', EmpresaParceira::class);
+
         $query = EmpresaParceira::query();
 
         if ($request->filled('nome_empresa')) {
@@ -30,11 +32,13 @@ class EmpresaParceiraController extends Controller
 
     public function create()
     {
+        $this->authorize('create', EmpresaParceira::class);
         return view('empresas.create');
     }
 
     public function store(Request $request)
     {
+        $this->authorize('create', EmpresaParceira::class);
         $validated = $request->validate($this->validationRules());
         EmpresaParceira::create($validated);
         return redirect()->route('empresas.index')->with('success', 'Cliente cadastrado com sucesso.');
@@ -42,16 +46,19 @@ class EmpresaParceiraController extends Controller
 
     public function show(EmpresaParceira $empresa)
     {
+        $this->authorize('view', $empresa);
         return view('empresas.show', compact('empresa'));
     }
 
     public function edit(EmpresaParceira $empresa)
     {
+        $this->authorize('update', $empresa);
         return view('empresas.edit', compact('empresa'));
     }
 
     public function update(Request $request, EmpresaParceira $empresa)
     {
+        $this->authorize('update', $empresa);
         $validated = $request->validate($this->validationRules($empresa->id));
         $empresa->update($validated);
         return redirect()->route('empresas.index')->with('success', 'Cliente atualizado com sucesso.');
@@ -59,6 +66,7 @@ class EmpresaParceiraController extends Controller
 
     public function toggleStatus(EmpresaParceira $empresa)
     {
+        $this->authorize('toggleStatus', $empresa);
         $novoStatus = $empresa->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $empresa->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Cliente habilitado com sucesso.' : 'Cliente desabilitado com sucesso.';

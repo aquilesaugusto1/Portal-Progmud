@@ -11,6 +11,8 @@ class ContratoController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Contrato::class);
+
         $query = Contrato::with(['cliente', 'coordenador', 'techLead']);
 
         if ($request->filled('cliente_id')) {
@@ -29,6 +31,8 @@ class ContratoController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Contrato::class);
+
         $clientes = EmpresaParceira::where('status', 'Ativo')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->get();
@@ -38,6 +42,8 @@ class ContratoController extends Controller
 
     public function store(Request $request)
     {
+        $this->authorize('create', Contrato::class);
+
         $validatedData = $request->validate($this->getValidationRules());
         $preparedData = $this->prepareData($request, $validatedData);
 
@@ -48,11 +54,14 @@ class ContratoController extends Controller
 
     public function show(Contrato $contrato)
     {
+        $this->authorize('view', $contrato);
         return view('contratos.show', compact('contrato'));
     }
 
     public function edit(Contrato $contrato)
     {
+        $this->authorize('update', $contrato);
+
         $clientes = EmpresaParceira::where('status', 'Ativo')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->get();
@@ -62,6 +71,8 @@ class ContratoController extends Controller
 
     public function update(Request $request, Contrato $contrato)
     {
+        $this->authorize('update', $contrato);
+
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
         $preparedData = $this->prepareData($request, $validatedData);
 
@@ -72,6 +83,8 @@ class ContratoController extends Controller
 
     public function toggleStatus(Contrato $contrato)
     {
+        $this->authorize('toggleStatus', $contrato);
+
         $novoStatus = $contrato->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $contrato->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Contrato ativado com sucesso.' : 'Contrato inativado com sucesso.';
