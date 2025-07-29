@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmpresaParceira;
+use App\Rules\CnpjValido; 
 use Illuminate\Http\Request;
 
 class EmpresaParceiraController extends Controller

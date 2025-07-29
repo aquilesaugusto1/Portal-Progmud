@@ -4,7 +4,7 @@
         <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Informações da Empresa</h3>
         <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div class="md:col-span-2"><label for="nome_empresa" class="block font-medium text-sm text-gray-700">Nome da Empresa</label><input type="text" name="nome_empresa" id="nome_empresa" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('nome_empresa', $empresa->nome_empresa ?? '') }}" required></div>
-            <div><label for="cnpj" class="block font-medium text-sm text-gray-700">CNPJ</label><input type="text" name="cnpj" id="cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('cnpj', $empresa->cnpj ?? '') }}" required></div>
+            <div><label for="cnpj" class="block font-medium text-sm text-gray-700">CNPJ</label><input type="text" name="cnpj" id="cnpj" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('cnpj', $empresa->cnpj ?? '') }}" required maxlength="18"></div>
             <div><label for="status" class="block font-medium text-sm text-gray-700">Status</label><select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required><option value="Ativo" @selected(old('status', $empresa->status ?? 'Ativo') == 'Ativo')>Ativo</option><option value="Inativo" @selected(old('status', $empresa->status ?? '') == 'Inativo')>Inativo</option></select></div>
         </div>
     </div>
@@ -55,5 +55,22 @@
 </div>
 <div class="flex items-center justify-end mt-6 pt-5 border-t">
     <a href="{{ route('empresas.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">Cancelar</a>
-    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">{{ isset($empresa) ? 'Atualizar Cliente' : 'Salvar Cliente' }}</button>
+    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md shadow-sm">{{ isset($empresa) && $empresa->exists ? 'Atualizar Cliente' : 'Salvar Cliente' }}</button>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const cnpjInput = document.getElementById('cnpj');
+
+        cnpjInput.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+            value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+            value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+            value = value.replace(/(\d{4})(\d)/, '$1-$2');
+            e.target.value = value.slice(0, 18);
+        });
+    });
+</script>
+@endpush
