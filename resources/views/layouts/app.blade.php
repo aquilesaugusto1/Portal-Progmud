@@ -7,7 +7,8 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-          <link rel="icon" href="{{ asset('favicon.webp') }}">
+          <link rel="icon" type="image/webp" href="{{ asset('images/favicon.webp') }}">
+
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />

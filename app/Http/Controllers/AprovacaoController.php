@@ -49,7 +49,9 @@ class AprovacaoController extends Controller
 
                 // 3. Se for faturável, deduz as horas do contrato
                 if ($apontamento->faturavel && $apontamento->contrato && $apontamento->contrato->baseline_horas_mes !== null) {
-                    $apontamento->contrato->decrement('baseline_horas_mes', $apontamento->horas_gastas);
+                    // CORREÇÃO: Garante que o valor subtraído seja sempre positivo
+                    $horasASubtrair = abs($apontamento->horas_gastas);
+                    $apontamento->contrato->decrement('baseline_horas_mes', $horasASubtrair);
                 }
             });
 
