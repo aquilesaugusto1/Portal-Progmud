@@ -31,7 +31,7 @@ class ColaboradorController extends Controller
     public function create()
     {
         $this->authorize('create', User::class);
-        $colaborador = new User(); // Adicionado para consistência no formulário
+        $colaborador = new User();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         return view('colaboradores.create', compact('colaborador', 'techLeads'));
     }
@@ -89,7 +89,8 @@ class ColaboradorController extends Controller
             'nome' => ['required', 'string', 'max:255'],
             'sobrenome' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,' . $id],
-            'funcao' => ['required', 'string', 'in:consultor,techlead,admin,coordenador_operacoes,coordenador_tecnico,comercial'],
+            // Corrigido para aceitar 'administrativo' do formulário
+            'funcao' => ['required', 'string', 'in:consultor,techlead,administrativo,coordenador_operacoes,coordenador_tecnico,comercial'],
             'tipo_contrato' => ['nullable', 'string'],
             'data_nascimento' => ['nullable', 'date'],
             'nacionalidade' => ['nullable', 'string', 'max:255'],
@@ -121,6 +122,11 @@ class ColaboradorController extends Controller
     {
         $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);
         
+        // Adicionado para converter o valor do formulário para o valor do banco de dados
+        if (isset($data['funcao']) && $data['funcao'] === 'administrativo') {
+            $data['funcao'] = 'admin';
+        }
+
         if ($isCreate) {
             $data['password'] = Hash::make($request->password);
         } elseif ($request->filled('password')) {

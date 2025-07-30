@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\Userstamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Contrato extends Model
 {
-    use HasFactory;
+    use HasFactory, Userstamps;
 
     /**
      * The attributes that are mass assignable.
@@ -54,8 +55,8 @@ class Contrato extends Model
     public function usuarios()
     {
         return $this->belongsToMany(User::class, 'contrato_usuario', 'contrato_id', 'usuario_id')
-                    ->withPivot('funcao_contrato')
-                    ->withTimestamps();
+                        ->withPivot('funcao_contrato')
+                        ->withTimestamps();
     }
 
     /**

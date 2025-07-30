@@ -98,6 +98,25 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Seção de Auditoria -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Informações de Auditoria</h3>
+                        <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
+                            <div class="sm:col-span-1">
+                                <dt class="font-medium text-slate-600">Criado por</dt>
+                                <dd class="mt-1 text-slate-800">
+                                    {{ $contrato->creator->nome ?? 'Sistema' }} em {{ $contrato->created_at->format('d/m/Y H:i') }}
+                                </dd>
+                            </div>
+                            <div class="sm:col-span-1">
+                                <dt class="font-medium text-slate-600">Última Atualização por</dt>
+                                <dd class="mt-1 text-slate-800">
+                                    {{ $contrato->updater->nome ?? 'Sistema' }} em {{ $contrato->updated_at->format('d/m/Y H:i') }}
+                                </dd>
+                            </div>
+                        </dl>
+                    </div>
                 </div>
 
                 <div class="flex items-center justify-end mt-8 pt-5 border-t border-slate-200">

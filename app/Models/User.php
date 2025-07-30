@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\Userstamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, Userstamps;
 
     protected $table = 'usuarios';
 
@@ -33,6 +34,8 @@ class User extends Authenticatable
         'dados_bancarios',
         'termos_aceite_em',
         'ip_aceite',
+        'created_by', // Adicionado para a trait
+        'updated_by', // Adicionado para a trait
     ];
 
     protected $hidden = [
@@ -60,7 +63,6 @@ class User extends Authenticatable
 
     public function consultoresLiderados(): BelongsToMany
     {
-        // Adicionado select() para resolver ambiguidade da coluna 'id' no join.
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id')
                     ->select('usuarios.*');
     }

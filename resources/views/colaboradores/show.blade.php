@@ -22,7 +22,7 @@
                         <div>
                             <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Dados Profissionais</h3>
                             <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-6">
-                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Email Progmud</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->email ?? 'N/A' }}</dd></div>
+                                <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Email Agen</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->email ?? 'N/A' }}</dd></div>
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Email Totvs Partner</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->email_totvs_partner ?? 'N/A' }}</dd></div>
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Status</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->status ?? 'N/A' }}</dd></div>
                                 <div class="sm:col-span-1"><dt class="text-sm font-medium text-gray-500">Tipo de Contrato</dt><dd class="mt-1 text-sm text-gray-900">{{ $colaborador->tipo_contrato ?? 'N/A' }}</dd></div>
@@ -50,6 +50,25 @@
                             </dl>
                         </div>
                         @endif
+
+                        <!-- Seção de Auditoria -->
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Informações de Auditoria</h3>
+                            <dl class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Criado por</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        {{ $colaborador->creator->nome ?? 'Sistema' }} em {{ $colaborador->created_at->format('d/m/Y H:i') }}
+                                    </dd>
+                                </div>
+                                <div class="sm:col-span-1">
+                                    <dt class="text-sm font-medium text-gray-500">Última Atualização por</dt>
+                                    <dd class="mt-1 text-sm text-gray-900">
+                                        {{ $colaborador->updater->nome ?? 'Sistema' }} em {{ $colaborador->updated_at->format('d/m/Y H:i') }}
+                                    </dd>
+                                </div>
+                            </dl>
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-end mt-6 pt-5 border-t">

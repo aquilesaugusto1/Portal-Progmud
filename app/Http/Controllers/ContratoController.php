@@ -59,7 +59,7 @@ class ContratoController extends Controller
     public function show(Contrato $contrato)
     {
         $this->authorize('view', $contrato);
-        $contrato->load(['cliente', 'coordenadores', 'techLeads', 'consultores']);
+        $contrato->load(['cliente', 'coordenadores', 'techLeads', 'consultores', 'creator', 'updater']);
         return view('contratos.show', compact('contrato'));
     }
 
@@ -150,5 +150,8 @@ class ContratoController extends Controller
                 $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
             }
         }
+        
+        // Força a atualização do timestamp 'updated_at' do contrato
+        $contrato->touch();
     }
 }
