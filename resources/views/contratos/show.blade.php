@@ -96,6 +96,16 @@
                                 <span class="font-medium text-slate-600">Permite Antecipar Baseline:</span>
                                 <span class="text-slate-800">{{ $contrato->permite_antecipar_baseline ? 'Sim' : 'Não' }}</span>
                             </div>
+                            
+                            <!-- Exibição do Documento de Baseline -->
+                            @if($contrato->documento_baseline_path)
+                            <div class="md:col-span-2 border-b py-2">
+                                <span class="font-medium text-slate-600">Documento de Comprovação:</span>
+                                <a href="{{ Storage::url($contrato->documento_baseline_path) }}" target="_blank" class="ml-2 text-indigo-600 hover:underline">
+                                    Visualizar Documento
+                                </a>
+                            </div>
+                            @endif
                         </div>
                     </div>
 

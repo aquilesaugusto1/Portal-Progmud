@@ -7,39 +7,33 @@ use App\Models\EmpresaParceira;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage; // Adicionado para lidar com arquivos
 
 class ContratoController extends Controller
 {
     public function index(Request $request)
     {
         $this->authorize('viewAny', Contrato::class);
-
         $query = Contrato::with(['cliente', 'coordenadores', 'techLeads']);
-
         if ($request->filled('cliente_id')) {
             $query->where('cliente_id', $request->cliente_id);
         }
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
         $contratos = $query->latest()->paginate(10)->withQueryString();
         $clientes = EmpresaParceira::where('status', 'Ativo')->get();
-
         return view('contratos.index', compact('contratos', 'clientes'));
     }
 
     public function create()
     {
         $this->authorize('create', Contrato::class);
-
         $contrato = new Contrato();
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
-
         return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
@@ -49,7 +43,13 @@ class ContratoController extends Controller
         $validatedData = $request->validate($this->getValidationRules());
 
         DB::transaction(function () use ($request, $validatedData) {
-            $contrato = Contrato::create($this->prepareData($request, $validatedData));
+            $preparedData = $this->prepareData($request, $validatedData);
+
+            if ($request->hasFile('documento_baseline')) {
+                $preparedData['documento_baseline_path'] = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+            }
+
+            $contrato = Contrato::create($preparedData);
             $this->syncUsuarios($contrato, $request);
         });
 
@@ -66,13 +66,11 @@ class ContratoController extends Controller
     public function edit(Contrato $contrato)
     {
         $this->authorize('update', $contrato);
-
         $contrato->load(['coordenadores', 'techLeads', 'consultores']);
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
-
         return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
@@ -82,7 +80,17 @@ class ContratoController extends Controller
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
 
         DB::transaction(function () use ($request, $contrato, $validatedData) {
-            $contrato->update($this->prepareData($request, $validatedData));
+            $preparedData = $this->prepareData($request, $validatedData);
+
+            if ($request->hasFile('documento_baseline')) {
+                // Apaga o arquivo antigo se existir
+                if ($contrato->documento_baseline_path) {
+                    Storage::disk('public')->delete($contrato->documento_baseline_path);
+                }
+                $preparedData['documento_baseline_path'] = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+            }
+
+            $contrato->update($preparedData);
             $this->syncUsuarios($contrato, $request);
         });
 
@@ -113,6 +121,7 @@ class ContratoController extends Controller
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
+            'documento_baseline' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:2048'],
             'coordenadores' => ['nullable', 'array'],
             'coordenadores.*' => ['exists:usuarios,id'],
             'tech_leads' => ['nullable', 'array'],
@@ -134,7 +143,6 @@ class ContratoController extends Controller
     private function syncUsuarios(Contrato $contrato, Request $request)
     {
         $contrato->usuarios()->detach();
-
         if ($request->has('coordenadores')) {
             foreach ($request->coordenadores as $id) {
                 $contrato->usuarios()->attach($id, ['funcao_contrato' => 'coordenador']);
@@ -150,8 +158,6 @@ class ContratoController extends Controller
                 $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
             }
         }
-        
-        // Força a atualização do timestamp 'updated_at' do contrato
         $contrato->touch();
     }
 }

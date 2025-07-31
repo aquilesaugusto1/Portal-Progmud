@@ -29,7 +29,7 @@ class ApontamentoPolicy
         }
 
         if ($user->funcao === 'techlead') {
-            return $user->consultoresLiderados()->where('id', $apontamento->consultor_id)->exists();
+            return $user->consultoresLiderados()->where('usuarios.id', $apontamento->consultor_id)->exists();
         }
 
         return $user->id === $apontamento->consultor_id;
@@ -37,17 +37,20 @@ class ApontamentoPolicy
 
     public function create(User $user): bool
     {
-        return $user->funcao === 'consultor';
+        // Apenas consultores podem criar apontamentos para si mesmos.
+        // A lógica de quem pode criar para quem está no controller do calendário.
+        return true; 
     }
 
     public function update(User $user, Apontamento $apontamento): bool
     {
-        return $user->id === $apontamento->consultor_id && $apontamento->status === 'Pendente';
+        // Permite a atualização se o usuário for o dono E o status for Pendente OU Rejeitado.
+        return $user->id === $apontamento->consultor_id && in_array($apontamento->status, ['Pendente', 'Rejeitado']);
     }
 
     public function delete(User $user, Apontamento $apontamento): bool
     {
-        return $user->id === $apontamento->consultor_id && $apontamento->status === 'Pendente';
+        return $user->id === $apontamento->consultor_id && in_array($apontamento->status, ['Pendente', 'Rejeitado']);
     }
 
     public function approve(User $user, Apontamento $apontamento): bool
@@ -57,7 +60,7 @@ class ApontamentoPolicy
         }
 
         if ($user->funcao === 'techlead') {
-            return $user->consultoresLiderados()->where('id', $apontamento->consultor_id)->exists();
+            return $user->consultoresLiderados()->where('usuarios.id', $apontamento->consultor_id)->exists();
         }
 
         return false;

@@ -27,6 +27,7 @@ class Contrato extends Model
         'contato_principal',
         'baseline_horas_mes',
         'permite_antecipar_baseline',
+        'documento_baseline_path', // Adicionado para o anexo
     ];
 
     /**

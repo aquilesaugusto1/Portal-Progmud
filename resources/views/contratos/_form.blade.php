@@ -140,6 +140,17 @@
                 </label>
             </div>
         </div>
+        
+        <!-- NOVO CAMPO DE UPLOAD CONDICIONAL -->
+        <div id="documento_baseline_container" class="{{ old('permite_antecipar_baseline', $contrato->permite_antecipar_baseline ?? false) ? '' : 'hidden' }} mt-6">
+            <x-input-label for="documento_baseline" value="Documento de Comprovação" />
+            <input type="file" name="documento_baseline" id="documento_baseline" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+            @if(isset($contrato) && $contrato->documento_baseline_path)
+                <div class="mt-2 text-sm">
+                    <a href="{{ Storage::url($contrato->documento_baseline_path) }}" target="_blank" class="text-indigo-600 hover:underline">Ver documento atual</a>
+                </div>
+            @endif
+        </div>
     </div>
 </div>
 
@@ -159,13 +170,16 @@
         const produtosCheckboxes = document.querySelectorAll('input[name="produtos[]"]');
         const especifiqueOutroContainer = document.getElementById('especifique_outro_container');
         const outroCheckbox = document.querySelector('input[value="Outro"]');
+        
+        const baselineCheckbox = document.getElementById('permite_antecipar_baseline');
+        const documentoContainer = document.getElementById('documento_baseline_container');
 
         function toggleEspecifiqueOutro() {
-            if (outroCheckbox.checked) {
-                especifiqueOutroContainer.classList.remove('hidden');
-            } else {
-                especifiqueOutroContainer.classList.add('hidden');
-            }
+            especifiqueOutroContainer.classList.toggle('hidden', !outroCheckbox.checked);
+        }
+
+        function toggleDocumentoBaseline() {
+            documentoContainer.classList.toggle('hidden', !baselineCheckbox.checked);
         }
 
         produtosCheckboxes.forEach(checkbox => {
@@ -174,7 +188,11 @@
             }
         });
         
+        baselineCheckbox.addEventListener('change', toggleDocumentoBaseline);
+        
+        // Initial checks on page load
         toggleEspecifiqueOutro();
+        toggleDocumentoBaseline();
     });
 </script>
 @endpush

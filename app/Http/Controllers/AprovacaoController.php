@@ -49,7 +49,6 @@ class AprovacaoController extends Controller
 
                 // 3. Se for faturável, deduz as horas do contrato
                 if ($apontamento->faturavel && $apontamento->contrato && $apontamento->contrato->baseline_horas_mes !== null) {
-                    // CORREÇÃO: Garante que o valor subtraído seja sempre positivo
                     $horasASubtrair = abs($apontamento->horas_gastas);
                     $apontamento->contrato->decrement('baseline_horas_mes', $horasASubtrair);
                 }
@@ -74,7 +73,7 @@ class AprovacaoController extends Controller
         $validated = $request->validate(['motivo_rejeicao' => 'required|string|max:500']);
 
         $apontamento->status = 'Rejeitado';
-        $apontamento->faturado = false; // Um apontamento rejeitado nunca é faturado
+        $apontamento->faturavel = false; // CORRIGIDO: de 'faturado' para 'faturavel'
         $apontamento->motivo_rejeicao = $validated['motivo_rejeicao'];
         $apontamento->aprovado_por_id = Auth::id();
         $apontamento->data_aprovacao = now();
