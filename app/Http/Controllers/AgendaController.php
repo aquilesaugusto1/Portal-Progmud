@@ -47,7 +47,9 @@ class AgendaController extends Controller
         $eventosDoCalendario = $this->formatarParaCalendario($calendarQuery->get());
 
         // Dados para os filtros
-        $consultores = User::where('status', 'Ativo')->whereIn('funcao', ['consultor', 'techlead'])->orderBy('nome')->get();
+        $consultores = User::where('status', 'Ativo')->where('funcao', 'consultor')->orderBy('nome')->get();
+
+
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
 
         return view('agendas.index', compact('agendas', 'eventosDoCalendario', 'consultores', 'contratos'));
