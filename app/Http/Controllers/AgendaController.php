@@ -70,6 +70,7 @@ class AgendaController extends Controller
                 'extendedProps' => [
                     'consultor' => $agenda->consultor->nome ?? 'N/A',
                     'cliente' => $agenda->contrato->cliente->nome_empresa ?? 'N/A',
+                    'url' => route('agendas.show', $agenda),
                 ]
             ];
         });
