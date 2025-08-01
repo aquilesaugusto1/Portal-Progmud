@@ -34,8 +34,8 @@ class User extends Authenticatable
         'dados_bancarios',
         'termos_aceite_em',
         'ip_aceite',
-        'created_by', // Adicionado para a trait
-        'updated_by', // Adicionado para a trait
+        'created_by', 
+        'updated_by', 
     ];
 
     protected $hidden = [
@@ -63,8 +63,7 @@ class User extends Authenticatable
 
     public function consultoresLiderados(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id')
-                    ->select('usuarios.*');
+        return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id');
     }
 
     public function apontamentos(): HasMany
@@ -72,9 +71,6 @@ class User extends Authenticatable
         return $this->hasMany(Apontamento::class, 'consultor_id');
     }
 
-    /**
-     * The contracts that the user belongs to.
-     */
     public function contratos(): BelongsToMany
     {
         return $this->belongsToMany(Contrato::class, 'contrato_usuario', 'usuario_id', 'contrato_id')
@@ -82,7 +78,6 @@ class User extends Authenticatable
                     ->withTimestamps();
     }
 
-    // Métodos de verificação de função (ROLE CHECKING) - ADICIONADO AQUI
     public function isAdmin()
     {
         return $this->funcao === 'admin';

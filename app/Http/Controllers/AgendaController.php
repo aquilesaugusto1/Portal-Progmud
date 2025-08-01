@@ -18,15 +18,14 @@ class AgendaController extends Controller
         $user = Auth::user();
         $query = Agenda::with(['consultor', 'contrato.cliente']);
 
-        // Aplica filtros de permissão
-        if ($user->funcao === 'techlead') {
-            $consultoresLideradosIds = $user->consultoresLiderados()->pluck('id');
+        if ($user->isTechLead()) {
+            // CORREÇÃO APLICADA AQUI
+            $consultoresLideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
             $query->whereIn('consultor_id', $consultoresLideradosIds);
-        } elseif ($user->funcao === 'consultor') {
+        } elseif ($user->isConsultor()) {
             $query->where('consultor_id', $user->id);
         }
 
-        // Aplica filtros do formulário
         if ($request->filled('consultor_id')) {
             $query->where('consultor_id', $request->consultor_id);
         }
@@ -37,16 +36,12 @@ class AgendaController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Clona a query para o calendário antes da paginação
         $calendarQuery = clone $query;
         
-        // Dados para a visão de LISTA (paginada)
         $agendas = $query->latest('data_hora')->paginate(15)->withQueryString();
 
-        // Dados para a visão de CALENDÁRIO (sem paginação)
         $eventosDoCalendario = $this->formatarParaCalendario($calendarQuery->get());
 
-        // Dados para os filtros
         $consultores = User::where('status', 'Ativo')->where('funcao', 'consultor')->orderBy('nome')->get();
 
 
@@ -58,10 +53,10 @@ class AgendaController extends Controller
     private function formatarParaCalendario($agendas)
     {
         return $agendas->map(function ($agenda) {
-            $color = '#3B82F6'; // Azul padrão para Agendada
+            $color = '#3B82F6'; 
             switch ($agenda->status) {
-                case 'Realizada': $color = '#10B981'; break; // Verde
-                case 'Cancelada': $color = '#EF4444'; break; // Vermelho
+                case 'Realizada': $color = '#10B981'; break; 
+                case 'Cancelada': $color = '#EF4444'; break; 
             }
 
             return [
@@ -98,7 +93,7 @@ class AgendaController extends Controller
             'status' => 'required|string|in:Agendada,Realizada,Cancelada',
         ]);
         $user = Auth::user();
-        if ($user->funcao === 'techlead' && !$user->consultoresLiderados()->where('id', $validated['consultor_id'])->exists()) {
+        if ($user->isTechLead() && !$user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
              return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para consultores que você lidera.'])->withInput();
         }
         Agenda::create($validated);
@@ -111,20 +106,36 @@ class AgendaController extends Controller
         return view('agendas.show', compact('agenda'));
     }
 
+    private function getFilteredConsultantsForContract(?Contrato $contrato, User $user)
+    {
+        if (!$contrato) {
+            return collect();
+        }
+    
+        $query = User::where('funcao', 'consultor')->where('status', 'Ativo');
+    
+        $query->whereHas('contratos', function ($q) use ($contrato) {
+            $q->where('contratos.id', $contrato->id);
+        });
+    
+        if ($user->isTechLead()) {
+            // CORREÇÃO APLICADA AQUI
+            $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
+    
+            if ($lideradosIds->isEmpty()) {
+                return collect();
+            }
+            $query->whereIn('usuarios.id', $lideradosIds);
+        }
+    
+        return $query->orderBy('nome')->get();
+    }
+
     public function edit(Agenda $agenda)
     {
         $this->authorize('update', $agenda);
         $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
-        $consultores = collect();
-        if ($agenda->contrato) {
-            $query = $agenda->contrato->consultores();
-            $user = Auth::user();
-            if ($user->funcao === 'techlead') {
-                $lideradosIds = $user->consultoresLiderados()->pluck('id');
-                $query->whereIn('usuarios.id', $lideradosIds);
-            }
-            $consultores = $query->orderBy('nome')->get();
-        }
+        $consultores = $this->getFilteredConsultantsForContract($agenda->contrato, Auth::user());
         return view('agendas.edit', compact('agenda', 'consultores', 'contratos'));
     }
 
@@ -140,7 +151,7 @@ class AgendaController extends Controller
             'status' => 'required|string|in:Agendada,Realizada,Cancelada',
         ]);
         $user = Auth::user();
-        if ($user->funcao === 'techlead' && !$user->consultoresLiderados()->where('id', $validated['consultor_id'])->exists()) {
+        if ($user->isTechLead() && !$user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
              return back()->withErrors(['consultor_id' => 'Você só pode atribuir agendas a este consultor.'])->withInput();
         }
         $agenda->update($validated);
@@ -159,24 +170,15 @@ class AgendaController extends Controller
         try {
             $this->authorize('create', Agenda::class);
             $contrato = Contrato::find($contratoId);
-            if (!$contrato) {
-                return response()->json([], 404);
-            }
-            $user = Auth::user();
-            $query = $contrato->consultores()->where('status', 'Ativo');
-            if ($user->funcao === 'techlead') {
-                $lideradosIds = $user->consultoresLiderados()->pluck('id');
-                $query->whereIn('usuarios.id', $lideradosIds);
-            }
-            $consultores = $query->orderBy('nome')->get(['usuarios.id', 'nome', 'sobrenome']);
-            return response()->json($consultores);
+            $consultores = $this->getFilteredConsultantsForContract($contrato, Auth::user());
+            return response()->json($consultores->map->only(['id', 'nome', 'sobrenome']));
         } catch (\Exception $e) {
-            Log::error('Erro ao buscar consultores para o contrato.', [
+            Log::error('Erro CRÍTICO ao buscar consultores para o contrato.', [
                 'contrato_id' => $contratoId,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['message' => 'Ocorreu um erro no servidor.'], 500);
+            return response()->json(['message' => 'Ocorreu um erro crítico no servidor.'], 500);
         }
     }
 }

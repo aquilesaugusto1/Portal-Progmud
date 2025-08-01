@@ -8,59 +8,43 @@ use Illuminate\Auth\Access\Response;
 
 class AgendaPolicy
 {
-    public function before(User $user, string $ability): bool|null
-    {
-        if ($user->funcao === 'admin') {
-            return true;
-        }
- 
-        return null;
-    }
-
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isAdmin() || str_contains($user->funcao, 'coordenador') || $user->isTechLead() || $user->isConsultor();
     }
 
     public function view(User $user, Agenda $agenda): bool
     {
-        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead'])) {
+        if ($user->isAdmin() || str_contains($user->funcao, 'coordenador')) {
             return true;
         }
 
-        return $user->id === $agenda->consultor_id;
+        if ($user->isTechLead()) {
+            // A CORREÇÃO ESTÁ AQUI. Adicionamos 'usuarios.id'
+            return $user->consultoresLiderados()->where('usuarios.id', $agenda->consultor_id)->exists();
+        }
+
+        if ($user->isConsultor()) {
+            return $user->id === $agenda->consultor_id;
+        }
+
+        return false;
     }
 
     public function create(User $user): bool
     {
-        return in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico', 'techlead']);
+         return $user->isAdmin() || str_contains($user->funcao, 'coordenador') || $user->isTechLead();
     }
 
     public function update(User $user, Agenda $agenda): bool
     {
-        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico'])) {
-            return true;
-        }
-
-        if ($user->funcao === 'techlead') {
-            // CORREÇÃO: Especifica a tabela 'usuarios.id' para evitar ambiguidade
-            return $user->consultoresLiderados()->where('usuarios.id', $agenda->consultor_id)->exists();
-        }
-
-        return false;
+        // Esta função já reutiliza a lógica corrigida de 'view'
+        return $this->view($user, $agenda);
     }
 
     public function delete(User $user, Agenda $agenda): bool
     {
-        if (in_array($user->funcao, ['coordenador_operacoes', 'coordenador_tecnico'])) {
-            return true;
-        }
-
-        if ($user->funcao === 'techlead') {
-            // CORREÇÃO: Especifica a tabela 'usuarios.id' para evitar ambiguidade
-            return $user->consultoresLiderados()->where('usuarios.id', $agenda->consultor_id)->exists();
-        }
-
-        return false;
+        // Esta função já reutiliza a lógica corrigida de 'view'
+        return $this->view($user, $agenda);
     }
 }
