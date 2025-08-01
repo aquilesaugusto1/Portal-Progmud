@@ -59,7 +59,7 @@
 <body>
 <div class="container">
 <div class="logo-container">
-<img src="{{ asset('favicon.webp') }}" alt="Logo ProgMUD" class="logo">
+<img src="{{ asset('images/favicon.webp') }}" alt="Logo ProgMUD" class="logo">
 </div>
 <h1>Estamos fazendo uma pequena pausa.</h1>
 <p>Voltaremos em breve com melhorias para você. Agradecemos a sua paciência!</p>
