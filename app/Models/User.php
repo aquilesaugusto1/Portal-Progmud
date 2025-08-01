@@ -81,4 +81,25 @@ class User extends Authenticatable
                     ->withPivot('funcao_contrato')
                     ->withTimestamps();
     }
+
+    // Métodos de verificação de função (ROLE CHECKING) - ADICIONADO AQUI
+    public function isAdmin()
+    {
+        return $this->funcao === 'admin';
+    }
+
+    public function isCoordenador()
+    {
+        return str_contains($this->funcao, 'coordenador');
+    }
+
+    public function isTechLead()
+    {
+        return $this->funcao === 'techlead';
+    }
+
+    public function isConsultor()
+    {
+        return $this->funcao === 'consultor';
+    }
 }
