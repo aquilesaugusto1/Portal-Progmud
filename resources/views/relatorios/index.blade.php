@@ -11,13 +11,15 @@
                         <input type="hidden" name="formato" id="formato" value="html">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label for="data_inicio" class="block font-medium text-sm text-gray-700">Data de Início</label>
+                                <label for="data_inicio" class="block font-medium text-sm text-gray-700">Data de Início *</label>
                                 <input type="date" name="data_inicio" id="data_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                             </div>
                             <div>
-                                <label for="data_fim" class="block font-medium text-sm text-gray-700">Data de Fim</label>
+                                <label for="data_fim" class="block font-medium text-sm text-gray-700">Data de Fim *</label>
                                 <input type="date" name="data_fim" id="data_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                             </div>
+                            
+                            @if(Auth::user()->funcao !== 'consultor')
                             <div>
                                 <label for="consultor_id" class="block font-medium text-sm text-gray-700">Filtrar por Consultor (Opcional)</label>
                                 <select name="consultor_id" id="consultor_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
@@ -28,14 +30,15 @@
                                 </select>
                             </div>
                             <div>
-                                <label for="empresa_id" class="block font-medium text-sm text-gray-700">Filtrar por Cliente (Opcional)</label>
-                                <select name="empresa_id" id="empresa_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                    <option value="">Todos os clientes</option>
-                                    @foreach ($empresas as $empresa)
-                                        <option value="{{ $empresa->id }}">{{ $empresa->nome_empresa }}</option>
+                                <label for="contrato_id" class="block font-medium text-sm text-gray-700">Filtrar por Contrato (Opcional)</label>
+                                <select name="contrato_id" id="contrato_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                                    <option value="">Todos os contratos</option>
+                                    @foreach ($contratos as $contrato)
+                                        <option value="{{ $contrato->id }}">{{ $contrato->cliente->nome_empresa }} (#{{ $contrato->id }})</option>
                                     @endforeach
                                 </select>
                             </div>
+                            @endif
                         </div>
                         <div class="flex items-center justify-end mt-6 space-x-4">
                             <button type="button" onclick="setFormato('html')" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

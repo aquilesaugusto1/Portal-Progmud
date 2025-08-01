@@ -52,9 +52,9 @@
                             @forelse ($apontamentos as $apontamento)
                                 <tr>
                                     <td class="px-4 py-2">{{ $apontamento->data_apontamento->format('d/m/Y') }}</td>
-                                    <td class="px-4 py-2">{{ $apontamento->consultor->nome }}</td>
-                                    <td class="px-4 py-2">{{ $apontamento->agenda->projeto->empresaParceira->nome_empresa }}</td>
-                                    <td class="px-4 py-2">{{ $apontamento->agenda->assunto }}</td>
+                                    <td class="px-4 py-2">{{ $apontamento->consultor->nome ?? 'N/A' }}</td>
+                                    <td class="px-4 py-2">{{ $apontamento->contrato->cliente->nome_empresa ?? 'N/A' }}</td>
+                                    <td class="px-4 py-2">{{ $apontamento->agenda->assunto ?? 'N/A' }}</td>
                                     <td class="px-4 py-2 text-right font-bold">{{ number_format($apontamento->horas_gastas, 1) }}</td>
                                 </tr>
                             @empty

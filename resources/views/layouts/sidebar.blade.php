@@ -1,12 +1,21 @@
-<div class="flex flex-col w-64 bg-slate-900 text-slate-300">
-    <div class="flex items-center justify-center h-16 bg-slate-950">
+<!-- Overlay for mobile -->
+<div x-show="sidebarOpen" class="lg:hidden fixed inset-0 z-30 bg-black/30" @click="sidebarOpen = false" x-cloak></div>
+
+<!-- Sidebar -->
+<div
+    class="bg-slate-900 text-slate-300 w-64 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0"
+    :class="{'translate-x-0': sidebarOpen}"
+>
+    <!-- Logo -->
+    <div class="flex items-center justify-center h-16 bg-slate-950 flex-shrink-0">
         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
             <img class="h-8 w-auto" src="{{ asset('images/logo-agen.png') }}" alt="Logo da Agen">
             <span class="text-2xl font-bold text-slate-200">Agen</span>
         </a>
     </div>
-    <nav class="flex-1 px-2 py-4 space-y-1">
-        <!-- Menu Principal (Todos) -->
+
+    <!-- Links -->
+    <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
             <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>
             Início
@@ -27,29 +36,22 @@
             <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.311a15.045 15.045 0 01-7.5 0C4.508 17.67 2.25 15.443 2.25 12.75c0-2.692 2.258-4.92 5.04-5.233.95-.112 1.933-.167 2.96-.167s2.01.055 2.96.167c2.782.313 5.04 2.54 5.04 5.233 0 2.693-2.258 4.92-5.04 5.233z" /></svg>
             Sugestões
         </a>
-
-        <!-- Menu de Gestão (Perfis específicos) -->
         <hr class="my-4 border-slate-700">
         <p class="px-4 text-xs font-semibold uppercase text-slate-500">Gestão</p>
-
         @can('viewAprovacoes', App\Models\Apontamento::class)
             <a href="{{ route('aprovacoes.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('aprovacoes.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
                 <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 Aprovações
             </a>
         @endcan
-        
         @if(in_array(auth()->user()->funcao, ['admin', 'coordenador_operacoes', 'coordenador_tecnico', 'techlead']))
             <a href="{{ route('email.agendas.create') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('email.agendas.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
                 <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
                 Enviar Agendas
             </a>
         @endif
-
-        <!-- Menu de Cadastros -->
         <hr class="my-4 border-slate-700">
         <p class="px-4 text-xs font-semibold uppercase text-slate-500">Cadastros</p>
-        
         @can('viewAny', App\Models\User::class)
             <a href="{{ route('colaboradores.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('colaboradores.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
                 <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-2.305c.395-.44-.22-1.078-.682-1.078h-4.042a1.125 1.125 0 01-1.125-1.125v-4.042A1.125 1.125 0 019.875 8.25c.662 0 1.185.523 1.185 1.185v4.042a1.125 1.125 0 001.125 1.125h4.042zM18 12.375a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>

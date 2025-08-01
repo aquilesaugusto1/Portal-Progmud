@@ -29,7 +29,7 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
             'Data',
             'Consultor',
             'Cliente',
-            'Projeto',
+            'Contrato',
             'Assunto',
             'Horas Gastas',
             'Descrição',
@@ -40,10 +40,10 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             $apontamento->data_apontamento->format('d/m/Y'),
-            $apontamento->consultor->nome,
-            $apontamento->agenda->projeto->empresaParceira->nome_empresa,
-            $apontamento->agenda->projeto->nome_projeto,
-            $apontamento->agenda->assunto,
+            $apontamento->consultor->nome ?? 'N/A',
+            $apontamento->contrato->cliente->nome_empresa ?? 'N/A',
+            $apontamento->contrato->numero_contrato ?? '#' . $apontamento->contrato->id,
+            $apontamento->agenda->assunto ?? 'N/A',
             $apontamento->horas_gastas,
             $apontamento->descricao,
         ];
