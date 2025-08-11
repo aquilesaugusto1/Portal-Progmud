@@ -1,256 +1,173 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="h4 font-weight-bold">
-            <i class="fas fa-chart-line me-2"></i>
-            {{ __('Relatório de Apontamentos') }}
-        </h2>
-    </x-slot>
+    <div class="py-12">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">
+            <div>
+                <h2 class="font-semibold text-2xl text-gray-800 leading-tight">Relatório de Apontamentos</h2>
+            </div>
+            
+            {{-- Card de Filtros com Tailwind --}}
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Filtros do Relatório</h3>
+                <form action="{{ route('relatorios.gerar') }}" method="POST">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {{-- Período --}}
+                        <div>
+                            <label for="data_inicio" class="block text-sm font-medium text-gray-700">Período</label>
+                            <div class="flex items-center mt-1">
+                                <input type="date" id="data_inicio" name="data_inicio" class="form-input w-full rounded-l-md border-gray-300 shadow-sm" value="{{ $filtros['data_inicio'] ?? old('data_inicio', now()->startOfMonth()->format('Y-m-d')) }}" required>
+                                <span class="px-3 py-2 border-t border-b border-gray-300 bg-gray-50 text-gray-500">a</span>
+                                <input type="date" id="data_fim" name="data_fim" class="form-input w-full rounded-r-md border-gray-300 shadow-sm" value="{{ $filtros['data_fim'] ?? old('data_fim', now()->endOfMonth()->format('Y-m-d')) }}" required>
+                            </div>
+                        </div>
 
-    {{-- Card de Filtros --}}
-    <div class="card my-4 shadow-sm">
-        <div class="card-header bg-light border-0 py-3">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros do Relatório</h5>
-        </div>
-        <div class="card-body">
-            <form action="{{ route('relatorios.gerar') }}" method="POST">
-                @csrf
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label for="data_inicio" class="form-label">Período</label>
-                        <div class="input-group">
-                            <input type="date" id="data_inicio" name="data_inicio" class="form-control" value="{{ $filtros['data_inicio'] ?? old('data_inicio', now()->startOfMonth()->format('Y-m-d')) }}" required>
-                            <span class="input-group-text">a</span>
-                            <input type="date" id="data_fim" name="data_fim" class="form-control" value="{{ $filtros['data_fim'] ?? old('data_fim', now()->endOfMonth()->format('Y-m-d')) }}" required>
+                        {{-- Cliente (Empresa) --}}
+                        <div>
+                            <label for="empresa_id" class="block text-sm font-medium text-gray-700">Cliente</label>
+                            <select id="empresa_id" name="empresa_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="">Todos os Clientes</option>
+                                @foreach($clientes as $cliente)
+                                    <option value="{{ $cliente->id }}" {{ (isset($filtros['empresa_id']) && $filtros['empresa_id'] == $cliente->id) ? 'selected' : '' }}>{{ $cliente->nome_empresa }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        
+                        {{-- Contrato --}}
+                        <div>
+                            <label for="contrato_id" class="block text-sm font-medium text-gray-700">Contrato</label>
+                            <select id="contrato_id" name="contrato_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="">Todos os Contratos</option>
+                                @foreach($contratos as $contrato)
+                                    {{-- CORREÇÃO: Exibindo o número do contrato, que é um campo que existe. --}}
+                                    <option value="{{ $contrato->id }}" {{ (isset($filtros['contrato_id']) && $filtros['contrato_id'] == $contrato->id) ? 'selected' : '' }}>
+                                        {{ $contrato->numero_contrato ?? "Contrato ID: {$contrato->id}" }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Colaborador --}}
+                        <div>
+                            <label for="colaborador_id" class="block text-sm font-medium text-gray-700">Colaborador</label>
+                            <select id="colaborador_id" name="colaborador_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="">Todos os Colaboradores</option>
+                                @foreach($colaboradores as $colaborador)
+                                    <option value="{{ $colaborador->id }}" {{ (isset($filtros['colaborador_id']) && $filtros['colaborador_id'] == $colaborador->id) ? 'selected' : '' }}>{{ $colaborador->nome }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        {{-- Status --}}
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700">Status</label>
+                            <select id="status" name="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                <option value="">Todos os Status</option>
+                                <option value="Aprovado" {{ (isset($filtros['status']) && $filtros['status'] == 'Aprovado') ? 'selected' : '' }}>Aprovado</option>
+                                <option value="Pendente" {{ (isset($filtros['status']) && $filtros['status'] == 'Pendente') ? 'selected' : '' }}>Pendente</option>
+                                <option value="Reprovado" {{ (isset($filtros['status']) && $filtros['status'] == 'Reprovado') ? 'selected' : '' }}>Reprovado</option>
+                            </select>
                         </div>
                     </div>
-                     <div class="col-md-6">
-                        <label for="empresa_id" class="form-label">Cliente</label>
-                        <select id="empresa_id" name="empresa_id" class="form-select">
-                            <option value="">Todos os Clientes</option>
-                            @foreach($empresas as $empresa)
-                                <option value="{{ $empresa->id }}" @selected(isset($filtros['empresa_id']) && $filtros['empresa_id'] == $empresa->id)>
-                                    {{ $empresa->nome_empresa }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="flex items-center justify-end mt-6 border-t pt-4">
+                        <a href="{{ route('relatorios.index') }}" class="text-sm font-medium text-gray-600 hover:text-gray-900 mr-4">Limpar Filtros</a>
+                        <button type="submit" name="formato" value="html" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 active:bg-indigo-900 focus:outline-none focus:border-indigo-900 focus:ring ring-indigo-300 disabled:opacity-25 transition ease-in-out duration-150">Gerar Relatório</button>
+                        <button type="submit" name="formato" value="pdf" class="ml-3 inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700">Gerar PDF</button>
+                        <button type="submit" name="formato" value="excel" class="ml-3 inline-flex items-center px-4 py-2 bg-emerald-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-emerald-700">Gerar Excel</button>
                     </div>
-                    <div class="col-md-4">
-                        <label for="contrato_id" class="form-label">Contrato</label>
-                        <select id="contrato_id" name="contrato_id" class="form-select">
-                            <option value="">Todos os Contratos</option>
-                            @foreach($contratos as $contrato)
-                                <option value="{{ $contrato->id }}" @selected(isset($filtros['contrato_id']) && $filtros['contrato_id'] == $contrato->id)>
-                                    {{ $contrato->cliente->nome_empresa }} - {{ $contrato->numero_contrato }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label for="colaborador_id" class="form-label">Consultor</label>
-                        <select id="colaborador_id" name="colaborador_id" class="form-select">
-                            <option value="">Todos os Consultores</option>
-                            @foreach($consultores as $consultor)
-                                <option value="{{ $consultor->id }}" @selected(isset($filtros['colaborador_id']) && $filtros['colaborador_id'] == $consultor->id)>
-                                    {{ $consultor->nome }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                     <div class="col-md-4">
-                        <label for="status" class="form-label">Status do Apontamento</label>
-                        <select id="status" name="status" class="form-select">
-                            <option value="">Todos</option>
-                            <option value="Aprovado" @selected(isset($filtros['status']) && $filtros['status'] == 'Aprovado')>Aprovado</option>
-                            <option value="Pendente" @selected(isset($filtros['status']) && $filtros['status'] == 'Pendente')>Pendente</option>
-                            <option value="Reprovado" @selected(isset($filtros['status']) && $filtros['status'] == 'Reprovado')>Reprovado</option>
-                        </select>
-                    </div>
-                </div>
+                </form>
+            </div>
 
-                <hr class="my-4">
+            {{-- Seção de Resultados --}}
+            @if(isset($apontamentos))
+                @if($apontamentos->isEmpty())
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-md" role="alert">
+                        <p class="font-bold">Nenhum resultado encontrado</p>
+                        <p>Nenhum apontamento corresponde aos filtros selecionados.</p>
+                    </div>
+                @else
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-indigo-500 text-white p-6 rounded-lg shadow-lg">
+                            <p class="text-sm font-medium text-indigo-100">Total de Horas Aprovadas</p>
+                            <p class="mt-1 text-4xl font-bold">{{ number_format($kpis['total_horas'], 1, ',', '.') }}h</p>
+                        </div>
+                        <div class="bg-blue-500 text-white p-6 rounded-lg shadow-lg">
+                            <p class="text-sm font-medium text-blue-100">Total de Apontamentos</p>
+                            <p class="mt-1 text-4xl font-bold">{{ $kpis['total_apontamentos'] }}</p>
+                        </div>
+                        <div class="bg-green-500 text-white p-6 rounded-lg shadow-lg">
+                            <p class="text-sm font-medium text-green-100">Apontamentos Aprovados</p>
+                            <p class="mt-1 text-4xl font-bold">{{ $kpis['total_aprovados'] }}</p>
+                        </div>
+                        <div class="bg-purple-500 text-white p-6 rounded-lg shadow-lg">
+                            <p class="text-sm font-medium text-purple-100">Média Horas / Apont. Aprovado</p>
+                            <p class="mt-1 text-4xl font-bold">{{ number_format($kpis['media_horas'], 1, ',', '.') }}h</p>
+                        </div>
+                    </div>
 
-                <div class="d-flex justify-content-end">
-                    <button type="submit" name="formato" value="html" class="btn btn-primary btn-lg me-2">
-                        <i class="fas fa-search me-1"></i> Gerar Relatório
-                    </button>
-                    <button type="submit" name="formato" value="pdf" class="btn btn-outline-danger me-2">
-                        <i class="fas fa-file-pdf me-1"></i> Gerar PDF
-                    </button>
-                    <button type="submit" name="formato" value="excel" class="btn btn-outline-success">
-                        <i class="fas fa-file-excel me-1"></i> Gerar Excel
-                    </button>
-                </div>
-            </form>
+                    <!-- Gráficos -->
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Horas Aprovadas por Cliente</h3>
+                            <canvas id="clienteChart"></canvas>
+                        </div>
+                        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Distribuição de Horas por Consultor</h3>
+                            <canvas id="consultorChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Tabela Detalhada -->
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6 bg-white border-b border-gray-200">
+                            <h3 class="text-lg font-bold text-slate-800 mb-4">Todos os Apontamentos</h3>
+                            @include('relatorios.partials.detalhado', ['resultados' => $apontamentos, 'totalGeralHoras' => $kpis['total_horas']])
+                        </div>
+                    </div>
+                @endif
+            @endif
         </div>
     </div>
-
-    {{-- Seção de Resultados --}}
-    @if(isset($apontamentos))
-    <div class="mt-5">
-        {{-- KPIs --}}
-        <div class="row">
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card text-white bg-primary shadow-lg">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="card-title">Horas Aprovadas</div>
-                                <div class="h2 fw-bold">{{ number_format($kpis['total_horas'], 2) }}h</div>
-                            </div>
-                            <i class="fas fa-clock fa-3x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card text-white bg-info shadow-lg">
-                    <div class="card-body">
-                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="card-title">Apontamentos</div>
-                                <div class="h2 fw-bold">{{ $kpis['total_apontamentos'] }}</div>
-                            </div>
-                            <i class="fas fa-file-alt fa-3x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card text-white bg-success shadow-lg">
-                    <div class="card-body">
-                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="card-title">Aprovados</div>
-                                <div class="h2 fw-bold">{{ $kpis['total_aprovados'] }}</div>
-                            </div>
-                           <i class="fas fa-check-circle fa-3x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-3 col-md-6 mb-4">
-                <div class="card text-white bg-secondary shadow-lg">
-                     <div class="card-body">
-                         <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="card-title">Média Horas</div>
-                                <div class="h2 fw-bold">{{ number_format($kpis['media_horas'], 2) }}h</div>
-                            </div>
-                            <i class="fas fa-balance-scale fa-3x opacity-50"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Gráficos --}}
-        <div class="row">
-            <div class="col-lg-8 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">Horas Aprovadas por Cliente</div>
-                    <div class="card-body"><canvas id="clienteChart"></canvas></div>
-                </div>
-            </div>
-            <div class="col-lg-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-white border-0 py-3">Distribuição por Consultor</div>
-                    <div class="card-body"><canvas id="consultorChart"></canvas></div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Tabela de Dados --}}
-        <div class="card my-4 shadow-sm">
-            <div class="card-header bg-white border-0 py-3">
-                <h5 class="mb-0">Detalhes dos Apontamentos</h5>
-            </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="px-4 py-3">Data</th>
-                                <th>Consultor</th>
-                                <th>Cliente</th>
-                                <th>Contrato</th>
-                                <th class="text-end">Horas Gastas</th>
-                                <th class="text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($apontamentos as $apontamento)
-                                <tr>
-                                    <td class="px-4">{{ \Carbon\Carbon::parse($apontamento->data_apontamento)->format('d/m/Y') }}</td>
-                                    <td>{{ $apontamento->consultor->nome ?? 'N/A' }}</td>
-                                    <td>{{ $apontamento->contrato->cliente->nome_empresa ?? 'N/A' }}</td>
-                                    <td>{{ $apontamento->contrato->numero_contrato ?? 'N/A' }}</td>
-                                    <td class="text-end fw-bold">{{ $apontamento->horas_gastas ?? '00:00' }}</td>
-                                    <td class="text-center px-4">
-                                        <span class="badge w-100 rounded-pill fs-6 
-                                            @if($apontamento->status == 'Aprovado') bg-success-subtle text-success-emphasis
-                                            @elseif($apontamento->status == 'Reprovado') bg-danger-subtle text-danger-emphasis
-                                            @else bg-warning-subtle text-warning-emphasis @endif">
-                                            {{ $apontamento->status }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="text-center py-5">
-                                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
-                                        <p class="h5 text-muted">Nenhum apontamento encontrado</p>
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    @endif
-
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    @if(isset($kpis) && $kpis['total_aprovados'] > 0)
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const chartColors = ['#0d6efd', '#6f42c1', '#198754', '#0dcaf0', '#ffc107', '#6c757d', '#fd7e14'];
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        @if(isset($apontamentos) && !$apontamentos->isEmpty() && $kpis['total_aprovados'] > 0)
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const clienteCtx = document.getElementById('clienteChart');
+                if (clienteCtx) {
+                    new Chart(clienteCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: @json($horasPorCliente->keys()),
+                            datasets: [{
+                                label: 'Horas Aprovadas',
+                                data: @json($horasPorCliente->values()),
+                                backgroundColor: 'rgba(79, 70, 229, 0.8)',
+                                borderColor: 'rgba(79, 70, 229, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } } }
+                    });
+                }
 
-            const clienteCtx = document.getElementById('clienteChart');
-            if (clienteCtx) {
-                new Chart(clienteCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: @json($horasPorCliente->keys()),
-                        datasets: [{
-                            label: 'Horas Aprovadas',
-                            data: @json($horasPorCliente->values()),
-                            backgroundColor: chartColors,
-                            borderRadius: 4,
-                        }]
-                    },
-                    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
-                });
-            }
-
-            const consultorCtx = document.getElementById('consultorChart');
-            if (consultorCtx) {
-                new Chart(consultorCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: @json($horasPorConsultor->keys()),
-                        datasets: [{
-                            data: @json($horasPorConsultor->values()),
-                            backgroundColor: chartColors,
-                            hoverOffset: 4
-                        }]
-                    },
-                    options: { responsive: true, plugins: { legend: { position: 'top' } } }
-                });
-            }
-        });
-    </script>
-    @endif
+                const consultorCtx = document.getElementById('consultorChart');
+                if(consultorCtx) {
+                    new Chart(consultorCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: @json($horasPorConsultor->keys()),
+                            datasets: [{
+                                label: 'Horas',
+                                data: @json($horasPorConsultor->values()),
+                                backgroundColor: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe', '#10b981', '#f59e0b'],
+                            }]
+                        },
+                        options: { responsive: true, plugins: { legend: { position: 'top' } } }
+                    });
+                }
+            });
+        </script>
+        @endif
     @endpush
 </x-app-layout>

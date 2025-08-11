@@ -17,8 +17,9 @@
         .filters-summary { margin-bottom: 25px; border-left: 4px solid #0dcaf0; padding: 10px 15px; background-color: #f8f9fa; }
         .filters-summary h5 { margin: 0 0 10px; font-size: 12px; font-weight: bold; color: #0dcaf0; }
         .filters-summary p { margin: 0; padding: 2px 0; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; word-wrap: break-word; }
         th { background-color: #f2f2f2; font-weight: bold; }
         tbody tr:nth-child(even) { background-color: #f9f9f9; }
         .total-section { margin-top: 30px; text-align: right; }
@@ -29,7 +30,9 @@
 </head>
 <body>
     <header>
-        <img src="{{ public_path('images/logo-agen.png') }}" alt="Logo">
+        {{-- ATUALIZAÇÃO: Alterado o caminho da imagem para o favicon da Progmud. --}}
+        {{-- Nota: O suporte a imagens .webp pode depender da versão da biblioteca GD no servidor. Se a imagem não aparecer, converta-a para .png. --}}
+        <img src="{{ public_path('images/favicon.webp') }}" alt="Logo Progmud">
         <div class="header-text">
             <h1>Relatório de Apontamentos</h1>
             <p>Gerado em: {{ now()->format('d/m/Y H:i') }}</p>
@@ -37,7 +40,8 @@
     </header>
 
     <footer>
-        Relatório de Apontamentos | {{ config('app.name', 'Laravel') }} | Página <span class="pagenum"></span>
+        {{-- ATUALIZAÇÃO: Alterado o nome da empresa no rodapé. --}}
+        Relatório de Apontamentos | Progmud | Página <span class="pagenum"></span>
     </footer>
 
     <main>
@@ -71,7 +75,7 @@
                         <td>{{ $apontamento->consultor->nome ?? 'N/A' }}</td>
                         <td>{{ $apontamento->contrato->cliente->nome_empresa ?? 'N/A' }}</td>
                         <td>{{ $apontamento->contrato->numero_contrato ?? 'N/A' }}</td>
-                        <td style="text-align: right;">{{ $apontamento->horas_gastas ?? '00:00' }}</td>
+                        <td style="text-align: right;">{{ number_format($apontamento->horas_gastas, 2, ':', '') }}</td>
                         <td style="text-align: center;">{{ $apontamento->status }}</td>
                     </tr>
                 @empty
@@ -82,18 +86,8 @@
             </tbody>
         </table>
 
-        @if($apontamentosAprovados->isNotEmpty())
+        @if(isset($apontamentosAprovados) && $apontamentosAprovados->isNotEmpty())
         <div class="total-section">
-             @php
-                $totalSegundos = $apontamentosAprovados->reduce(function ($carry, $apontamento) {
-                    if (empty($apontamento->horas_gastas)) return $carry;
-                    $partes = explode(':', $apontamento->horas_gastas);
-                    return $carry + ((int)($partes[0] ?? 0) * 3600) + ((int)($partes[1] ?? 0) * 60);
-                }, 0);
-                $horas = floor($totalSegundos / 3600);
-                $minutos = floor(($totalSegundos % 3600) / 60);
-                $totalFormatado = sprintf('%02d:%02d', $horas, $minutos);
-            @endphp
             <div class="total-box">
                 <span class="label">TOTAL DE HORAS APROVADAS</span>
                 <span class="value">{{ $totalFormatado }}</span>

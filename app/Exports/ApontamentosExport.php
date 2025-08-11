@@ -29,23 +29,24 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
             'Data',
             'Consultor',
             'Cliente',
-            'Contrato',
-            'Assunto',
-            'Horas Gastas',
+            'Contrato ID',
             'Descrição',
+            'Horas Gastas',
+            'Status',
         ];
     }
 
     public function map($apontamento): array
     {
         return [
-            $apontamento->data_apontamento->format('d/m/Y'),
-            $apontamento->consultor->nome ?? 'N/A',
-            $apontamento->contrato->cliente->nome_empresa ?? 'N/A',
-            $apontamento->contrato->numero_contrato ?? '#' . $apontamento->contrato->id,
-            $apontamento->agenda->assunto ?? 'N/A',
-            $apontamento->horas_gastas,
+            \Carbon\Carbon::parse($apontamento->data_apontamento)->format('d/m/Y'),
+            $apontamento->consultor?->nome ?? 'N/A',
+            // CORREÇÃO: Acesso seguro à propriedade para evitar erro com cliente nulo.
+            $apontamento->contrato?->cliente?->nome_empresa ?? 'N/A',
+            $apontamento->contrato?->id ?? 'N/A',
             $apontamento->descricao,
+            number_format($apontamento->horas_gastas, 2, ',', '.'),
+            $apontamento->status,
         ];
     }
 }

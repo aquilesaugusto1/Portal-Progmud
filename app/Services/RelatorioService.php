@@ -3,99 +3,80 @@
 namespace App\Services;
 
 use App\Models\Apontamento;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 class RelatorioService
 {
-    public function getDadosRelatorio(Request $request)
+    /**
+     * Monta a query base para os relatórios com os filtros aplicados.
+     */
+    private function getQuery(array $filtros): Builder
     {
         $user = Auth::user();
-        $query = Apontamento::query()
-            ->with([
-                'colaborador',
-                'agenda.contrato.empresaParceira'
-            ])
-            ->select('apontamentos.*');
+        // Usar withDefault() nos relacionamentos para evitar erros de propriedade nula.
+        // Isso garante que, se um contrato ou cliente não for encontrado, um modelo vazio será retornado.
+        $query = Apontamento::with(['consultor', 'contrato.cliente' => fn($q) => $q->withDefault(), 'agenda'])
+            ->whereBetween('data_apontamento', [$filtros['data_inicio'], $filtros['data_fim']]);
 
-        // Filtros de data e status
-        if ($request->filled('data_inicio')) {
-            $query->where('data', '>=', $request->data_inicio);
+        if (!empty($filtros['colaborador_id'])) {
+            $query->where('consultor_id', $filtros['colaborador_id']);
+        }
+        if (!empty($filtros['contrato_id'])) {
+            $query->where('contrato_id', $filtros['contrato_id']);
+        }
+        if (!empty($filtros['empresa_id'])) {
+            $query->whereHas('contrato', fn($q) => $q->where('cliente_id', $filtros['empresa_id']));
+        }
+        if (!empty($filtros['status'])) {
+            $query->where('status', $filtros['status']);
         }
 
-        if ($request->filled('data_fim')) {
-            $query->where('data', '<=', $request->data_fim);
-        }
-        
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($user->isTechLead()) {
+            $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
+            $query->whereIn('consultor_id', $lideradosIds);
         }
 
-        // Filtros de Entidade
-        if ($request->filled('colaborador_id')) {
-            $query->where('colaborador_id', $request->colaborador_id);
-        }
-
-        if ($request->filled('empresa_id')) {
-            $query->whereHas('agenda.contrato', function ($q) use ($request) {
-                $q->where('empresa_parceira_id', $request->empresa_id);
-            });
-        }
-
-        if ($request->filled('contrato_id')) {
-            $query->whereHas('agenda', function ($q) use ($request) {
-                $q->where('contrato_id', $request->contrato_id);
-            });
-        }
-
-        // Lógica de Permissão
-        if ($user->isConsultor()) {
-            $query->where('colaborador_id', $user->id);
-        } 
-        elseif ($user->isTechLead()) {
-            $lideradosIds = $user->consultoresLiderados->pluck('id')->toArray();
-            
-            // Se um consultor específico foi filtrado, verifica se ele é um liderado
-            if ($request->filled('colaborador_id') && !in_array($request->colaborador_id, $lideradosIds)) {
-                 // Retorna uma coleção vazia se o tech lead tentar filtrar um consultor que não lidera
-                return collect();
-            }
-            
-            $query->whereIn('colaborador_id', $lideradosIds);
-        }
-        // Se for admin ou coordenador, não aplica filtro de permissão (vê tudo)
-
-        return $query->orderBy('data', 'asc')->get();
+        return $query;
     }
 
-    public function getDadosGrafico($apontamentos)
+    /**
+     * Gera todos os dados necessários para a página de relatório (HTML).
+     */
+    public function gerarDadosCompletos(array $filtros): array
     {
-        if ($apontamentos->isEmpty()) {
-            return [
-                'labels' => [],
-                'values' => [],
-            ];
-        }
+        $query = $this->getQuery($filtros);
+        $apontamentos = $query->orderBy('data_apontamento', 'desc')->get();
+        
+        $apontamentosAprovados = $apontamentos->where('status', 'Aprovado');
 
-        $dados = $apontamentos->groupBy('colaborador.nome')
-            ->map(function ($group) {
-                return $group->sum(function ($apontamento) {
-                    if (empty($apontamento->horas_aprovadas)) {
-                        return 0;
-                    }
-                    
-                    $partes = explode(':', $apontamento->horas_aprovadas);
-                    $horas = isset($partes[0]) ? (int)$partes[0] : 0;
-                    $minutos = isset($partes[1]) ? (int)$partes[1] / 60 : 0;
-                    
-                    return $horas + $minutos;
-                });
-            })
+        $totalHoras = $apontamentosAprovados->sum('horas_gastas');
+
+        $kpis = [
+            'total_horas' => $totalHoras,
+            'total_apontamentos' => $apontamentos->count(),
+            'total_aprovados' => $apontamentosAprovados->count(),
+            'media_horas' => $apontamentosAprovados->count() > 0 ? $totalHoras / $apontamentosAprovados->count() : 0,
+        ];
+
+        // CORREÇÃO: Agrupamento seguro para evitar erro com cliente nulo.
+        $horasPorCliente = $apontamentosAprovados->groupBy(function ($apontamento) {
+            return $apontamento->contrato->cliente->nome_empresa ?? 'Cliente não informado';
+        })->map(fn($group) => $group->sum('horas_gastas'))->sortDesc();
+
+        $horasPorConsultor = $apontamentosAprovados->groupBy('consultor.nome')
+            ->map(fn($group) => $group->sum('horas_gastas'))
             ->sortDesc();
 
-        return [
-            'labels' => $dados->keys(),
-            'values' => $dados->values(),
-        ];
+        return compact('apontamentos', 'kpis', 'horasPorCliente', 'horasPorConsultor');
+    }
+
+    /**
+     * Retorna apenas a coleção de apontamentos para exportação (PDF/Excel).
+     */
+    public function getDadosParaExportacao(array $filtros): Collection
+    {
+        return $this->getQuery($filtros)->orderBy('data_apontamento', 'asc')->get();
     }
 }

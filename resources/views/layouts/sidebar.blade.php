@@ -9,8 +9,17 @@
     <!-- Logo -->
     <div class="flex items-center justify-center h-16 bg-slate-950 flex-shrink-0">
         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-            <img class="h-8 w-auto" src="{{ asset('images/logo-agen.png') }}" alt="Logo da Agen">
-            <span class="text-2xl font-bold text-slate-200">Agen</span>
+            {{-- 
+                MELHORIA VISUAL: 
+                O ícone agora está dentro de um container com fundo claro e cantos arredondados.
+                Isso cria um efeito de "emblema", que é visualmente mais agradável e profissional
+                do que a imagem solta no fundo escuro. O tamanho do ícone também foi ajustado
+                para evitar distorção.
+            --}}
+            <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-slate-800 flex-shrink-0">
+                <img class="h-6 w-6" src="{{ asset('images/favicon.webp') }}" alt="Logo da Progmud">
+            </div>
+            <span class="text-2xl font-bold text-slate-200">Progmud</span>
         </a>
     </div>
 
