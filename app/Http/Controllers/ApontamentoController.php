@@ -29,10 +29,10 @@ class ApontamentoController extends Controller
         $query = Agenda::with(['consultor', 'contrato.cliente', 'apontamento'])
                        ->whereBetween('data_hora', [$start, $end]);
 
-        if ($user->funcao === 'consultor') {
+        if ($user->isConsultor()) {
             $query->where('consultor_id', $user->id);
-        } elseif ($user->funcao === 'techlead') {
-            $consultor_ids = $user->consultoresLiderados()->pluck('id');
+        } elseif ($user->isTechLead()) {
+            $consultor_ids = $user->consultoresLiderados()->pluck('usuarios.id');
             $query->whereIn('consultor_id', $consultor_ids);
         }
 
@@ -47,7 +47,7 @@ class ApontamentoController extends Controller
             'hora_inicio' => 'required|date_format:H:i',
             'hora_fim' => 'required|date_format:H:i|after:hora_inicio',
             'descricao' => 'required|string|max:2000',
-            'anexo' => ['required_without:apontamento_id', 'file', 'mimes:pdf', 'max:2048'],
+            'anexo' => ['nullable', 'file', 'mimes:pdf,jpg,png,jpeg', 'max:2048'],
             'faturavel' => 'nullable|boolean',
         ]);
 
@@ -116,7 +116,8 @@ class ApontamentoController extends Controller
                 'extendedProps' => [
                     'consultor' => $agenda->consultor->nome,
                     'assunto' => $agenda->assunto,
-                    'contrato' => $agenda->contrato->numero_contrato ?? 'N/A',
+                    // AQUI ESTÁ A MUDANÇA
+                    'contrato' => ($agenda->contrato->cliente->nome_empresa ?? 'Cliente N/A') . ' - ' . ($agenda->contrato->numero_contrato ?? 'Contrato N/A'),
                     'status' => $status,
                     'hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
                     'hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
