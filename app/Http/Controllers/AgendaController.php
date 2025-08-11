@@ -58,12 +58,10 @@ class AgendaController extends Controller
 
             return [
                 'id' => $agenda->id,
-                // AQUI ESTÁ A MUDANÇA: Exibindo o nome do consultor no título do evento.
                 'title' => $agenda->consultor->nome ?? 'Consultor N/A', 
                 'start' => $agenda->data_hora->toIso8601String(),
                 'color' => $color,
                 'extendedProps' => [
-                    // Mantive o assunto e outros dados aqui para uso em modais ou tooltips.
                     'assunto' => $agenda->assunto,
                     'consultor' => $agenda->consultor->nome ?? 'N/A',
                     'cliente' => $agenda->contrato->cliente->nome_empresa ?? 'N/A',
@@ -84,8 +82,9 @@ class AgendaController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', Agenda::class);
+        // CORREÇÃO: A validação agora aponta para a tabela 'usuarios', que é a correta.
         $validated = $request->validate([
-            'consultor_id' => 'required|exists:users,id',
+            'consultor_id' => 'required|exists:usuarios,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
             'data_hora' => 'required|date',
@@ -141,8 +140,9 @@ class AgendaController extends Controller
     public function update(Request $request, Agenda $agenda)
     {
         $this->authorize('update', $agenda);
+        // CORREÇÃO: A validação agora aponta para a tabela 'usuarios', que é a correta.
         $validated = $request->validate([
-            'consultor_id' => 'required|exists:users,id',
+            'consultor_id' => 'required|exists:usuarios,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
             'data_hora' => 'required|date',
