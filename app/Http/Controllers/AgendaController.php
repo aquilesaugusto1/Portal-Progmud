@@ -19,7 +19,6 @@ class AgendaController extends Controller
         $query = Agenda::with(['consultor', 'contrato.cliente']);
 
         if ($user->isTechLead()) {
-            // CORREÇÃO APLICADA AQUI
             $consultoresLideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
             $query->whereIn('consultor_id', $consultoresLideradosIds);
         } elseif ($user->isConsultor()) {
@@ -43,9 +42,7 @@ class AgendaController extends Controller
         $eventosDoCalendario = $this->formatarParaCalendario($calendarQuery->get());
 
         $consultores = User::where('status', 'Ativo')->where('funcao', 'consultor')->orderBy('nome')->get();
-
-
-        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
+        $contratos = Contrato::with('cliente')->where('status', 'Ativo')->orderBy('numero_contrato')->get();
 
         return view('agendas.index', compact('agendas', 'eventosDoCalendario', 'consultores', 'contratos'));
     }
@@ -53,18 +50,21 @@ class AgendaController extends Controller
     private function formatarParaCalendario($agendas)
     {
         return $agendas->map(function ($agenda) {
-            $color = '#3B82F6'; 
+            $color = '#3B82F6'; // Azul padrão para 'Agendada'
             switch ($agenda->status) {
-                case 'Realizada': $color = '#10B981'; break; 
-                case 'Cancelada': $color = '#EF4444'; break; 
+                case 'Realizada': $color = '#10B981'; break; // Verde
+                case 'Cancelada': $color = '#EF4444'; break; // Vermelho
             }
 
             return [
                 'id' => $agenda->id,
-                'title' => $agenda->assunto,
+                // AQUI ESTÁ A MUDANÇA: Exibindo o nome do consultor no título do evento.
+                'title' => $agenda->consultor->nome ?? 'Consultor N/A', 
                 'start' => $agenda->data_hora->toIso8601String(),
                 'color' => $color,
                 'extendedProps' => [
+                    // Mantive o assunto e outros dados aqui para uso em modais ou tooltips.
+                    'assunto' => $agenda->assunto,
                     'consultor' => $agenda->consultor->nome ?? 'N/A',
                     'cliente' => $agenda->contrato->cliente->nome_empresa ?? 'N/A',
                     'url' => route('agendas.show', $agenda),
@@ -76,7 +76,7 @@ class AgendaController extends Controller
     public function create()
     {
         $this->authorize('create', Agenda::class);
-        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
+        $contratos = Contrato::with('cliente')->where('status', 'Ativo')->orderBy('numero_contrato')->get();
         $consultores = collect();
         return view('agendas.create', compact('consultores', 'contratos'));
     }
@@ -85,7 +85,7 @@ class AgendaController extends Controller
     {
         $this->authorize('create', Agenda::class);
         $validated = $request->validate([
-            'consultor_id' => 'required|exists:usuarios,id',
+            'consultor_id' => 'required|exists:users,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
             'data_hora' => 'required|date',
@@ -119,7 +119,6 @@ class AgendaController extends Controller
         });
     
         if ($user->isTechLead()) {
-            // CORREÇÃO APLICADA AQUI
             $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
     
             if ($lideradosIds->isEmpty()) {
@@ -134,7 +133,7 @@ class AgendaController extends Controller
     public function edit(Agenda $agenda)
     {
         $this->authorize('update', $agenda);
-        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->get();
+        $contratos = Contrato::with('cliente')->where('status', 'Ativo')->get();
         $consultores = $this->getFilteredConsultantsForContract($agenda->contrato, Auth::user());
         return view('agendas.edit', compact('agenda', 'consultores', 'contratos'));
     }
@@ -143,7 +142,7 @@ class AgendaController extends Controller
     {
         $this->authorize('update', $agenda);
         $validated = $request->validate([
-            'consultor_id' => 'required|exists:usuarios,id',
+            'consultor_id' => 'required|exists:users,id',
             'contrato_id' => 'required|exists:contratos,id',
             'assunto' => 'required|string|max:255',
             'data_hora' => 'required|date',
@@ -173,12 +172,12 @@ class AgendaController extends Controller
             $consultores = $this->getFilteredConsultantsForContract($contrato, Auth::user());
             return response()->json($consultores->map->only(['id', 'nome', 'sobrenome']));
         } catch (\Exception $e) {
-            Log::error('Erro CRÍTICO ao buscar consultores para o contrato.', [
+            Log::error('Erro ao buscar consultores para o contrato.', [
                 'contrato_id' => $contratoId,
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage()
             ]);
-            return response()->json(['message' => 'Ocorreu um erro crítico no servidor.'], 500);
+            return response()->json(['message' => 'Ocorreu um erro no servidor.'], 500);
         }
     }
 }
