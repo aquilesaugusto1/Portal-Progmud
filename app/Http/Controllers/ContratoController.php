@@ -7,7 +7,8 @@ use App\Models\EmpresaParceira;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage; // Adicionado para lidar com arquivos
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule; // Importar a classe Rule
 
 class ContratoController extends Controller
 {
@@ -83,7 +84,6 @@ class ContratoController extends Controller
             $preparedData = $this->prepareData($request, $validatedData);
 
             if ($request->hasFile('documento_baseline')) {
-                // Apaga o arquivo antigo se existir
                 if ($contrato->documento_baseline_path) {
                     Storage::disk('public')->delete($contrato->documento_baseline_path);
                 }
@@ -108,9 +108,12 @@ class ContratoController extends Controller
 
     private function getValidationRules($id = null)
     {
+        // Pega o valor do checkbox 'permite_antecipar_baseline' diretamente da request
+        $permiteAntecipar = request()->input('permite_antecipar_baseline');
+
         return [
             'cliente_id' => ['required', 'exists:empresas_parceiras,id'],
-            'numero_contrato' => ['nullable', 'string', 'max:255', 'unique:contratos,numero_contrato,' . $id],
+            'numero_contrato' => ['nullable', 'string', 'max:255', Rule::unique('contratos')->ignore($id)],
             'tipo_contrato' => ['required', 'string'],
             'produtos' => ['required', 'array'],
             'produtos.*' => ['string'],
@@ -121,7 +124,17 @@ class ContratoController extends Controller
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
-            'documento_baseline' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png', 'max:2048'],
+
+            // *** MUDANÇA PRINCIPAL AQUI ***
+            // O campo 'documento_baseline' agora é obrigatório se 'permite_antecipar_baseline' for '1' ou 'true'.
+            'documento_baseline' => [
+                'nullable',
+                Rule::requiredIf($permiteAntecipar == '1' || $permiteAntecipar === true),
+                'file',
+                'mimes:pdf,doc,docx,jpg,jpeg,png',
+                'max:2048'
+            ],
+
             'coordenadores' => ['nullable', 'array'],
             'coordenadores.*' => ['exists:usuarios,id'],
             'tech_leads' => ['nullable', 'array'],
@@ -133,7 +146,9 @@ class ContratoController extends Controller
 
     private function prepareData(Request $request, array $validatedData)
     {
+        // Converte o valor do checkbox para um booleano (0 ou 1)
         $validatedData['permite_antecipar_baseline'] = $request->has('permite_antecipar_baseline');
+
         if (!in_array('Outro', $validatedData['produtos'])) {
             $validatedData['especifique_outro'] = null;
         }
