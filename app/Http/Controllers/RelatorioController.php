@@ -2,9 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Contrato;
-use App\Models\EmpresaParceira;
 use Illuminate\Http\Request;
 use App\Services\RelatorioService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -65,7 +62,8 @@ class RelatorioController extends Controller
                 if ($filtros['formato'] === 'pdf') {
                     $pdf = Pdf::loadView('relatorios.pdf.alocacao-consultores', [
                         'resultados' => $dadosRelatorio['resultados'],
-                        'filtros' => $filtros
+                        'filtros' => $filtros,
+                        'dias_uteis' => $dadosRelatorio['dias_uteis']
                     ]);
                     return $pdf->download('relatorio_alocacao_consultores_'.now()->format('Y-m-d').'.pdf');
                 }
@@ -74,8 +72,23 @@ class RelatorioController extends Controller
                 return view('relatorios.alocacao-consultores', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             case 'visao-geral-contratos':
-                // ... lógica do relatório de contratos ...
-                break;
+                $filtros = $request->validate([
+                    'contratos_id' => 'required|array',
+                    'formato' => 'required|in:html,pdf',
+                ]);
+
+                $dadosRelatorio = $this->relatorioService->gerarRelatorioContratos($filtros);
+
+                if ($filtros['formato'] === 'pdf') {
+                    $pdf = Pdf::loadView('relatorios.pdf.visao-geral-contratos', [
+                        'resultados' => $dadosRelatorio['resultados'],
+                        'filtros' => $filtros
+                    ]);
+                    return $pdf->download('relatorio_visao_contratos_'.now()->format('Y-m-d').'.pdf');
+                }
+
+                $dadosFiltro = $this->relatorioService->getFiltrosContratos();
+                return view('relatorios.visao-geral-contratos', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             default:
                 return redirect()->route('relatorios.index')->with('error', 'Tipo de relatório inválido.');
