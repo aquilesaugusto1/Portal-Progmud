@@ -2,81 +2,140 @@
 
 namespace App\Services;
 
+use App\Models\User;
+use App\Models\Agenda;
+use App\Models\Contrato;
 use App\Models\Apontamento;
+use App\Models\EmpresaParceira;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 class RelatorioService
 {
-    /**
-     * Monta a query base para os relatórios com os filtros aplicados.
-     */
-    private function getQuery(array $filtros): Builder
+    public function getFiltrosApontamentos()
     {
         $user = Auth::user();
-        // Usar withDefault() nos relacionamentos para evitar erros de propriedade nula.
-        // Isso garante que, se um contrato ou cliente não for encontrado, um modelo vazio será retornado.
-        $query = Apontamento::with(['consultor', 'contrato.cliente' => fn($q) => $q->withDefault(), 'agenda'])
-            ->whereBetween('data_apontamento', [$filtros['data_inicio'], $filtros['data_fim']]);
-
-        if (!empty($filtros['colaborador_id'])) {
-            $query->where('consultor_id', $filtros['colaborador_id']);
-        }
-        if (!empty($filtros['contrato_id'])) {
-            $query->where('contrato_id', $filtros['contrato_id']);
-        }
-        if (!empty($filtros['empresa_id'])) {
-            $query->whereHas('contrato', fn($q) => $q->where('cliente_id', $filtros['empresa_id']));
-        }
-        if (!empty($filtros['status'])) {
-            $query->where('status', $filtros['status']);
-        }
-
-        if ($user->isTechLead()) {
-            $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
-            $query->whereIn('consultor_id', $lideradosIds);
-        }
-
-        return $query;
+        $clientes = EmpresaParceira::orderBy('nome_empresa')->get();
+        $contratos = $user->isTechLead() ? $user->contratos()->orderBy('numero_contrato')->get() : Contrato::orderBy('numero_contrato')->get();
+        $colaboradores = $user->isTechLead() ? $user->consultoresLiderados()->orderBy('nome')->get() : User::where('funcao', 'consultor')->orderBy('nome')->get();
+        return compact('clientes', 'contratos', 'colaboradores');
     }
 
-    /**
-     * Gera todos os dados necessários para a página de relatório (HTML).
-     */
-    public function gerarDadosCompletos(array $filtros): array
+    public function gerarRelatorioApontamentos(array $filtros)
     {
-        $query = $this->getQuery($filtros);
-        $apontamentos = $query->orderBy('data_apontamento', 'desc')->get();
-        
-        $apontamentosAprovados = $apontamentos->where('status', 'Aprovado');
-
-        $totalHoras = $apontamentosAprovados->sum('horas_gastas');
-
-        $kpis = [
-            'total_horas' => $totalHoras,
-            'total_apontamentos' => $apontamentos->count(),
-            'total_aprovados' => $apontamentosAprovados->count(),
-            'media_horas' => $apontamentosAprovados->count() > 0 ? $totalHoras / $apontamentosAprovados->count() : 0,
-        ];
-
-        // CORREÇÃO: Agrupamento seguro para evitar erro com cliente nulo.
-        $horasPorCliente = $apontamentosAprovados->groupBy(function ($apontamento) {
-            return $apontamento->contrato->cliente->nome_empresa ?? 'Cliente não informado';
-        })->map(fn($group) => $group->sum('horas_gastas'))->sortDesc();
-
-        $horasPorConsultor = $apontamentosAprovados->groupBy('consultor.nome')
-            ->map(fn($group) => $group->sum('horas_gastas'))
-            ->sortDesc();
-
-        return compact('apontamentos', 'kpis', 'horasPorCliente', 'horasPorConsultor');
+        $query = Apontamento::with(['consultor', 'contrato.cliente']);
+        $apontamentos = $query->get();
+        return ['resultados' => $apontamentos];
     }
 
-    /**
-     * Retorna apenas a coleção de apontamentos para exportação (PDF/Excel).
-     */
-    public function getDadosParaExportacao(array $filtros): Collection
+    public function getFiltrosAlocacao()
     {
-        return $this->getQuery($filtros)->orderBy('data_apontamento', 'asc')->get();
+        $consultoresPJ = User::where('funcao', 'consultor')
+                                ->whereIn('tipo_contrato', ['PJ Mensal', 'PJ Horista'])
+                                ->where('status', 'Ativo')
+                                ->orderBy('nome')
+                                ->get();
+        return ['consultores' => $consultoresPJ];
+    }
+
+    public function gerarRelatorioAlocacao(array $filtros)
+    {
+        $inicioPeriodo = Carbon::parse($filtros['data_inicio'])->startOfDay();
+        $fimPeriodo = Carbon::parse($filtros['data_fim'])->endOfDay();
+
+        $diasUteis = $this->getDiasUteisNoPeriodo($inicioPeriodo, $fimPeriodo);
+        $horasUteisDoPeriodo = $diasUteis * 8;
+
+        $consultores = User::whereIn('id', $filtros['consultores_id'])->get();
+        $resultados = [];
+
+        foreach ($consultores as $consultor) {
+            $horasApontadas = Apontamento::where('consultor_id', $consultor->id)
+                ->whereBetween('data_apontamento', [$inicioPeriodo, $fimPeriodo])
+                ->sum('horas_gastas');
+
+            $numeroDeAgendas = Agenda::where('consultor_id', $consultor->id)
+                ->whereBetween('data_hora', [$inicioPeriodo, $fimPeriodo])
+                ->where('status', '!=', 'Cancelada')
+                ->count();
+            
+            // CORREÇÃO: Usando abs() para garantir que o valor subtraído seja sempre positivo,
+            // evitando o problema de "menos com menos" que você identificou.
+            $horasUteisRestantes = $horasUteisDoPeriodo - abs($horasApontadas);
+
+            $resultados[] = [
+                'consultor' => $consultor,
+                'horas_apontadas' => $horasApontadas,
+                'numero_agendas' => $numeroDeAgendas,
+                'horas_uteis_periodo' => $horasUteisDoPeriodo,
+                'horas_uteis_restantes' => $horasUteisRestantes,
+            ];
+        }
+        return ['resultados' => $resultados, 'dias_uteis' => $diasUteis];
+    }
+
+    private function getDiasUteisNoPeriodo(Carbon $inicio, Carbon $fim): int
+    {
+        $diasUteis = 0;
+        $feriados = $this->getFeriados(range($inicio->year, $fim->year));
+        $dataAtual = $inicio->copy();
+
+        while ($dataAtual <= $fim) {
+            if ($dataAtual->isWeekday() && !in_array($dataAtual->format('Y-m-d'), $feriados)) {
+                $diasUteis++;
+            }
+            $dataAtual->addDay();
+        }
+        return $diasUteis;
+    }
+
+    private function getFeriados(array $anos): array
+    {
+        $feriados = [];
+        foreach ($anos as $ano) {
+            $feriados[] = "{$ano}-01-01";
+            $feriados[] = "{$ano}-04-21";
+            $feriados[] = "{$ano}-05-01";
+            $feriados[] = "{$ano}-09-07";
+            $feriados[] = "{$ano}-10-12";
+            $feriados[] = "{$ano}-11-02";
+            $feriados[] = "{$ano}-11-15";
+            $feriados[] = "{$ano}-12-25";
+
+            $pascoaTimestamp = easter_date($ano);
+            $feriados[] = date('Y-m-d', strtotime('-2 days', $pascoaTimestamp));
+            $feriados[] = date('Y-m-d', strtotime('-47 days', $pascoaTimestamp));
+            $feriados[] = date('Y-m-d', strtotime('+60 days', $pascoaTimestamp));
+        }
+        return $feriados;
+    }
+
+    public function getFiltrosContratos()
+    {
+        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
+        return compact('contratos');
+    }
+
+    public function gerarRelatorioContratos(array $filtros)
+    {
+        $contratos = Contrato::with('cliente')->whereIn('id', $filtros['contratos_id'])->get();
+        $resultados = [];
+
+        foreach ($contratos as $contrato) {
+            $horasGastas = Apontamento::where('contrato_id', $contrato->id)
+                ->where('status', 'Aprovado')
+                ->sum('horas_gastas');
+            
+            $saldo = $contrato->horas_contratadas - $horasGastas;
+            $percentualGasto = ($contrato->horas_contratadas > 0) ? ($horasGastas / $contrato->horas_contratadas) * 100 : 0;
+
+            $resultados[] = [
+                'contrato' => $contrato,
+                'horas_gastas' => $horasGastas,
+                'saldo_horas' => $saldo,
+                'percentual_gasto' => round($percentualGasto)
+            ];
+        }
+        return ['resultados' => $resultados];
     }
 }

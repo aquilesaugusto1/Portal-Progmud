@@ -18,16 +18,13 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Rotas que só exigem autenticação básica
 Route::middleware(['auth'])->group(function () {
     Route::get('/termo-de-aceite', [TermoAceiteController::class, 'show'])->name('termo.aceite');
     Route::post('/termo-de-aceite', [TermoAceiteController::class, 'accept'])->name('termo.accept');
 });
 
-// Rotas principais da aplicação (exigem login, email verificado e termo de aceite)
 Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite::class])->group(function () {
 
-    // Rotas acessíveis a todos os perfis logados
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -39,18 +36,17 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::get('/api/agendas', [ApontamentoController::class, 'events'])->name('api.agendas');
 
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
-    Route::post('/relatorios', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
+    Route::get('/relatorios/{tipo}', [RelatorioController::class, 'show'])->name('relatorios.show');
+    Route::post('/relatorios/gerar', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
     
     Route::get('/api/contratos/{contratoId}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
     Route::resource('agendas', AgendaController::class);
     Route::resource('sugestoes', SugestaoController::class)->only(['index', 'create', 'store']);
 
-    // Módulos de Cadastro (Acesso controlado via Policy nos Controllers)
     Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
     Route::resource('contratos', ContratoController::class)->except(['destroy']);
     Route::resource('colaboradores', ColaboradorController::class)->except(['destroy'])->parameters(['colaboradores' => 'colaborador']);
 
-    // Rotas de Ações Específicas (Protegidas por middleware de perfil)
     Route::middleware('role:admin,coordenador_operacoes,coordenador_tecnico,techlead')->group(function () {
         Route::get('/enviar-agendas', [EmailController::class, 'create'])->name('email.agendas.create');
         Route::post('/enviar-agendas', [EmailController::class, 'send'])->name('email.agendas.send');

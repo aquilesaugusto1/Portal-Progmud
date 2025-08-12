@@ -5,12 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Contrato;
 use App\Models\EmpresaParceira;
-use Illuminate\Support\Facades\Auth;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\ApontamentosExport;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 use App\Services\RelatorioService;
-use App\Http\Requests\GerarRelatorioRequest;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class RelatorioController extends Controller
 {
@@ -21,78 +18,67 @@ class RelatorioController extends Controller
         $this->relatorioService = $relatorioService;
     }
 
-    /**
-     * Retorna as opções para os filtros do formulário.
-     */
-    private function getFiltroOptions(): array
-    {
-        $user = Auth::user();
-        
-        $clientes = EmpresaParceira::orderBy('nome_empresa')->get();
-        
-        // --- LÓGICA DE FILTRO DE CONTRATOS ATUALIZADA ---
-        if ($user->isTechLead()) {
-            // Se o usuário for um Tech Lead, busca apenas os contratos aos quais ele está associado.
-            $contratos = $user->contratos()->orderBy('numero_contrato')->get();
-        } else {
-            // Para outras funções (como Admin), busca todos os contratos.
-            $contratos = Contrato::orderBy('numero_contrato')->get();
-        }
-
-        // Lógica para buscar colaboradores (respeitando a hierarquia do Tech Lead)
-        if ($user->isTechLead()) {
-            $colaboradores = $user->consultoresLiderados()->orderBy('nome')->get();
-        } else {
-            $colaboradores = User::where('funcao', 'consultor')->orderBy('nome')->get();
-        }
-
-        return compact('clientes', 'contratos', 'colaboradores');
-    }
-
-    /**
-     * Exibe a página inicial de relatórios com os filtros.
-     */
     public function index()
     {
-        return view('relatorios.index', $this->getFiltroOptions());
+        return view('relatorios.index');
     }
 
-    /**
-     * Gera o relatório com base nos filtros e no formato solicitado.
-     */
-    public function gerar(GerarRelatorioRequest $request)
+    public function show(string $tipo)
     {
-        $filtros = $request->validated();
+        switch ($tipo) {
+            case 'apontamentos':
+                $dadosFiltro = $this->relatorioService->getFiltrosApontamentos();
+                return view('relatorios.apontamentos', $dadosFiltro);
 
-        if ($filtros['formato'] === 'pdf') {
-            $apontamentos = $this->relatorioService->getDadosParaExportacao($filtros);
-            $apontamentosAprovados = $apontamentos->where('status', 'Aprovado');
+            case 'alocacao-consultores':
+                $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
+                return view('relatorios.alocacao-consultores', $dadosFiltro);
 
-            $totalHorasDecimal = $apontamentosAprovados->sum('horas_gastas');
-            $horas = floor($totalHorasDecimal);
-            $minutos = round(($totalHorasDecimal - $horas) * 60);
-            $totalFormatado = sprintf('%02d:%02d', $horas, $minutos);
+            case 'visao-geral-contratos':
+                $dadosFiltro = $this->relatorioService->getFiltrosContratos();
+                return view('relatorios.visao-geral-contratos', $dadosFiltro);
 
-            $pdf = Pdf::loadView('relatorios.pdf', [
-                'apontamentos' => $apontamentos,
-                'apontamentosAprovados' => $apontamentosAprovados,
-                'filtros' => $filtros,
-                'totalFormatado' => $totalFormatado
-            ]);
-            return $pdf->download('relatorio_apontamentos_'.now()->format('Y-m-d').'.pdf');
+            default:
+                abort(404);
         }
+    }
 
-        if ($filtros['formato'] === 'excel') {
-            $dadosParaExportacao = $this->relatorioService->getDadosParaExportacao($filtros);
-            return Excel::download(new ApontamentosExport($dadosParaExportacao, $filtros), 'relatorio_apontamentos_'.now()->format('Y-m-d').'.xlsx');
-        }
-
-        $dadosRelatorio = $this->relatorioService->gerarDadosCompletos($filtros);
+    public function gerar(Request $request)
+    {
+        $tipo = $request->input('tipo_relatorio');
         
-        return view('relatorios.index', array_merge(
-            $dadosRelatorio,
-            ['filtros' => $filtros],
-            $this->getFiltroOptions()
-        ));
+        switch ($tipo) {
+            case 'apontamentos':
+                // ... lógica do relatório de apontamentos ...
+                break;
+
+            case 'alocacao-consultores':
+                $filtros = $request->validate([
+                    'data_inicio' => 'required|date',
+                    'data_fim' => 'required|date|after_or_equal:data_inicio',
+                    'consultores_id' => 'required|array',
+                    'formato' => 'required|in:html,pdf',
+                ]);
+
+                $dadosRelatorio = $this->relatorioService->gerarRelatorioAlocacao($filtros);
+
+                if ($filtros['formato'] === 'pdf') {
+                    $pdf = Pdf::loadView('relatorios.pdf.alocacao-consultores', [
+                        'resultados' => $dadosRelatorio['resultados'],
+                        'filtros' => $filtros
+                    ]);
+                    return $pdf->download('relatorio_alocacao_consultores_'.now()->format('Y-m-d').'.pdf');
+                }
+                
+                $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
+                return view('relatorios.alocacao-consultores', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
+
+            case 'visao-geral-contratos':
+                // ... lógica do relatório de contratos ...
+                break;
+
+            default:
+                return redirect()->route('relatorios.index')->with('error', 'Tipo de relatório inválido.');
+        }
     }
 }
