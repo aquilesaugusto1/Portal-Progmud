@@ -14,9 +14,6 @@ class SugestaoController extends Controller
         
         $query = Sugestao::with('usuario')->latest();
 
-        // Lógica de filtro removida - agora todos veem todas as sugestões.
-        // A permissão para editar é controlada pela Policy.
-
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }

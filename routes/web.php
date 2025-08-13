@@ -41,7 +41,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     
     Route::get('/api/contratos/{contratoId}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
     Route::resource('agendas', AgendaController::class);
-    Route::resource('sugestoes', SugestaoController::class)->only(['index', 'create', 'store', 'update']);
+    Route::resource('sugestoes', SugestaoController::class)->only(['index', 'create', 'store', 'update'])->parameters(['sugestoes' => 'sugestao']);
 
     Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
     Route::resource('contratos', ContratoController::class)->except(['destroy']);
