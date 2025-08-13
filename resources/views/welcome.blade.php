@@ -16,8 +16,8 @@
                 <nav class="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
                     <div class="flex lg:flex-1">
                         <a href="#" class="-m-1.5 p-1.5 flex items-center space-x-3">
-                            <img class="h-8 w-auto" src="{{ asset('images/logo-agen.png') }}" alt="Logo da Agen">
-                            <span class="text-2xl font-bold text-white">Agen</span>
+                            <img class="h-8 w-auto" src="{{ asset('images/favicon.webp') }}" alt="Logo da Progmud">
+                            <span class="text-2xl font-bold text-white">Portal Progmud</span>
                         </a>
                     </div>
                     <div class="lg:flex lg:flex-1 lg:justify-end">
@@ -54,9 +54,9 @@
         <section id="sobre" class="bg-white py-24 sm:py-32">
             <div class="mx-auto max-w-7xl px-6 lg:px-8">
                 <div class="mx-auto max-w-2xl lg:text-center">
-                    <h2 class="text-base font-semibold leading-7 text-indigo-600">O que é a Agen?</h2>
+                    <h2 class="text-base font-semibold leading-7 text-indigo-600">O que é o Portal Progmud?</h2>
                     <p class="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Uma Ferramenta Completa para a Sua Operação</p>
-                    <p class="mt-6 text-lg leading-8 text-gray-600">Nascido da necessidade de clareza e controle, a Agen foi projetada para centralizar a gestão de projetos de consultoria. Desde a alocação de Tech Leads e Consultores até ao apontamento detalhado de horas e o envio de relatórios, o nosso objetivo é transformar a complexidade em eficiência.</p>
+                    <p class="mt-6 text-lg leading-8 text-gray-600">Nascido da necessidade de clareza e controle, o Portal Progmud foi projetado para centralizar a gestão de projetos de consultoria. Desde a alocação de Tech Leads e Consultores até ao apontamento detalhado de horas e o envio de relatórios, o nosso objetivo é transformar a complexidade em eficiência.</p>
                 </div>
             </div>
         </section>
@@ -72,13 +72,13 @@
                         <img class="h-24 w-24 rounded-full object-cover" src="{{ asset('images/foto-aquiles.jpg') }}" alt="Foto de Aquiles Morato">
                         <h3 class="mt-6 text-lg font-semibold leading-8 text-white">Aquiles Morato</h3>
                         <p class="text-base leading-7 text-indigo-400">Desenvolvedor Full-Stack</p>
-                        <p class="mt-4 text-base leading-7 text-slate-300">Com apenas 18 anos, Aquiles é o arquiteto do sistema. Ele transforma lógicas de negócio complexas em funcionalidades robustas e eficientes, garantindo que a fundação do Agen seja sólida, segura e perfeitamente escalável para o futuro.</p>
+                        <p class="mt-4 text-base leading-7 text-slate-300">Com apenas 18 anos, Aquiles é o arquiteto do sistema. Ele transforma lógicas de negócio complexas em funcionalidades robustas e eficientes, garantindo que a fundação do Portal Progmud seja sólida, segura e perfeitamente escalável para o futuro.</p>
                     </div>
                     <div class="flex flex-col items-start">
                         <img class="h-24 w-24 rounded-full object-cover" src="{{ asset('images/foto-luca.jpg') }}" alt="Foto de Luca Morato">
                         <h3 class="mt-6 text-lg font-semibold leading-8 text-white">Luca Morato</h3>
                         <p class="text-base leading-7 text-fuchsia-400">Front-end & UX Designer</p>
-                        <p class="mt-4 text-base leading-7 text-slate-300">Também com 18 anos, Luca é o mestre da experiência do utilizador. O seu foco incansável é criar um fluxo de trabalho intuitivo e um design limpo, garantindo que o poder do Agen seja não só acessível, mas também agradável de usar no dia a dia.</p>
+                        <p class="mt-4 text-base leading-7 text-slate-300">Também com 18 anos, Luca é o mestre da experiência do utilizador. O seu foco incansável é criar um fluxo de trabalho intuitivo e um design limpo, garantindo que o poder do Portal Progmud seja não só acessível, mas também agradável de usar no dia a dia.</p>
                     </div>
                 </div>
             </div>
@@ -86,7 +86,7 @@
 
         <footer class="bg-slate-950">
             <div class="mx-auto max-w-7xl overflow-hidden px-6 py-12 lg:px-8">
-                <p class="text-center text-xs leading-5 text-slate-400">&copy; {{ date('Y') }} Agen. Todos os direitos reservados.</p>
+                <p class="text-center text-xs leading-5 text-slate-400">&copy; {{ date('Y') }} Portal Progmud. Todos os direitos reservados.</p>
             </div>
         </footer>
     </body>
