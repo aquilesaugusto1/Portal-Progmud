@@ -47,7 +47,8 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Contrato</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Contratadas</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Originais</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Horas</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
                                 <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
@@ -58,7 +59,8 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $contrato->cliente->nome_empresa }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->numero_contrato ?? 'N/A' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->baseline_horas_mes ? number_format($contrato->baseline_horas_mes, 1) . 'h' : 'N/A' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->baseline_horas_original ? number_format($contrato->baseline_horas_original, 2) . 'h' : 'N/A' }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">{{ $contrato->baseline_horas_mes ? number_format($contrato->baseline_horas_mes, 2) . 'h' : 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $contrato->status }}</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->data_inicio->format('d/m/Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -76,7 +78,7 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
+                                <tr><td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

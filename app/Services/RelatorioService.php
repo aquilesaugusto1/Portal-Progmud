@@ -59,8 +59,6 @@ class RelatorioService
                 ->where('status', '!=', 'Cancelada')
                 ->count();
             
-            // CORREÇÃO: Usando abs() para garantir que o valor subtraído seja sempre positivo,
-            // evitando o problema de "menos com menos" que você identificou.
             $horasUteisRestantes = $horasUteisDoPeriodo - abs($horasApontadas);
 
             $resultados[] = [
@@ -122,17 +120,15 @@ class RelatorioService
         $resultados = [];
 
         foreach ($contratos as $contrato) {
-            $horasGastas = Apontamento::where('contrato_id', $contrato->id)
-                ->where('status', 'Aprovado')
-                ->sum('horas_gastas');
-            
-            $saldo = $contrato->horas_contratadas - $horasGastas;
-            $percentualGasto = ($contrato->horas_contratadas > 0) ? ($horasGastas / $contrato->horas_contratadas) * 100 : 0;
+            $horasOriginais = $contrato->baseline_horas_original ?? 0;
+            $horasRestantes = $contrato->baseline_horas_mes ?? 0;
+            $horasGastas = $horasOriginais - $horasRestantes;
+            $percentualGasto = ($horasOriginais > 0) ? ($horasGastas / $horasOriginais) * 100 : 0;
 
             $resultados[] = [
                 'contrato' => $contrato,
                 'horas_gastas' => $horasGastas,
-                'saldo_horas' => $saldo,
+                'saldo_horas' => $horasRestantes,
                 'percentual_gasto' => round($percentualGasto)
             ];
         }

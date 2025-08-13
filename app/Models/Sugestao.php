@@ -9,17 +9,28 @@ class Sugestao extends Model
 {
     use HasFactory;
 
+    /**
+     * Informa ao Laravel o nome correto da tabela.
+     */
     protected $table = 'sugestoes';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * CORREÇÃO: Adicionado 'status' à lista para permitir que seja atualizado.
+     */
     protected $fillable = [
-        'usuario_id',
         'titulo',
         'descricao',
-        'status',
+        'status', 
+        'usuario_id'
     ];
 
+    /**
+     * Get the user that owns the suggestion.
+     */
     public function usuario()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'usuario_id');
     }
 }

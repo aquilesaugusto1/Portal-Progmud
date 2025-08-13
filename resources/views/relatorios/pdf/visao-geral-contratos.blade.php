@@ -43,25 +43,31 @@
                 <tr>
                     <th>Contrato</th>
                     <th>Cliente</th>
-                    <th class="text-right">Horas Contratadas (Total)</th>
-                    <th class="text-right">Horas Gastas (Aprovadas)</th>
-                    <th class="text-right">Horas Restantes (Saldo)</th>
+                    <th class="text-right">Horas Originais</th>
+                    <th class="text-right">Horas Gastas</th>
+                    <th class="text-right">Saldo de Horas</th>
+                    <th class="text-right">Consumo (%)</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($resultados as $resultado)
+                    @php
+                        $horasOriginais = $resultado['contrato']->baseline_horas_original ?? 0;
+                        $limiteCritico = $horasOriginais * 0.1;
+                    @endphp
                     <tr>
                         <td>{{ $resultado['contrato']->numero_contrato }}</td>
                         <td>{{ $resultado['contrato']->cliente->nome_empresa }}</td>
-                        <td class="text-right">{{ number_format($resultado['contrato']->horas_contratadas, 2, ',', '.') }}h</td>
+                        <td class="text-right">{{ number_format($horasOriginais, 2, ',', '.') }}h</td>
                         <td class="text-right">{{ number_format($resultado['horas_gastas'], 2, ',', '.') }}h</td>
-                        <td class="text-right @if($resultado['saldo_horas'] < 0) text-red @endif">
+                        <td class="text-right @if($resultado['saldo_horas'] < $limiteCritico) text-red @else text-green @endif">
                             <strong>{{ number_format($resultado['saldo_horas'], 2, ',', '.') }}h</strong>
                         </td>
+                        <td class="text-right">{{ number_format($resultado['percentual_gasto'], 1, ',', '.') }}%</td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 20px;">Nenhum contrato selecionado ou dados encontrados.</td>
+                        <td colspan="6" style="text-align: center; padding: 20px;">Nenhum contrato selecionado ou dados encontrados.</td>
                     </tr>
                 @endforelse
             </tbody>

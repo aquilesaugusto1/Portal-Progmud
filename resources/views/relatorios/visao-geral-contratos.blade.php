@@ -50,8 +50,8 @@
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contrato</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Contratadas (Total)</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Restantes (Saldo)</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Originais</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo de Horas</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Consumo</th>
                                 </tr>
                             </thead>
@@ -60,8 +60,8 @@
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $resultado['contrato']->numero_contrato }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $resultado['contrato']->cliente->nome_empresa }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{{ number_format($resultado['contrato']->horas_contratadas, 2, ',', '.') }}h</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right @if($resultado['saldo_horas'] < ($resultado['contrato']->horas_contratadas * 0.1)) text-red-600 @else text-green-600 @endif">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{{ number_format($resultado['contrato']->baseline_horas_original, 2, ',', '.') }}h</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right @if($resultado['saldo_horas'] < ($resultado['contrato']->baseline_horas_original * 0.1)) text-red-600 @else text-green-600 @endif">
                                         {{ number_format($resultado['saldo_horas'], 2, ',', '.') }}h
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

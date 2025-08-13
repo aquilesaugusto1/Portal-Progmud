@@ -10,11 +10,6 @@ class Contrato extends Model
 {
     use HasFactory, Userstamps;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'cliente_id',
         'numero_contrato',
@@ -26,33 +21,25 @@ class Contrato extends Model
         'data_termino',
         'contato_principal',
         'baseline_horas_mes',
+        'baseline_horas_original',
         'permite_antecipar_baseline',
-        'documento_baseline_path', // Adicionado para o anexo
+        'documento_baseline_path',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'produtos' => 'array',
         'data_inicio' => 'date',
         'data_termino' => 'date',
         'permite_antecipar_baseline' => 'boolean',
+        'baseline_horas_mes' => 'decimal:2',
+        'baseline_horas_original' => 'decimal:2',
     ];
 
-    /**
-     * Get the client for the contract.
-     */
     public function cliente()
     {
         return $this->belongsTo(EmpresaParceira::class, 'cliente_id');
     }
 
-    /**
-     * The users that belong to the contract.
-     */
     public function usuarios()
     {
         return $this->belongsToMany(User::class, 'contrato_usuario', 'contrato_id', 'usuario_id')
@@ -60,25 +47,16 @@ class Contrato extends Model
                         ->withTimestamps();
     }
 
-    /**
-     * Get the coordinators for the contract.
-     */
     public function coordenadores()
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'coordenador');
     }
 
-    /**
-     * Get the tech leads for the contract.
-     */
     public function techLeads()
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'tech_lead');
     }
 
-    /**
-     * Get the consultants for the contract.
-     */
     public function consultores()
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'consultor');

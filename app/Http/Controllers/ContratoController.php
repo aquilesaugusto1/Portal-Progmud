@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule; // Importar a classe Rule
+use Illuminate\Validation\Rule;
 
 class ContratoController extends Controller
 {
@@ -45,6 +45,10 @@ class ContratoController extends Controller
 
         DB::transaction(function () use ($request, $validatedData) {
             $preparedData = $this->prepareData($request, $validatedData);
+
+            if (isset($preparedData['baseline_horas_mes'])) {
+                $preparedData['baseline_horas_original'] = $preparedData['baseline_horas_mes'];
+            }
 
             if ($request->hasFile('documento_baseline')) {
                 $preparedData['documento_baseline_path'] = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
@@ -108,7 +112,6 @@ class ContratoController extends Controller
 
     private function getValidationRules($id = null)
     {
-        // Pega o valor do checkbox 'permite_antecipar_baseline' diretamente da request
         $permiteAntecipar = request()->input('permite_antecipar_baseline');
 
         return [
@@ -124,9 +127,6 @@ class ContratoController extends Controller
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
-
-            // *** MUDANÇA PRINCIPAL AQUI ***
-            // O campo 'documento_baseline' agora é obrigatório se 'permite_antecipar_baseline' for '1' ou 'true'.
             'documento_baseline' => [
                 'nullable',
                 Rule::requiredIf($permiteAntecipar == '1' || $permiteAntecipar === true),
@@ -134,7 +134,6 @@ class ContratoController extends Controller
                 'mimes:pdf,doc,docx,jpg,jpeg,png',
                 'max:2048'
             ],
-
             'coordenadores' => ['nullable', 'array'],
             'coordenadores.*' => ['exists:usuarios,id'],
             'tech_leads' => ['nullable', 'array'],
@@ -146,7 +145,6 @@ class ContratoController extends Controller
 
     private function prepareData(Request $request, array $validatedData)
     {
-        // Converte o valor do checkbox para um booleano (0 ou 1)
         $validatedData['permite_antecipar_baseline'] = $request->has('permite_antecipar_baseline');
 
         if (!in_array('Outro', $validatedData['produtos'])) {

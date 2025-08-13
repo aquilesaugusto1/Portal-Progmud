@@ -8,30 +8,57 @@ use Illuminate\Support\Facades\Auth;
 
 class SugestaoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $sugestoes = Sugestao::with('usuario')->latest()->paginate(15);
+        $this->authorize('viewAny', Sugestao::class);
+        
+        $query = Sugestao::with('usuario')->latest();
+
+        // Lógica de filtro removida - agora todos veem todas as sugestões.
+        // A permissão para editar é controlada pela Policy.
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $sugestoes = $query->paginate(9)->withQueryString();
+
         return view('sugestoes.index', compact('sugestoes'));
     }
 
     public function create()
     {
+        $this->authorize('create', Sugestao::class);
         return view('sugestoes.create');
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $this->authorize('create', Sugestao::class);
+        $request->validate([
             'titulo' => 'required|string|max:255',
             'descricao' => 'required|string',
         ]);
 
         Sugestao::create([
+            'titulo' => $request->titulo,
+            'descricao' => $request->descricao,
+            'status' => 'Pendente',
             'usuario_id' => Auth::id(),
-            'titulo' => $validated['titulo'],
-            'descricao' => $validated['descricao'],
         ]);
 
         return redirect()->route('sugestoes.index')->with('success', 'Sugestão enviada com sucesso!');
+    }
+
+    public function update(Request $request, Sugestao $sugestao)
+    {
+        $this->authorize('update', $sugestao);
+        $request->validate([
+            'status' => 'required|string|in:Pendente,Em Análise,Concluída,Rejeitada',
+        ]);
+
+        $sugestao->update(['status' => $request->status]);
+
+        return back()->with('success', 'Status da sugestão atualizado.');
     }
 }
