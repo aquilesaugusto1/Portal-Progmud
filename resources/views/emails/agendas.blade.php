@@ -9,7 +9,7 @@ Aqui está um resumo da sua agenda de atividades.
 | Data / Hora | Cliente | Contrato | Assunto | Status |
 |:----------- |:------- |:-------- |:------- |:------ |
 @foreach($agendas as $agenda)
-| **{{ $agenda->data_hora->format('d/m/y H:i') }}** | {{ $agenda->contrato->cliente->nome_empresa ?? 'N/A' }} | {{ $agenda->contrato->numero_contrato ?? 'N/A' }} | {{ $agenda->assunto }} | *{{ $agenda->status }}* |
+| **{{ $agenda->data_hora->format('d/m/y H:i') }}** | {{ $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A' }} | {{ $agenda->contrato->numero_contrato ?? 'N/A' }} | {{ $agenda->assunto }} | *{{ $agenda->status }}* |
 @endforeach
 </x-mail::table>
 
