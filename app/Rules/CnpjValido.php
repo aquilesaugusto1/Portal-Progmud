@@ -14,7 +14,7 @@ class CnpjValido implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!$this->isCnpj($value)) {
+        if (! $this->isCnpj($value)) {
             $fail('O campo :attribute não é um CNPJ válido.');
         }
     }
@@ -43,24 +43,24 @@ class CnpjValido implements ValidationRule
 
         // Valida o primeiro dígito verificador
         for ($i = 0, $j = 5, $soma = 0; $i < 12; $i++) {
-            $soma += $cnpj[$i] * $j;
+            $soma += (int) $cnpj[$i] * $j;
             $j = ($j == 2) ? 9 : $j - 1;
         }
 
         $resto = $soma % 11;
 
-        if ($cnpj[12] != ($resto < 2 ? 0 : 11 - $resto)) {
+        if ((int) $cnpj[12] !== ($resto < 2 ? 0 : 11 - $resto)) {
             return false;
         }
 
         // Valida o segundo dígito verificador
         for ($i = 0, $j = 6, $soma = 0; $i < 13; $i++) {
-            $soma += $cnpj[$i] * $j;
+            $soma += (int) $cnpj[$i] * $j;
             $j = ($j == 2) ? 9 : $j - 1;
         }
 
         $resto = $soma % 11;
 
-        return $cnpj[13] == ($resto < 2 ? 0 : 11 - $resto);
+        return (int) $cnpj[13] === ($resto < 2 ? 0 : 11 - $resto);
     }
 }

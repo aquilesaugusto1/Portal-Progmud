@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Apontamento;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -10,6 +11,7 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
 {
     protected $apontamentos;
+
     protected $filtros;
 
     public function __construct(Collection $apontamentos, array $filtros)
@@ -40,10 +42,9 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             \Carbon\Carbon::parse($apontamento->data_apontamento)->format('d/m/Y'),
-            $apontamento->consultor?->nome ?? 'N/A',
-            // CORREÇÃO: Acesso seguro à propriedade para evitar erro com cliente nulo.
-            $apontamento->contrato?->cliente?->nome_empresa ?? 'N/A',
-            $apontamento->contrato?->id ?? 'N/A',
+            $apontamento->consultor->nome,
+            $apontamento->contrato->empresaParceira->nome_empresa,
+            $apontamento->contrato->id,
             $apontamento->descricao,
             number_format($apontamento->horas_gastas, 2, ',', '.'),
             $apontamento->status,

@@ -20,7 +20,6 @@
                 </div>
 
                 <div class="space-y-6">
-                    <!-- Detalhes da Agenda -->
                     <div>
                         <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Detalhes da Agenda</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 text-sm">
@@ -30,7 +29,7 @@
                             </div>
                             <div class="flex justify-between border-b py-2">
                                 <span class="font-medium text-slate-600">Cliente:</span>
-                                <span class="text-slate-800">{{ $agenda->contrato->cliente->nome_empresa ?? 'N/A' }}</span>
+                                <span class="text-slate-800">{{ $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A' }}</span>
                             </div>
                             <div class="flex justify-between border-b py-2">
                                 <span class="font-medium text-slate-600">Contrato:</span>
@@ -39,7 +38,6 @@
                         </div>
                     </div>
                     
-                    <!-- Descrição -->
                     @if($agenda->descricao)
                     <div>
                         <h3 class="text-lg font-semibold text-slate-700 border-b pb-2 mb-3">Descrição</h3>

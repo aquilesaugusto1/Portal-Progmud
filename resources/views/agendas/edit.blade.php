@@ -34,7 +34,7 @@
                                     <option value="">Selecione um contrato</option>
                                     @foreach($contratos as $contrato)
                                         <option value="{{ $contrato->id }}" @selected(old('contrato_id', $agenda->contrato_id) == $contrato->id)>
-                                            {{ $contrato->cliente->nome_empresa }} (#{{ $contrato->numero_contrato ?? $contrato->id }})
+                                            {{ $contrato->empresaParceira->nome_empresa }} (#{{ $contrato->numero_contrato ?? $contrato->id }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -44,7 +44,6 @@
                                 <label for="consultor_id" class="block font-medium text-sm text-gray-700">Consultor *</label>
                                 <select name="consultor_id" id="consultor_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
                                     <option value="">Selecione um contrato para ver os consultores</option>
-                                    {{-- This will be populated by JS, but we'll add the current selection for non-JS users or initial state --}}
                                     @foreach($consultores as $consultor)
                                         <option value="{{ $consultor->id }}" @selected(old('consultor_id', $agenda->consultor_id) == $consultor->id)>
                                             {{ $consultor->nome }}
@@ -133,7 +132,6 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchConsultores(this.value);
     });
 
-    // On page load, if a contract is already selected, trigger the fetch
     if (contratoSelect.value) {
         fetchConsultores(contratoSelect.value, currentConsultorId);
     }

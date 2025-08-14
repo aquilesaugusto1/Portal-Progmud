@@ -57,7 +57,7 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($contratos as $contrato)
                                 <tr>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $contrato->cliente->nome_empresa }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $contrato->empresaParceira->nome_empresa }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->numero_contrato ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->baseline_horas_original ? number_format($contrato->baseline_horas_original, 2) . 'h' : 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">{{ $contrato->baseline_horas_mes ? number_format($contrato->baseline_horas_mes, 2) . 'h' : 'N/A' }}</td>

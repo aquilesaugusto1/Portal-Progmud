@@ -2,10 +2,10 @@
 
 namespace App\Imports;
 
-use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class SheetListImport implements WithMultipleSheets, SkipsUnknownSheets
+class SheetListImport implements SkipsUnknownSheets, WithMultipleSheets
 {
     private $sheetNames = [];
 

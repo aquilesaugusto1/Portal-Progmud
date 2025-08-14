@@ -4,16 +4,15 @@ namespace App\Policies;
 
 use App\Models\Contrato;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ContratoPolicy
 {
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->funcao === 'admin') {
             return true;
         }
- 
+
         return null;
     }
 

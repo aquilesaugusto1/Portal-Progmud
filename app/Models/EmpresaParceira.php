@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\Userstamps; 
+use App\Traits\Userstamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class EmpresaParceira extends Model
 {
-    use HasFactory, Userstamps; 
+    use HasFactory, Userstamps;
 
     protected $table = 'empresas_parceiras';
 
@@ -38,7 +38,7 @@ class EmpresaParceira extends Model
     /**
      * Get the contracts for the partner company.
      */
-    public function contratos() 
+    public function contratos()
     {
         return $this->hasMany(Contrato::class, 'cliente_id');
     }

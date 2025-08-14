@@ -11,11 +11,11 @@ class SpreadsheetAnalyzer
     {
         $spreadsheet = IOFactory::load($filePath);
         $worksheet = $spreadsheet->getSheetByName($sheetName);
-        
-        if (!$worksheet) {
+
+        if (! $worksheet) {
             return [[], -1];
         }
-        
+
         $rows = new Collection($worksheet->toArray(null, true, true, true));
 
         return $this->findHeaderRow($rows);
@@ -27,25 +27,26 @@ class SpreadsheetAnalyzer
         $maxStringCount = -1;
 
         foreach ($rows->take(20) as $index => $row) {
-            $filteredRow = (new Collection($row))->filter(fn($cell) => $cell !== null && $cell !== '');
+            $filteredRow = (new Collection($row))->filter(fn ($cell) => $cell !== null && $cell !== '');
             if ($filteredRow->isEmpty()) {
                 continue;
             }
 
-            $stringCount = $filteredRow->filter(fn($cell) => is_string($cell) && !is_numeric($cell))->count();
-            
+            $stringCount = $filteredRow->filter(fn ($cell) => is_string($cell) && ! is_numeric($cell))->count();
+
             if ($stringCount >= $maxStringCount && $stringCount > $filteredRow->count() * 0.5) {
                 $maxStringCount = $stringCount;
                 $bestGuessIndex = $index;
             }
         }
-        
+
         if ($bestGuessIndex !== -1) {
             $headerValues = array_values($rows[$bestGuessIndex]->filter()->toArray());
             $zeroBasedIndex = $bestGuessIndex - 1;
+
             return [$headerValues, $zeroBasedIndex];
         }
-        
+
         return [[], -1];
     }
 }

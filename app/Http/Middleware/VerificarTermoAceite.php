@@ -11,7 +11,7 @@ class VerificarTermoAceite
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check() && !Auth::user()->termos_aceite_em) {
+        if (Auth::check() && ! Auth::user()->termos_aceite_em) {
             return redirect()->route('termo.aceite');
         }
 

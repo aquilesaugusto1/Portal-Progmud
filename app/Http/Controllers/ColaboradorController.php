@@ -16,7 +16,7 @@ class ColaboradorController extends Controller
 
         $query = User::query();
         if ($request->filled('nome')) {
-            $query->where('nome', 'like', '%' . $request->nome . '%');
+            $query->where('nome', 'like', '%'.$request->nome.'%');
         }
         if ($request->filled('funcao')) {
             $query->where('funcao', $request->funcao);
@@ -25,14 +25,16 @@ class ColaboradorController extends Controller
             $query->where('status', $request->status);
         }
         $colaboradores = $query->latest()->paginate(10)->withQueryString();
+
         return view('colaboradores.index', compact('colaboradores'));
     }
 
     public function create()
     {
         $this->authorize('create', User::class);
-        $colaborador = new User();
+        $colaborador = new User;
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+
         return view('colaboradores.create', compact('colaborador', 'techLeads'));
     }
 
@@ -46,12 +48,14 @@ class ColaboradorController extends Controller
                 $colaborador->techLeads()->sync($request->input('tech_leads'));
             }
         });
+
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador criado com sucesso.');
     }
 
     public function show(User $colaborador)
     {
         $this->authorize('view', $colaborador);
+
         return view('colaboradores.show', compact('colaborador'));
     }
 
@@ -59,6 +63,7 @@ class ColaboradorController extends Controller
     {
         $this->authorize('update', $colaborador);
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
+
         return view('colaboradores.edit', compact('colaborador', 'techLeads'));
     }
 
@@ -71,6 +76,7 @@ class ColaboradorController extends Controller
             $techLeads = $request->input('tech_leads', []);
             $colaborador->techLeads()->sync($techLeads);
         });
+
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador atualizado com sucesso.');
     }
 
@@ -80,6 +86,7 @@ class ColaboradorController extends Controller
         $novoStatus = $colaborador->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $colaborador->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Colaborador habilitado.' : 'Colaborador desabilitado.';
+
         return redirect()->route('colaboradores.index')->with('success', $mensagem);
     }
 
@@ -88,7 +95,7 @@ class ColaboradorController extends Controller
         $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'sobrenome' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,' . $id],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,'.$id],
             // Corrigido para aceitar 'administrativo' do formulário
             'funcao' => ['required', 'string', 'in:consultor,techlead,administrativo,coordenador_operacoes,coordenador_tecnico,comercial'],
             'tipo_contrato' => ['nullable', 'string'],
@@ -112,16 +119,17 @@ class ColaboradorController extends Controller
             'dados_bancarios.agencia' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.conta' => ['nullable', 'string', 'max:255'],
         ];
-        if (!$id || $request->filled('password')) {
+        if (! $id || $request->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
         }
+
         return $rules;
     }
 
     private function getData(Request $request, $isCreate = true)
     {
         $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);
-        
+
         // Adicionado para converter o valor do formulário para o valor do banco de dados
         if (isset($data['funcao']) && $data['funcao'] === 'administrativo') {
             $data['funcao'] = 'admin';
@@ -136,6 +144,7 @@ class ColaboradorController extends Controller
         }
 
         $data['dados_empresa_prestador'] = in_array($request->tipo_contrato, ['PJ Mensal', 'PJ Horista']) ? $request->dados_empresa_prestador : null;
+
         return $data;
     }
 }

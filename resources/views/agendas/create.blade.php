@@ -33,7 +33,7 @@
                                     <option value="">Selecione um contrato</option>
                                     @foreach($contratos as $contrato)
                                         <option value="{{ $contrato->id }}" @selected(old('contrato_id') == $contrato->id)>
-                                            {{ $contrato->cliente->nome_empresa }} (#{{ $contrato->numero_contrato ?? $contrato->id }})
+                                            {{ $contrato->empresaParceira->nome_empresa }} (#{{ $contrato->numero_contrato ?? $contrato->id }})
                                         </option>
                                     @endforeach
                                 </select>
@@ -126,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchConsultores(this.value);
     });
 
-    // If there's an old contract value (e.g., validation error), trigger the fetch
     if (contratoSelect.value) {
         fetchConsultores(contratoSelect.value, oldConsultorId);
     }

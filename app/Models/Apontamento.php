@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Apontamento extends Model
 {
@@ -14,7 +15,7 @@ class Apontamento extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'consultor_id',
@@ -47,7 +48,7 @@ class Apontamento extends Model
     /**
      * Get the agenda for the time entry.
      */
-    public function agenda()
+    public function agenda(): BelongsTo
     {
         return $this->belongsTo(Agenda::class);
     }
@@ -55,7 +56,7 @@ class Apontamento extends Model
     /**
      * Get the consultant for the time entry.
      */
-    public function consultor()
+    public function consultor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'consultor_id');
     }
@@ -63,7 +64,7 @@ class Apontamento extends Model
     /**
      * Get the contract for the time entry.
      */
-    public function contrato()
+    public function contrato(): BelongsTo
     {
         return $this->belongsTo(Contrato::class);
     }
@@ -71,7 +72,7 @@ class Apontamento extends Model
     /**
      * Get the user who approved the time entry.
      */
-    public function aprovador()
+    public function aprovador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'aprovado_por_id');
     }

@@ -7,9 +7,9 @@ use App\Models\Apontamento;
 use App\Models\Contrato;
 use App\Models\EmpresaParceira;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
@@ -36,24 +36,26 @@ class DashboardController extends Controller
             $consultoresAtivos = User::where('funcao', 'consultor')
                 ->withSum(['apontamentos' => function ($query) {
                     $query->where('data_apontamento', '>=', now()->subDays(30));
-                }], 'horas_gastas') // Corrigido para 'horas_gastas'
+                }], 'horas_gastas')
                 ->get()
-                ->sortByDesc('apontamentos_sum_horas_gastas') // Corrigido para 'horas_gastas'
+                ->sortByDesc('apontamentos_sum_horas_gastas')
                 ->map(function ($consultor) {
-                    $consultor->horas_30_dias = $consultor->apontamentos_sum_horas_gastas ?? 0; // Corrigido para 'horas_gastas'
+                    /** @var User $consultor */
+                    $consultor->horas_30_dias = $consultor->apontamentos_sum_horas_gastas ?? 0;
+
                     return $consultor;
                 });
 
             $agendasPorMes = Agenda::select(
-                DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'), // Corrigido para 'data_hora'
+                DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'),
                 'status',
                 DB::raw('count(*) as total')
             )
-            ->where('data_hora', '>=', now()->subMonths(5)->startOfMonth()) // Corrigido para 'data_hora'
-            ->groupBy('mes', 'status')
-            ->orderBy('mes', 'asc')
-            ->get();
-            
+                ->where('data_hora', '>=', now()->subMonths(5)->startOfMonth())
+                ->groupBy('mes', 'status')
+                ->orderBy('mes', 'asc')
+                ->get();
+
             $periodo = Carbon::now()->subMonths(5)->startOfMonth()->toPeriod(Carbon::now()->startOfMonth());
             $dadosGrafico = [];
 
@@ -63,6 +65,7 @@ class DashboardController extends Controller
             }
 
             foreach ($agendasPorMes as $item) {
+                /** @var object{mes: string, status: string, total: int} $item */
                 if (isset($dadosGrafico[$item->mes])) {
                     $dadosGrafico[$item->mes][$item->status] = $item->total;
                 }
@@ -76,7 +79,6 @@ class DashboardController extends Controller
             }
 
         } else {
-            // Lógica para outros usuários (Tech Lead, Coordenador, Consultor)
             $stats = [
                 'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('data_hora', today())->count(),
                 'Meus Contratos' => $user->contratos()->count(),
@@ -84,7 +86,7 @@ class DashboardController extends Controller
             ];
 
             $ultimas_agendas = Agenda::where('consultor_id', $user->id)
-                ->with(['contrato.cliente'])
+                ->with(['contrato.empresaParceira'])
                 ->where('data_hora', '>=', today())
                 ->orderBy('data_hora', 'asc')
                 ->limit(5)
@@ -92,8 +94,8 @@ class DashboardController extends Controller
         }
 
         return view('dashboard', compact(
-            'stats', 
-            'contratosCriticos', 
+            'stats',
+            'contratosCriticos',
             'consultoresAtivos',
             'ultimas_agendas',
             'chartLabels',

@@ -26,11 +26,11 @@ return new class extends Migration
 
             $table->string('status')->default('Pendente'); // Padronizado para 'status'
             $table->boolean('faturavel')->default(true);
-            
+
             $table->foreignId('aprovado_por_id')->nullable()->constrained('usuarios')->onDelete('set null');
             $table->timestamp('data_aprovacao')->nullable();
             $table->text('motivo_rejeicao')->nullable();
-            
+
             $table->timestamps();
         });
     }

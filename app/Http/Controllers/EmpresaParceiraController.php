@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\EmpresaParceira;
-use App\Rules\CnpjValido; 
 use Illuminate\Http\Request;
 
 class EmpresaParceiraController extends Controller
@@ -15,11 +14,11 @@ class EmpresaParceiraController extends Controller
         $query = EmpresaParceira::query();
 
         if ($request->filled('nome_empresa')) {
-            $query->where('nome_empresa', 'like', '%' . $request->nome_empresa . '%');
+            $query->where('nome_empresa', 'like', '%'.$request->nome_empresa.'%');
         }
 
         if ($request->filled('cnpj')) {
-            $query->where('cnpj', 'like', '%' . $request->cnpj . '%');
+            $query->where('cnpj', 'like', '%'.$request->cnpj.'%');
         }
 
         if ($request->filled('status')) {
@@ -34,6 +33,7 @@ class EmpresaParceiraController extends Controller
     public function create()
     {
         $this->authorize('create', EmpresaParceira::class);
+
         return view('empresas.create');
     }
 
@@ -42,18 +42,21 @@ class EmpresaParceiraController extends Controller
         $this->authorize('create', EmpresaParceira::class);
         $validated = $request->validate($this->validationRules());
         EmpresaParceira::create($validated);
+
         return redirect()->route('empresas.index')->with('success', 'Cliente cadastrado com sucesso.');
     }
 
     public function show(EmpresaParceira $empresa)
     {
         $this->authorize('view', $empresa);
+
         return view('empresas.show', compact('empresa'));
     }
 
     public function edit(EmpresaParceira $empresa)
     {
         $this->authorize('update', $empresa);
+
         return view('empresas.edit', compact('empresa'));
     }
 
@@ -62,6 +65,7 @@ class EmpresaParceiraController extends Controller
         $this->authorize('update', $empresa);
         $validated = $request->validate($this->validationRules($empresa->id));
         $empresa->update($validated);
+
         return redirect()->route('empresas.index')->with('success', 'Cliente atualizado com sucesso.');
     }
 
@@ -71,6 +75,7 @@ class EmpresaParceiraController extends Controller
         $novoStatus = $empresa->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $empresa->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Cliente habilitado com sucesso.' : 'Cliente desabilitado com sucesso.';
+
         return redirect()->route('empresas.index')->with('success', $mensagem);
     }
 
@@ -78,7 +83,7 @@ class EmpresaParceiraController extends Controller
     {
         return [
             'nome_empresa' => 'required|string|max:255',
-            'cnpj' => 'required|string|max:18|unique:empresas_parceiras,cnpj,' . $id,
+            'cnpj' => 'required|string|max:18|unique:empresas_parceiras,cnpj,'.$id,
             'saldo_horas' => 'nullable|numeric|min:0',
             'status' => 'required|string|in:Ativo,Inativo',
             'endereco_completo.logradouro' => 'nullable|string|max:255',

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 use App\Imports\AlocacoesImport;
 use App\Imports\SheetListImport;
 use App\Services\SpreadsheetAnalyzer;
+use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ImportController extends Controller
 {
@@ -19,12 +19,13 @@ class ImportController extends Controller
     {
         $request->validate(['file' => 'required|mimes:xlsx,xls|max:10240']);
         $path = $request->file('file')->store('imports');
-        
-        $sheetListImport = new SheetListImport();
+
+        $sheetListImport = new SheetListImport;
         Excel::import($sheetListImport, $path);
         $sheetNames = $sheetListImport->getSheetNames();
 
         $request->session()->put('import_file_path', $path);
+
         return view('imports.select_sheet', compact('sheetNames'));
     }
 
@@ -34,16 +35,16 @@ class ImportController extends Controller
         $path = $request->session()->get('import_file_path');
         $sheetName = $request->input('sheet_name');
 
-        if (!$path || !file_exists(storage_path('app/' . $path))) {
+        if (! $path || ! file_exists(storage_path('app/'.$path))) {
             return redirect()->route('imports.create')->with('error', 'Arquivo de importação expirou. Por favor, envie novamente.');
         }
-        
-        list($headings, $headerRowIndex) = $analyzer->analyze(storage_path('app/' . $path), $sheetName);
+
+        [$headings, $headerRowIndex] = $analyzer->analyze(storage_path('app/'.$path), $sheetName);
 
         if (empty($headings)) {
             return redirect()->route('imports.create')->with('error', "Não foram encontrados cabeçalhos na planilha '{$sheetName}'. Verifique se a planilha tem dados e tente novamente.");
         }
-        
+
         $request->session()->put('import_sheet_name', $sheetName);
         $request->session()->put('import_header_row_index', $headerRowIndex);
 
@@ -52,7 +53,7 @@ class ImportController extends Controller
             'projeto_id' => 'Nome do Projeto',
             'data_inicio' => 'Data de Início',
             'data_fim' => 'Data de Fim',
-            'tipo_alocacao' => 'Tipo de Alocação'
+            'tipo_alocacao' => 'Tipo de Alocação',
         ];
 
         return view('imports.mapping', compact('headings', 'dbColumns'));
@@ -66,16 +67,17 @@ class ImportController extends Controller
         $headerRowIndex = $request->session()->pull('import_header_row_index');
         $mappings = $request->input('mappings');
 
-        if (!$path || !$sheetName || $headerRowIndex === null) {
+        if (! $path || ! $sheetName || $headerRowIndex === null) {
             return redirect()->route('imports.create')->with('error', 'Sessão de importação expirou. Por favor, comece novamente.');
         }
 
         try {
             $headerRowNumber = $headerRowIndex + 1;
             Excel::import(new AlocacoesImport($mappings, $sheetName, $headerRowNumber), $path);
+
             return redirect()->route('agendas.index')->with('success', 'Alocações importadas com sucesso!');
         } catch (\Exception $e) {
-            return redirect()->route('imports.create')->with('error', 'Ocorreu um erro na importação: ' . $e->getMessage());
+            return redirect()->route('imports.create')->with('error', 'Ocorreu um erro na importação: '.$e->getMessage());
         }
     }
 }

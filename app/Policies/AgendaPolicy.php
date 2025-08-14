@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Agenda;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class AgendaPolicy
 {
@@ -33,7 +32,7 @@ class AgendaPolicy
 
     public function create(User $user): bool
     {
-         return $user->isAdmin() || str_contains($user->funcao, 'coordenador') || $user->isTechLead();
+        return $user->isAdmin() || str_contains($user->funcao, 'coordenador') || $user->isTechLead();
     }
 
     public function update(User $user, Agenda $agenda): bool

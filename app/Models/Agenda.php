@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Agenda extends Model
 {
@@ -12,7 +14,7 @@ class Agenda extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'consultor_id',
@@ -35,7 +37,7 @@ class Agenda extends Model
     /**
      * Get the consultant for the agenda.
      */
-    public function consultor()
+    public function consultor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'consultor_id');
     }
@@ -43,7 +45,7 @@ class Agenda extends Model
     /**
      * Get the contract for the agenda.
      */
-    public function contrato()
+    public function contrato(): BelongsTo
     {
         return $this->belongsTo(Contrato::class);
     }
@@ -51,7 +53,7 @@ class Agenda extends Model
     /**
      * Get the time entry for the agenda.
      */
-    public function apontamento()
+    public function apontamento(): HasOne
     {
         return $this->hasOne(Apontamento::class);
     }

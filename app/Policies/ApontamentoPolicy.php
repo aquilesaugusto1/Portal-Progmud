@@ -4,16 +4,15 @@ namespace App\Policies;
 
 use App\Models\Apontamento;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ApontamentoPolicy
 {
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->funcao === 'admin') {
             return true;
         }
- 
+
         return null;
     }
 
@@ -39,7 +38,7 @@ class ApontamentoPolicy
     {
         // Apenas consultores podem criar apontamentos para si mesmos.
         // A lógica de quem pode criar para quem está no controller do calendário.
-        return true; 
+        return true;
     }
 
     public function update(User $user, Apontamento $apontamento): bool

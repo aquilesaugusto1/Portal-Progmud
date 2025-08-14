@@ -1,14 +1,12 @@
 <x-app-layout>
     @push('styles')
     <style>
-        /* Garante que o calendário ocupe o espaço corretamente */
         #calendar {
             max-width: 1100px;
             margin: 0 auto;
         }
-        /* Estilo para o botão de visão ativo */
         .view-btn.active {
-            background-color: #4f46e5; /* indigo-600 */
+            background-color: #4f46e5;
             color: white;
         }
     </style>
@@ -21,7 +19,6 @@
                     Gestão de Agendas
                 </h2>
                 <div class="flex items-center space-x-2">
-                    <!-- Botões de Alternância de Visão -->
                     <div class="inline-flex rounded-md shadow-sm">
                         <button id="lista-btn" class="view-btn active px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50">Lista</button>
                         <button id="calendario-btn" class="view-btn px-4 py-2 text-sm font-medium text-gray-700 bg-white border-t border-b border-r border-gray-300 rounded-r-md hover:bg-gray-50">Calendário</button>
@@ -34,7 +31,6 @@
                 </div>
             </div>
 
-            <!-- Formulário de Filtros -->
             <div class="bg-white p-4 rounded-lg shadow-sm mb-4 border">
                 <form action="{{ route('agendas.index') }}" method="GET">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -52,7 +48,7 @@
                             <select name="contrato_id" id="contrato_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
                                 <option value="">Todos</option>
                                 @foreach($contratos as $contrato)
-                                    <option value="{{ $contrato->id }}" @selected(request('contrato_id') == $contrato->id)>{{ $contrato->cliente->nome_empresa }} (#{{$contrato->id}})</option>
+                                    <option value="{{ $contrato->id }}" @selected(request('contrato_id') == $contrato->id)>{{ $contrato->empresaParceira->nome_empresa }} (#{{$contrato->id}})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -73,7 +69,6 @@
                 </form>
             </div>
 
-            <!-- Visão em Lista -->
             <div id="lista-view">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 bg-white border-b border-gray-200">
@@ -110,7 +105,6 @@
                 </div>
             </div>
 
-            <!-- Visão em Calendário -->
             <div id="calendario-view" class="hidden">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div id="calendar"></div>
@@ -136,11 +130,9 @@ document.addEventListener('DOMContentLoaded', function() {
         buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' },
         events: @json($eventosDoCalendario),
         eventClick: function(info) {
-            // Redireciona para a página de detalhes da agenda
             window.location.href = info.event.extendedProps.url;
         },
         eventDidMount: function(info) {
-            // Adiciona um tooltip simples
             info.el.setAttribute('title', `${info.event.extendedProps.cliente}\nConsultor: ${info.event.extendedProps.consultor}`);
         }
     });
@@ -157,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarioView.classList.remove('hidden');
         listaBtn.classList.remove('active');
         calendarioBtn.classList.add('active');
-        // Renderiza o calendário apenas quando ele se torna visível pela primeira vez
         if (!calendar.isRendered) {
             calendar.render();
         }

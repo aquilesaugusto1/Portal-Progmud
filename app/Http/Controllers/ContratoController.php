@@ -16,7 +16,7 @@ class ContratoController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Contrato::class);
-        $query = Contrato::with(['cliente', 'coordenadores', 'techLeads']);
+        $query = Contrato::with(['empresaParceira', 'usuarios']);
         if ($request->filled('cliente_id')) {
             $query->where('cliente_id', $request->cliente_id);
         }
@@ -25,17 +25,19 @@ class ContratoController extends Controller
         }
         $contratos = $query->latest()->paginate(10)->withQueryString();
         $clientes = EmpresaParceira::where('status', 'Ativo')->get();
+
         return view('contratos.index', compact('contratos', 'clientes'));
     }
 
     public function create()
     {
         $this->authorize('create', Contrato::class);
-        $contrato = new Contrato();
+        $contrato = new Contrato;
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+
         return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
@@ -66,18 +68,20 @@ class ContratoController extends Controller
     public function show(Contrato $contrato)
     {
         $this->authorize('view', $contrato);
-        $contrato->load(['cliente', 'coordenadores', 'techLeads', 'consultores', 'creator', 'updater']);
+        $contrato->load(['empresaParceira', 'usuarios', 'creator', 'updater']);
+
         return view('contratos.show', compact('contrato'));
     }
 
     public function edit(Contrato $contrato)
     {
         $this->authorize('update', $contrato);
-        $contrato->load(['coordenadores', 'techLeads', 'consultores']);
+        $contrato->load(['usuarios']);
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+
         return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
@@ -87,10 +91,8 @@ class ContratoController extends Controller
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
 
         DB::transaction(function () use ($request, $contrato, $validatedData) {
-            // *** CORREÇÃO APLICADA AQUI ***
-            // Especificamos que queremos o 'id' da tabela 'usuarios'.
             $techLeadsAntigos = $contrato->techLeads()->pluck('usuarios.id')->toArray();
-            
+
             $preparedData = $this->prepareData($request, $validatedData);
 
             if ($request->hasFile('documento_baseline')) {
@@ -114,6 +116,7 @@ class ContratoController extends Controller
         $novoStatus = $contrato->status === 'Ativo' ? 'Inativo' : 'Ativo';
         $contrato->update(['status' => $novoStatus]);
         $mensagem = $novoStatus === 'Ativo' ? 'Contrato ativado com sucesso.' : 'Contrato desabilitado com sucesso.';
+
         return back()->with('success', $mensagem);
     }
 
@@ -139,7 +142,7 @@ class ContratoController extends Controller
                 Rule::requiredIf($permiteAntecipar == '1' || $permiteAntecipar === true),
                 'file',
                 'mimes:pdf,doc,docx,jpg,jpeg,png',
-                'max:2048'
+                'max:2048',
             ],
             'coordenadores' => ['nullable', 'array'],
             'coordenadores.*' => ['exists:usuarios,id'],
@@ -154,9 +157,10 @@ class ContratoController extends Controller
     {
         $validatedData['permite_antecipar_baseline'] = $request->has('permite_antecipar_baseline');
 
-        if (!in_array('Outro', $validatedData['produtos'])) {
+        if (! in_array('Outro', $validatedData['produtos'])) {
             $validatedData['especifique_outro'] = null;
         }
+
         return $validatedData;
     }
 
@@ -189,7 +193,7 @@ class ContratoController extends Controller
         $removidos = array_diff($techLeadsAntigos, $techLeadsNovos);
         $adicionados = array_diff($techLeadsNovos, $techLeadsAntigos);
 
-        if (!empty($removidos)) {
+        if (! empty($removidos)) {
             DB::table('contrato_historico_techleads')
                 ->where('contrato_id', $contrato->id)
                 ->whereIn('tech_lead_id', $removidos)

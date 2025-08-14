@@ -11,7 +11,7 @@ class SugestaoController extends Controller
     public function index(Request $request)
     {
         $this->authorize('viewAny', Sugestao::class);
-        
+
         $query = Sugestao::with('usuario')->latest();
 
         if ($request->filled('status')) {
@@ -26,6 +26,7 @@ class SugestaoController extends Controller
     public function create()
     {
         $this->authorize('create', Sugestao::class);
+
         return view('sugestoes.create');
     }
 

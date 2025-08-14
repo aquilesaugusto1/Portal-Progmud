@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
+use App\Imports\SheetContentImport;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Imports\SheetContentImport;
 
 class ImportAnalyzer
 {
@@ -13,7 +13,7 @@ class ImportAnalyzer
         $sheetContentImport = new SheetContentImport($sheetName);
         Excel::import($sheetContentImport, $filePath);
         $rows = $sheetContentImport->getRows();
-        
+
         return $this->findHeaderRow($rows);
     }
 
@@ -23,22 +23,23 @@ class ImportAnalyzer
         $maxStringCount = -1;
 
         foreach ($rows->take(20) as $index => $row) {
-            $filteredRow = $row->filter(fn($cell) => $cell !== null);
+            $filteredRow = $row->filter(fn ($cell) => $cell !== null);
             if ($filteredRow->isEmpty()) {
                 continue;
             }
 
-            $stringCount = $filteredRow->filter(fn($cell) => is_string($cell) && !is_numeric($cell))->count();
-            
+            $stringCount = $filteredRow->filter(fn ($cell) => is_string($cell) && ! is_numeric($cell))->count();
+
             if ($stringCount >= $maxStringCount && $stringCount > $filteredRow->count() * 0.5) {
                 $maxStringCount = $stringCount;
                 $bestGuessIndex = $index;
             }
         }
-        
+
         if ($bestGuessIndex !== -1) {
             return [$rows[$bestGuessIndex]->filter()->toArray(), $bestGuessIndex];
         }
+
         return [[], -1];
     }
 }

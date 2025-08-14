@@ -14,12 +14,14 @@ class ConsultorController extends Controller
     public function index()
     {
         $consultores = Consultor::with('usuario')->latest()->paginate(10);
+
         return view('consultores.index', compact('consultores'));
     }
 
     public function create()
     {
         $techLeads = User::where('funcao', 'techlead')->get();
+
         return view('consultores.create', compact('techLeads'));
     }
 
@@ -48,8 +50,8 @@ class ConsultorController extends Controller
                 'telefone' => $request->telefone,
                 'status' => 'Ativo',
             ]);
-            
-            $consultor->usuario_id = $user->id;
+
+            $consultor->usuario()->associate($user);
             $consultor->save();
 
             if ($request->has('tech_leads')) {
@@ -58,12 +60,13 @@ class ConsultorController extends Controller
         });
 
         return redirect()->route('consultores.index')
-                         ->with('success', 'Consultor criado com sucesso.');
+            ->with('success', 'Consultor criado com sucesso.');
     }
 
     public function show(Consultor $consultor)
     {
         $consultor->load('usuario', 'techLeads');
+
         return view('consultores.show', compact('consultor'));
     }
 
@@ -71,14 +74,17 @@ class ConsultorController extends Controller
     {
         $techLeads = User::where('funcao', 'techlead')->get();
         $consultor->load('techLeads');
+
         return view('consultores.edit', compact('consultor', 'techLeads'));
     }
 
     public function update(Request $request, Consultor $consultor)
     {
+        $consultor->load('usuario');
+
         $request->validate([
             'nome' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,' . $consultor->usuario_id],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,'.$consultor->usuario->id],
             'telefone' => ['nullable', 'string', 'max:20'],
             'status' => ['required', 'string', 'in:Ativo,Inativo'],
             'tech_leads' => ['nullable', 'array'],
@@ -100,13 +106,15 @@ class ConsultorController extends Controller
 
             $consultor->techLeads()->sync($request->input('tech_leads', []));
         });
-        
+
         return redirect()->route('consultores.index')
-                         ->with('success', 'Consultor atualizado com sucesso.');
+            ->with('success', 'Consultor atualizado com sucesso.');
     }
 
     public function destroy(Consultor $consultor)
     {
+        $consultor->load('usuario');
+
         DB::transaction(function () use ($consultor) {
             $user = $consultor->usuario;
             $consultor->delete();
@@ -114,6 +122,6 @@ class ConsultorController extends Controller
         });
 
         return redirect()->route('consultores.index')
-                         ->with('success', 'Consultor removido com sucesso.');
+            ->with('success', 'Consultor removido com sucesso.');
     }
 }

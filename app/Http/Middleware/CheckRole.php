@@ -10,7 +10,7 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             abort(403, 'Acesso Não Autorizado.');
         }
 
@@ -27,7 +27,7 @@ class CheckRole
             $userFuncao = 'techlead';
         }
 
-        if (!in_array($userFuncao, $roles)) {
+        if (! in_array($userFuncao, $roles)) {
             abort(403, 'Acesso Não Autorizado.');
         }
 

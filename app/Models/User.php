@@ -4,10 +4,11 @@ namespace App\Models;
 
 use App\Traits\Userstamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
@@ -34,8 +35,8 @@ class User extends Authenticatable
         'dados_bancarios',
         'termos_aceite_em',
         'ip_aceite',
-        'created_by', 
-        'updated_by', 
+        'created_by',
+        'updated_by',
     ];
 
     protected $hidden = [
@@ -56,6 +57,11 @@ class User extends Authenticatable
         ];
     }
 
+    public function consultor(): HasOne
+    {
+        return $this->hasOne(Consultor::class, 'usuario_id');
+    }
+
     public function techLeads(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'consultor_id', 'tech_lead_id');
@@ -74,8 +80,8 @@ class User extends Authenticatable
     public function contratos(): BelongsToMany
     {
         return $this->belongsToMany(Contrato::class, 'contrato_usuario', 'usuario_id', 'contrato_id')
-                    ->withPivot('funcao_contrato')
-                    ->withTimestamps();
+            ->withPivot('funcao_contrato')
+            ->withTimestamps();
     }
 
     public function isAdmin()

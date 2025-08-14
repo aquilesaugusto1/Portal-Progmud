@@ -1,18 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\EmpresaParceiraController;
-use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\AgendaController;
 use App\Http\Controllers\ApontamentoController;
-use App\Http\Controllers\RelatorioController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmailController;
 use App\Http\Controllers\AprovacaoController;
+use App\Http\Controllers\ColaboradorController;
+use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\EmailController;
+use App\Http\Controllers\EmpresaParceiraController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\SugestaoController;
 use App\Http\Controllers\TermoAceiteController;
-use App\Http\Controllers\ContratoController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
@@ -38,7 +38,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::get('/relatorios/{tipo}', [RelatorioController::class, 'show'])->name('relatorios.show');
     Route::post('/relatorios/gerar', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
-    
+
     Route::get('/api/contratos/{contratoId}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
     Route::resource('agendas', AgendaController::class);
     Route::resource('sugestoes', SugestaoController::class)->only(['index', 'create', 'store', 'update'])->parameters(['sugestoes' => 'sugestao']);

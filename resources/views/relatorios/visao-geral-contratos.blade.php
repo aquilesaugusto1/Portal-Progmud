@@ -27,7 +27,7 @@
                                            class="contrato-checkbox rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                                            {{ (isset($filtros['contratos_id']) && in_array($contrato->id, $filtros['contratos_id'])) ? 'checked' : '' }}>
                                     <label for="contrato_{{ $contrato->id }}" class="ml-2 text-sm text-gray-700">
-                                        {{ $contrato->numero_contrato }} - <span class="font-semibold">{{ $contrato->cliente->nome_empresa }}</span>
+                                        {{ $contrato->numero_contrato }} - <span class="font-semibold">{{ $contrato->empresaParceira->nome_empresa }}</span>
                                     </label>
                                 </div>
                             @endforeach
@@ -59,7 +59,7 @@
                                 @forelse($resultados as $resultado)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $resultado['contrato']->numero_contrato }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $resultado['contrato']->cliente->nome_empresa }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $resultado['contrato']->empresaParceira->nome_empresa }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">{{ number_format($resultado['contrato']->baseline_horas_original, 2, ',', '.') }}h</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-right @if($resultado['saldo_horas'] < ($resultado['contrato']->baseline_horas_original * 0.1)) text-red-600 @else text-green-600 @endif">
                                         {{ number_format($resultado['saldo_horas'], 2, ',', '.') }}h

@@ -57,7 +57,7 @@
                     @endphp
                     <tr>
                         <td>{{ $resultado['contrato']->numero_contrato }}</td>
-                        <td>{{ $resultado['contrato']->cliente->nome_empresa }}</td>
+                        <td>{{ $resultado['contrato']->empresaParceira->nome_empresa }}</td>
                         <td class="text-right">{{ number_format($horasOriginais, 2, ',', '.') }}h</td>
                         <td class="text-right">{{ number_format($resultado['horas_gastas'], 2, ',', '.') }}h</td>
                         <td class="text-right @if($resultado['saldo_horas'] < $limiteCritico) text-red @else text-green @endif">

@@ -2,24 +2,23 @@
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\Agenda;
-use App\Models\Contrato;
 use App\Models\Apontamento;
-use App\Models\EmpresaParceira;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use App\Models\Contrato;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class RelatorioService
 {
     public function getFiltrosAlocacao()
     {
         $consultoresPJ = User::where('funcao', 'consultor')
-                                ->whereIn('tipo_contrato', ['PJ Mensal', 'PJ Horista'])
-                                ->where('status', 'Ativo')
-                                ->orderBy('nome')
-                                ->get();
+            ->whereIn('tipo_contrato', ['PJ Mensal', 'PJ Horista'])
+            ->where('status', 'Ativo')
+            ->orderBy('nome')
+            ->get();
+
         return ['consultores' => $consultoresPJ];
     }
 
@@ -43,7 +42,7 @@ class RelatorioService
                 ->whereBetween('data_hora', [$inicioPeriodo, $fimPeriodo])
                 ->where('status', '!=', 'Cancelada')
                 ->count();
-            
+
             $horasUteisRestantes = $horasUteisDoPeriodo - abs($horasApontadas);
 
             $resultados[] = [
@@ -54,6 +53,7 @@ class RelatorioService
                 'horas_uteis_restantes' => $horasUteisRestantes,
             ];
         }
+
         return ['resultados' => $resultados, 'dias_uteis' => $diasUteis];
     }
 
@@ -64,11 +64,12 @@ class RelatorioService
         $dataAtual = $inicio->copy();
 
         while ($dataAtual <= $fim) {
-            if ($dataAtual->isWeekday() && !in_array($dataAtual->format('Y-m-d'), $feriados)) {
+            if ($dataAtual->isWeekday() && ! in_array($dataAtual->format('Y-m-d'), $feriados)) {
                 $diasUteis++;
             }
             $dataAtual->addDay();
         }
+
         return $diasUteis;
     }
 
@@ -90,18 +91,20 @@ class RelatorioService
             $feriados[] = date('Y-m-d', strtotime('-47 days', $pascoaTimestamp));
             $feriados[] = date('Y-m-d', strtotime('+60 days', $pascoaTimestamp));
         }
+
         return $feriados;
     }
 
     public function getFiltrosContratos()
     {
-        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
+        $contratos = Contrato::where('status', 'Ativo')->with('empresaParceira')->orderBy('numero_contrato')->get();
+
         return compact('contratos');
     }
 
     public function gerarRelatorioContratos(array $filtros)
     {
-        $contratos = Contrato::with('cliente')->whereIn('id', $filtros['contratos_id'])->get();
+        $contratos = Contrato::with('empresaParceira')->whereIn('id', $filtros['contratos_id'])->get();
         $resultados = [];
 
         foreach ($contratos as $contrato) {
@@ -114,21 +117,23 @@ class RelatorioService
                 'contrato' => $contrato,
                 'horas_gastas' => $horasGastas,
                 'saldo_horas' => $horasRestantes,
-                'percentual_gasto' => round($percentualGasto)
+                'percentual_gasto' => round($percentualGasto),
             ];
         }
+
         return ['resultados' => $resultados];
     }
 
     public function getFiltrosHistoricoTechLeads()
     {
-        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
+        $contratos = Contrato::where('status', 'Ativo')->with('empresaParceira')->orderBy('numero_contrato')->get();
+
         return compact('contratos');
     }
 
     public function gerarRelatorioHistoricoTechLeads(array $filtros)
     {
-        $contrato = Contrato::with('cliente')->findOrFail($filtros['contrato_id']);
+        $contrato = Contrato::with('empresaParceira')->findOrFail($filtros['contrato_id']);
 
         $historico = DB::table('contrato_historico_techleads as historico')
             ->join('usuarios', 'historico.tech_lead_id', '=', 'usuarios.id')

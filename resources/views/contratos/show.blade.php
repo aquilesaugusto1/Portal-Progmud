@@ -4,7 +4,7 @@
             <div class="bg-white shadow-lg rounded-sm border border-slate-200 p-6 md:p-8">
                 <div class="flex justify-between items-start mb-6">
                     <div>
-                        <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">{{ $contrato->cliente->nome_empresa }}</h1>
+                        <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">{{ $contrato->empresaParceira->nome_empresa }}</h1>
                         <span class="text-sm text-slate-500">Contrato #{{ $contrato->numero_contrato ?? $contrato->id }}</span>
                     </div>
                     <div class="px-3 py-1 text-xs font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800' }}">

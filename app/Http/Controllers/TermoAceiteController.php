@@ -12,7 +12,7 @@ class TermoAceiteController extends Controller
         if (Auth::user()->termos_aceite_em) {
             return redirect()->route('dashboard');
         }
-        
+
         return view('auth.termo-aceite');
     }
 
@@ -23,7 +23,7 @@ class TermoAceiteController extends Controller
         ]);
 
         $user = Auth::user();
-        $user->termos_aceite_em = now(); 
+        $user->termos_aceite_em = now();
         $user->ip_aceite = $request->ip();
         $user->save();
 

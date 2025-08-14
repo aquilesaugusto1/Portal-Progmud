@@ -3,16 +3,15 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ColaboradorPolicy
 {
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
         if ($user->funcao === 'admin') {
             return true;
         }
- 
+
         return null;
     }
 

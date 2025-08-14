@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Services\RelatorioService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\Request;
 
 class RelatorioController extends Controller
 {
@@ -25,14 +25,17 @@ class RelatorioController extends Controller
         switch ($tipo) {
             case 'historico-techleads':
                 $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
+
                 return view('relatorios.historico-techleads', $dadosFiltro);
 
             case 'alocacao-consultores':
                 $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
+
                 return view('relatorios.alocacao-consultores', $dadosFiltro);
 
             case 'visao-geral-contratos':
                 $dadosFiltro = $this->relatorioService->getFiltrosContratos();
+
                 return view('relatorios.visao-geral-contratos', $dadosFiltro);
 
             default:
@@ -43,7 +46,7 @@ class RelatorioController extends Controller
     public function gerar(Request $request)
     {
         $tipo = $request->input('tipo_relatorio');
-        
+
         switch ($tipo) {
             case 'historico-techleads':
                 $filtros = $request->validate([
@@ -55,10 +58,12 @@ class RelatorioController extends Controller
 
                 if ($filtros['formato'] === 'pdf') {
                     $pdf = Pdf::loadView('relatorios.pdf.historico-techleads', $dadosRelatorio);
+
                     return $pdf->download('relatorio_historico_techleads_'.now()->format('Y-m-d').'.pdf');
                 }
 
                 $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
+
                 return view('relatorios.historico-techleads', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             case 'alocacao-consultores':
@@ -75,12 +80,14 @@ class RelatorioController extends Controller
                     $pdf = Pdf::loadView('relatorios.pdf.alocacao-consultores', [
                         'resultados' => $dadosRelatorio['resultados'],
                         'filtros' => $filtros,
-                        'dias_uteis' => $dadosRelatorio['dias_uteis']
+                        'dias_uteis' => $dadosRelatorio['dias_uteis'],
                     ]);
+
                     return $pdf->download('relatorio_alocacao_consultores_'.now()->format('Y-m-d').'.pdf');
                 }
-                
+
                 $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
+
                 return view('relatorios.alocacao-consultores', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             case 'visao-geral-contratos':
@@ -94,12 +101,14 @@ class RelatorioController extends Controller
                 if ($filtros['formato'] === 'pdf') {
                     $pdf = Pdf::loadView('relatorios.pdf.visao-geral-contratos', [
                         'resultados' => $dadosRelatorio['resultados'],
-                        'filtros' => $filtros
+                        'filtros' => $filtros,
                     ]);
+
                     return $pdf->download('relatorio_visao_contratos_'.now()->format('Y-m-d').'.pdf');
                 }
 
                 $dadosFiltro = $this->relatorioService->getFiltrosContratos();
+
                 return view('relatorios.visao-geral-contratos', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             default:

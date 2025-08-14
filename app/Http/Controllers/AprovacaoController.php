@@ -15,11 +15,11 @@ class AprovacaoController extends Controller
         $this->authorize('viewAny', Apontamento::class);
 
         $user = Auth::user();
-        $query = Apontamento::with(['consultor', 'agenda.contrato.cliente'])
-                            ->where('status', 'Pendente');
+        $query = Apontamento::with(['consultor', 'contrato.empresaParceira'])
+            ->where('status', 'Pendente');
 
-        if ($user->funcao === 'techlead') {
-            $consultorIds = $user->consultoresLiderados()->pluck('id');
+        if ($user->isTechLead()) {
+            $consultorIds = $user->consultoresLiderados()->pluck('users.id');
             $query->whereIn('consultor_id', $consultorIds);
         }
 
@@ -32,8 +32,11 @@ class AprovacaoController extends Controller
     {
         $this->authorize('approve', $apontamento);
 
+        $apontamento->loadMissing(['agenda', 'contrato']);
+
         try {
             DB::transaction(function () use ($apontamento) {
+                /** @var \App\Models\Apontamento $apontamento */
                 // 1. Atualiza o status do apontamento
                 $apontamento->status = 'Aprovado';
                 $apontamento->aprovado_por_id = Auth::id();
@@ -54,14 +57,15 @@ class AprovacaoController extends Controller
                 }
             });
 
-            $message = $apontamento->faturavel 
-                ? 'Apontamento aprovado e faturado com sucesso!' 
+            $message = $apontamento->faturavel
+                ? 'Apontamento aprovado e faturado com sucesso!'
                 : 'Apontamento aprovado com sucesso (horas não faturadas).';
 
             return redirect()->route('aprovacoes.index')->with('success', $message);
 
         } catch (\Exception $e) {
-            Log::error('Erro ao aprovar apontamento: ' . $e->getMessage());
+            Log::error('Erro ao aprovar apontamento: '.$e->getMessage());
+
             return back()->withErrors('Ocorreu um erro inesperado ao tentar aprovar o apontamento.');
         }
     }
@@ -69,11 +73,11 @@ class AprovacaoController extends Controller
     public function rejeitar(Request $request, Apontamento $apontamento)
     {
         $this->authorize('approve', $apontamento);
-        
+
         $validated = $request->validate(['motivo_rejeicao' => 'required|string|max:500']);
 
         $apontamento->status = 'Rejeitado';
-        $apontamento->faturavel = false; // CORRIGIDO: de 'faturado' para 'faturavel'
+        $apontamento->faturavel = false;
         $apontamento->motivo_rejeicao = $validated['motivo_rejeicao'];
         $apontamento->aprovado_por_id = Auth::id();
         $apontamento->data_aprovacao = now();
