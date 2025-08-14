@@ -6,6 +6,7 @@ use App\Models\Contrato;
 use App\Models\EmpresaParceira;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -56,6 +57,7 @@ class ContratoController extends Controller
 
             $contrato = Contrato::create($preparedData);
             $this->syncUsuarios($contrato, $request);
+            $this->atualizarHistoricoTechLeads($contrato, [], $request->input('tech_leads', []));
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato criado com sucesso.');
@@ -85,6 +87,10 @@ class ContratoController extends Controller
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
 
         DB::transaction(function () use ($request, $contrato, $validatedData) {
+            // *** CORREÇÃO APLICADA AQUI ***
+            // Especificamos que queremos o 'id' da tabela 'usuarios'.
+            $techLeadsAntigos = $contrato->techLeads()->pluck('usuarios.id')->toArray();
+            
             $preparedData = $this->prepareData($request, $validatedData);
 
             if ($request->hasFile('documento_baseline')) {
@@ -96,6 +102,7 @@ class ContratoController extends Controller
 
             $contrato->update($preparedData);
             $this->syncUsuarios($contrato, $request);
+            $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, $request->input('tech_leads', []));
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato atualizado com sucesso.');
@@ -172,5 +179,38 @@ class ContratoController extends Controller
             }
         }
         $contrato->touch();
+    }
+
+    private function atualizarHistoricoTechLeads(Contrato $contrato, array $techLeadsAntigos, array $techLeadsNovos)
+    {
+        $hoje = now();
+        $userId = Auth::id();
+
+        $removidos = array_diff($techLeadsAntigos, $techLeadsNovos);
+        $adicionados = array_diff($techLeadsNovos, $techLeadsAntigos);
+
+        if (!empty($removidos)) {
+            DB::table('contrato_historico_techleads')
+                ->where('contrato_id', $contrato->id)
+                ->whereIn('tech_lead_id', $removidos)
+                ->whereNull('data_fim')
+                ->update(['data_fim' => $hoje]);
+        }
+
+        foreach ($adicionados as $techLeadId) {
+            DB::table('contrato_historico_techleads')->updateOrInsert(
+                [
+                    'contrato_id' => $contrato->id,
+                    'tech_lead_id' => $techLeadId,
+                    'data_fim' => null,
+                ],
+                [
+                    'data_inicio' => $hoje,
+                    'user_creator_id' => $userId,
+                    'created_at' => $hoje,
+                    'updated_at' => $hoje,
+                ]
+            );
+        }
     }
 }

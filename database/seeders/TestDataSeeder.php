@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\EmpresaParceira;
@@ -15,63 +14,63 @@ class TestDataSeeder extends Seeder
      */
     public function run(): void
     {
-        // Criar um Admin Padrão
-        User::create([
-            'nome' => 'Admin',
-            'sobrenome' => 'Agen',
-            'email' => 'admin@agen.com',
+        // Criar um usuário Admin Padrão
+        User::factory()->create([
+            'nome' => 'Admin Progmud',
+            'email' => 'admin@progmud.com.br',
             'password' => Hash::make('password'),
             'funcao' => 'admin',
             'status' => 'Ativo',
-            'termos_aceite_em' => now(),
-            'ip_aceite' => '127.0.0.1',
+            'termo_aceite' => true,
         ]);
 
         // Criar Coordenadores
-        User::create([
-            'nome' => 'Carlos',
-            'sobrenome' => 'Coordenador',
-            'email' => 'carlos.coord@agen.com',
+        User::factory()->create([
+            'nome' => 'Carlos Coordenador',
+            'email' => 'carlos.coordenador@progmud.com.br',
             'password' => Hash::make('password'),
             'funcao' => 'coordenador_operacoes',
             'status' => 'Ativo',
-            'termos_aceite_em' => now(),
-            'ip_aceite' => '127.0.0.1',
+            'termo_aceite' => true,
         ]);
-         User::create([
-            'nome' => 'Beatriz',
-            'sobrenome' => 'Coordenadora',
-            'email' => 'beatriz.coord@agen.com',
+        User::factory()->create([
+            'nome' => 'Ana Coordenadora',
+            'email' => 'ana.coordenadora@progmud.com.br',
             'password' => Hash::make('password'),
             'funcao' => 'coordenador_tecnico',
             'status' => 'Ativo',
-            'termos_aceite_em' => now(),
-            'ip_aceite' => '127.0.0.1',
+            'termo_aceite' => true,
         ]);
 
         // Criar Tech Leads
-        User::factory()->create([
-            'nome' => 'Fernanda',
-            'sobrenome' => 'TechLead',
-            'email' => 'fernanda.tl@agen.com',
+        $techleads = User::factory()->count(5)->sequence(
+            ['nome' => 'Mariana Oliveira', 'email' => 'mariana.oliveira@progmud.com.br'],
+            ['nome' => 'Rafael Souza', 'email' => 'rafael.souza@progmud.com.br'],
+            ['nome' => 'Beatriz Lima', 'email' => 'beatriz.lima@progmud.com.br'],
+            ['nome' => 'Gustavo Pereira', 'email' => 'gustavo.pereira@progmud.com.br'],
+            ['nome' => 'Juliana Costa', 'email' => 'juliana.costa@progmud.com.br'],
+        )->create([
+            'password' => Hash::make('password'),
             'funcao' => 'techlead',
             'status' => 'Ativo',
-        ]);
-        User::factory()->create([
-            'nome' => 'Ricardo',
-            'sobrenome' => 'TechLead',
-            'email' => 'ricardo.tl@agen.com',
-            'funcao' => 'techlead',
-            'status' => 'Ativo',
+            'termo_aceite' => true,
         ]);
 
         // Criar Consultores
-        User::factory()->count(5)->create([
+        $consultores = User::factory()->count(15)->create([
+            'password' => Hash::make('password'),
             'funcao' => 'consultor',
             'status' => 'Ativo',
+            'termo_aceite' => true,
         ]);
 
-        // Criar Empresas Parceiras
-        EmpresaParceira::factory()->count(5)->create();
+        // Associar alguns consultores a Tech Leads
+        $techleads->each(function ($techlead) use ($consultores) {
+            $consultoresLiderados = $consultores->random(3);
+            $techlead->consultoresLiderados()->attach($consultoresLiderados->pluck('id'));
+        });
+
+        // Criar Empresas Clientes
+        EmpresaParceira::factory()->count(25)->create();
     }
 }

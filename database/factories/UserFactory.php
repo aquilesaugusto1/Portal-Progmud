@@ -18,6 +18,9 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'funcao' => 'consultor', // Valor padrão
+            'status' => 'Ativo',     // Valor padrão
+            'termo_aceite' => true,  // Valor padrão
         ];
     }
 

@@ -8,26 +8,11 @@ use App\Models\Contrato;
 use App\Models\Apontamento;
 use App\Models\EmpresaParceira;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class RelatorioService
 {
-    public function getFiltrosApontamentos()
-    {
-        $user = Auth::user();
-        $clientes = EmpresaParceira::orderBy('nome_empresa')->get();
-        $contratos = $user->isTechLead() ? $user->contratos()->orderBy('numero_contrato')->get() : Contrato::orderBy('numero_contrato')->get();
-        $colaboradores = $user->isTechLead() ? $user->consultoresLiderados()->orderBy('nome')->get() : User::where('funcao', 'consultor')->orderBy('nome')->get();
-        return compact('clientes', 'contratos', 'colaboradores');
-    }
-
-    public function gerarRelatorioApontamentos(array $filtros)
-    {
-        $query = Apontamento::with(['consultor', 'contrato.cliente']);
-        $apontamentos = $query->get();
-        return ['resultados' => $apontamentos];
-    }
-
     public function getFiltrosAlocacao()
     {
         $consultoresPJ = User::where('funcao', 'consultor')
@@ -133,5 +118,28 @@ class RelatorioService
             ];
         }
         return ['resultados' => $resultados];
+    }
+
+    public function getFiltrosHistoricoTechLeads()
+    {
+        $contratos = Contrato::where('status', 'Ativo')->with('cliente')->orderBy('numero_contrato')->get();
+        return compact('contratos');
+    }
+
+    public function gerarRelatorioHistoricoTechLeads(array $filtros)
+    {
+        $contrato = Contrato::with('cliente')->findOrFail($filtros['contrato_id']);
+
+        $historico = DB::table('contrato_historico_techleads as historico')
+            ->join('usuarios', 'historico.tech_lead_id', '=', 'usuarios.id')
+            ->where('historico.contrato_id', $contrato->id)
+            ->select('usuarios.nome as tech_lead_nome', 'historico.data_inicio', 'historico.data_fim')
+            ->orderBy('historico.data_inicio', 'desc')
+            ->get();
+
+        return [
+            'contrato' => $contrato,
+            'historico' => $historico,
+        ];
     }
 }

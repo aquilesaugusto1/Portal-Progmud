@@ -23,9 +23,9 @@ class RelatorioController extends Controller
     public function show(string $tipo)
     {
         switch ($tipo) {
-            case 'apontamentos':
-                $dadosFiltro = $this->relatorioService->getFiltrosApontamentos();
-                return view('relatorios.apontamentos', $dadosFiltro);
+            case 'historico-techleads':
+                $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
+                return view('relatorios.historico-techleads', $dadosFiltro);
 
             case 'alocacao-consultores':
                 $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
@@ -45,9 +45,21 @@ class RelatorioController extends Controller
         $tipo = $request->input('tipo_relatorio');
         
         switch ($tipo) {
-            case 'apontamentos':
-                // ... lógica do relatório de apontamentos ...
-                break;
+            case 'historico-techleads':
+                $filtros = $request->validate([
+                    'contrato_id' => 'required|exists:contratos,id',
+                    'formato' => 'required|in:html,pdf',
+                ]);
+
+                $dadosRelatorio = $this->relatorioService->gerarRelatorioHistoricoTechLeads($filtros);
+
+                if ($filtros['formato'] === 'pdf') {
+                    $pdf = Pdf::loadView('relatorios.pdf.historico-techleads', $dadosRelatorio);
+                    return $pdf->download('relatorio_historico_techleads_'.now()->format('Y-m-d').'.pdf');
+                }
+
+                $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
+                return view('relatorios.historico-techleads', array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros]));
 
             case 'alocacao-consultores':
                 $filtros = $request->validate([
