@@ -21,7 +21,8 @@
                             <option value="">-- Selecione um contrato --</option>
                             @foreach($contratos as $contratoItem)
                                 <option value="{{ $contratoItem->id }}" {{ (isset($filtros['contrato_id']) && $filtros['contrato_id'] == $contratoItem->id) ? 'selected' : '' }}>
-                                    {{ $contratoItem->numero_contrato }} - {{ $contratoItem->empresaParceira->nome_fantasia }}
+                                    {{-- CORREÇÃO APLICADA AQUI --}}
+                                    {{ $contratoItem->numero_contrato }} - {{ $contratoItem->empresaParceira->nome_fantasia ?? $contratoItem->empresaParceira->nome_empresa }}
                                 </option>
                             @endforeach
                         </select>
