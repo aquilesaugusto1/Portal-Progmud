@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\AgendaMail;
+use App\Mail\ResumoAgendasMail;
 use App\Models\Agenda;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log; // Importe a classe Log
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -73,12 +74,31 @@ class EmailController extends Controller
 
         $recado = $validated['recado'] ?? 'Segue a sua agenda para o período selecionado.';
 
+        // --- LOG DE DEBUG ---
+        Log::info('Tentando enviar resumo de agendas.', [
+            'remetente_id' => $user->id,
+            'remetente_nome' => $user->nome,
+            'destinatario_id' => $consultor->id,
+            'destinatario_email' => $consultor->email,
+            'total_agendas' => $agendas->count(),
+            'periodo_inicio' => $validated['data_inicio'],
+            'periodo_fim' => $validated['data_fim'],
+        ]);
+
         try {
-            Mail::to($consultor->email)->send(new AgendaMail($agendas, $recado, $user));
+            Mail::to($consultor->email)->send(new ResumoAgendasMail($agendas, $recado, $user));
+            // --- LOG DE SUCESSO ---
+            Log::info('E-mail de resumo de agendas enviado com sucesso para: '.$consultor->email);
         } catch (\Exception $e) {
+            // --- LOG DE ERRO ---
+            Log::error('Falha ao enviar e-mail de resumo de agendas.', [
+                'destinatario' => $consultor->email,
+                'mensagem_erro' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(), // Log completo do erro
+            ]);
             report($e);
 
-            return back()->with('error', 'Ocorreu um erro ao tentar enviar o e-mail. Verifique se as credenciais de e-mail estão corretas e tente novamente.')->withInput();
+            return back()->with('error', 'Ocorreu um erro ao tentar enviar o e-mail. Verifique os logs para mais detalhes.')->withInput();
         }
 
         return redirect()->route('email.agendas.create')->with('success', 'E-mail com as agendas enviado com sucesso para '.$consultor->nome.'!');

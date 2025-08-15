@@ -3,62 +3,59 @@
 namespace App\Mail;
 
 use App\Models\Agenda;
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
-class AgendaMail extends Mailable
+class ResumoAgendasMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     /**
-     * Ação realizada na agenda (ex: 'criada', 'atualizada').
+     * @var Collection<int, Agenda>
      */
-    public string $acao;
+    public Collection $agendas;
+
+    public string $recado;
+
+    public User $remetente;
 
     /**
-     * Cria uma nova instância da mensagem.
+     * @param  Collection<int, Agenda>  $agendas
      */
-    public function __construct(
-        public Agenda $agenda,
-        string $acao = 'criada'
-    ) {
-        $this->acao = $acao;
+    public function __construct(Collection $agendas, string $recado, User $remetente)
+    {
+        $this->agendas = $agendas;
+        $this->recado = $recado;
+        $this->remetente = $remetente;
     }
 
-    /**
-     * Define o envelope da mensagem (remetente, assunto).
-     */
     public function envelope(): Envelope
     {
         $address = config('mail.from.address', 'nao-responda@progmud.com.br');
         $name = config('mail.from.name', 'Progmud');
-        $acaoCapitalizada = ucfirst($this->acao);
 
         return new Envelope(
             from: new Address($address, $name),
-            subject: "Agenda {$this->acao}: {$this->agenda->assunto}",
+            subject: 'Sua Agenda de Atividades da Semana',
         );
     }
 
-    /**
-     * Define o conteúdo da mensagem (a view).
-     */
     public function content(): Content
     {
-        // Aponta para a nova view singular que vamos criar a seguir.
+        // Aponta para a view que exibe a lista de agendas
         return new Content(
-            markdown: 'emails.agenda',
+            markdown: 'emails.agendas',
         );
     }
 
     /**
-     * Obtém os anexos da mensagem.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array{}
      */
     public function attachments(): array
     {

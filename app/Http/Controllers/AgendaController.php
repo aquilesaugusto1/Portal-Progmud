@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\AgendaMail;
 use App\Models\Agenda;
 use App\Models\Contrato;
 use App\Models\User;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -12,17 +14,19 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 use LogicException;
 
 class AgendaController extends Controller
 {
+    // ... (os métodos index, formatarParaCalendario, create, show, getFilteredConsultantsForContract e edit continuam iguais) ...
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Agenda::class);
 
         $user = Auth::user();
-        if (! $user) {
+        if (!$user) {
             throw new LogicException('User not authenticated.');
         }
 
@@ -57,10 +61,6 @@ class AgendaController extends Controller
         return view('agendas.index', compact('agendas', 'eventosDoCalendario', 'consultores', 'contratos'));
     }
 
-    /**
-     * @param  Collection<int, Agenda>  $agendas
-     * @return SupportCollection<int, array{id: int, title: string, start: string, color: string, extendedProps: array{assunto: string, consultor: string, cliente: string, url: string}}>
-     */
     private function formatarParaCalendario(Collection $agendas): SupportCollection
     {
         return $agendas->map(function (Agenda $agenda) {
@@ -118,7 +118,26 @@ class AgendaController extends Controller
         if ($user->isTechLead() && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
             return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para consultores que você lidera.'])->withInput();
         }
-        Agenda::create($validated);
+
+        $agenda = Agenda::create($validated);
+
+        // --- LOG DE DEBUG ---
+        Log::info('Tentando enviar e-mail de nova agenda.', [
+            'agenda_id' => $agenda->id,
+            'destinatario_email' => $agenda->consultor->email,
+        ]);
+
+        try {
+            Mail::to($agenda->consultor->email)->send(new AgendaMail($agenda, 'criada'));
+            // --- LOG DE SUCESSO ---
+            Log::info('E-mail de nova agenda enviado com sucesso para: '.$agenda->consultor->email);
+        } catch (Exception $e) {
+            // --- LOG DE ERRO ---
+            Log::error('Falha ao enviar e-mail de nova agenda.', [
+                'agenda_id' => $agenda->id,
+                'mensagem_erro' => $e->getMessage(),
+            ]);
+        }
 
         return redirect()->route('agendas.index')->with('success', 'Agenda criada com sucesso.');
     }
@@ -130,9 +149,6 @@ class AgendaController extends Controller
         return view('agendas.show', compact('agenda'));
     }
 
-    /**
-     * @return Collection<int, User>
-     */
     private function getFilteredConsultantsForContract(?Contrato $contrato, User $user): Collection
     {
         if (! $contrato) {
@@ -192,6 +208,24 @@ class AgendaController extends Controller
         }
         $agenda->update($validated);
 
+        // --- LOG DE DEBUG ---
+        Log::info('Tentando enviar e-mail de atualização de agenda.', [
+            'agenda_id' => $agenda->id,
+            'destinatario_email' => $agenda->consultor->email,
+        ]);
+
+        try {
+            Mail::to($agenda->consultor->email)->send(new AgendaMail($agenda, 'atualizada'));
+            // --- LOG DE SUCESSO ---
+            Log::info('E-mail de atualização de agenda enviado com sucesso para: '.$agenda->consultor->email);
+        } catch (Exception $e) {
+            // --- LOG DE ERRO ---
+            Log::error('Falha ao enviar e-mail de atualização de agenda.', [
+                'agenda_id' => $agenda->id,
+                'mensagem_erro' => $e->getMessage(),
+            ]);
+        }
+
         return redirect()->route('agendas.index')->with('success', 'Agenda atualizada com sucesso.');
     }
 
@@ -215,7 +249,7 @@ class AgendaController extends Controller
             $consultores = $this->getFilteredConsultantsForContract($contrato, $user);
 
             return response()->json($consultores->map->only(['id', 'nome', 'sobrenome']));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Erro ao buscar consultores para o contrato.', [
                 'contrato_id' => $contratoId,
                 'user_id' => Auth::id(),
