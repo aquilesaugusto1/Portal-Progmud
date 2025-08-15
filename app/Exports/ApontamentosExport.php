@@ -8,23 +8,42 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
+/**
+ * @implements WithMapping<Apontamento>
+ */
 class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
 {
-    protected $apontamentos;
+    /**
+     * @var Collection<int, Apontamento>
+     */
+    protected Collection $apontamentos;
 
-    protected $filtros;
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $filtros;
 
+    /**
+     * @param Collection<int, Apontamento> $apontamentos
+     * @param array<string, mixed> $filtros
+     */
     public function __construct(Collection $apontamentos, array $filtros)
     {
         $this->apontamentos = $apontamentos;
         $this->filtros = $filtros;
     }
 
-    public function collection()
+    /**
+     * @return Collection<int, Apontamento>
+     */
+    public function collection(): Collection
     {
         return $this->apontamentos;
     }
 
+    /**
+     * @return array<int, string>
+     */
     public function headings(): array
     {
         return [
@@ -38,6 +57,10 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
         ];
     }
 
+    /**
+     * @param Apontamento $apontamento
+     * @return array<int, mixed>
+     */
     public function map($apontamento): array
     {
         return [

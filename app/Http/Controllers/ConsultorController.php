@@ -4,28 +4,30 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultor;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\View\View;
 
 class ConsultorController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $consultores = Consultor::with('usuario')->latest()->paginate(10);
 
         return view('consultores.index', compact('consultores'));
     }
 
-    public function create()
+    public function create(): View
     {
         $techLeads = User::where('funcao', 'techlead')->get();
 
         return view('consultores.create', compact('techLeads'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'nome' => ['required', 'string', 'max:255'],
@@ -38,16 +40,16 @@ class ConsultorController extends Controller
 
         DB::transaction(function () use ($request) {
             $user = User::create([
-                'nome' => $request->nome,
-                'email' => $request->email,
-                'password' => Hash::make($request->password),
+                'nome' => $request->string('nome'),
+                'email' => $request->string('email'),
+                'password' => Hash::make((string) $request->input('password')),
                 'funcao' => 'consultor',
             ]);
 
             $consultor = new Consultor([
-                'nome' => $request->nome,
-                'email' => $request->email,
-                'telefone' => $request->telefone,
+                'nome' => $request->string('nome'),
+                'email' => $request->string('email'),
+                'telefone' => $request->string('telefone'),
                 'status' => 'Ativo',
             ]);
 
@@ -55,7 +57,7 @@ class ConsultorController extends Controller
             $consultor->save();
 
             if ($request->has('tech_leads')) {
-                $consultor->techLeads()->sync($request->tech_leads);
+                $consultor->techLeads()->sync((array) $request->input('tech_leads'));
             }
         });
 
@@ -63,14 +65,14 @@ class ConsultorController extends Controller
             ->with('success', 'Consultor criado com sucesso.');
     }
 
-    public function show(Consultor $consultor)
+    public function show(Consultor $consultor): View
     {
         $consultor->load('usuario', 'techLeads');
 
         return view('consultores.show', compact('consultor'));
     }
 
-    public function edit(Consultor $consultor)
+    public function edit(Consultor $consultor): View
     {
         $techLeads = User::where('funcao', 'techlead')->get();
         $consultor->load('techLeads');
@@ -78,7 +80,7 @@ class ConsultorController extends Controller
         return view('consultores.edit', compact('consultor', 'techLeads'));
     }
 
-    public function update(Request $request, Consultor $consultor)
+    public function update(Request $request, Consultor $consultor): RedirectResponse
     {
         $consultor->load('usuario');
 
@@ -93,32 +95,34 @@ class ConsultorController extends Controller
 
         DB::transaction(function () use ($request, $consultor) {
             $consultor->usuario->update([
-                'nome' => $request->nome,
-                'email' => $request->email,
+                'nome' => $request->string('nome'),
+                'email' => $request->string('email'),
             ]);
 
             $consultor->update([
-                'nome' => $request->nome,
-                'email' => $request->email,
-                'telefone' => $request->telefone,
-                'status' => $request->status,
+                'nome' => $request->string('nome'),
+                'email' => $request->string('email'),
+                'telefone' => $request->string('telefone'),
+                'status' => $request->string('status'),
             ]);
 
-            $consultor->techLeads()->sync($request->input('tech_leads', []));
+            $consultor->techLeads()->sync((array) $request->input('tech_leads', []));
         });
 
         return redirect()->route('consultores.index')
             ->with('success', 'Consultor atualizado com sucesso.');
     }
 
-    public function destroy(Consultor $consultor)
+    public function destroy(Consultor $consultor): RedirectResponse
     {
         $consultor->load('usuario');
 
         DB::transaction(function () use ($consultor) {
             $user = $consultor->usuario;
             $consultor->delete();
-            $user->delete();
+            if ($user) {
+                $user->delete();
+            }
         });
 
         return redirect()->route('consultores.index')

@@ -10,12 +10,18 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\View\View;
+use LogicException;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $user = Auth::user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
         $stats = [];
         $contratosCriticos = collect();
         $consultoresAtivos = collect();
@@ -39,11 +45,11 @@ class DashboardController extends Controller
                 }], 'horas_gastas')
                 ->get()
                 ->sortByDesc('apontamentos_sum_horas_gastas')
-                ->map(function ($consultor) {
-                    /** @var User $consultor */
-                    $consultor->horas_30_dias = $consultor->apontamentos_sum_horas_gastas ?? 0;
-
-                    return $consultor;
+                ->map(function (User $consultor) {
+                    return [
+                        'usuario' => $consultor,
+                        'horas_30_dias' => $consultor->apontamentos_sum_horas_gastas ?? 0,
+                    ];
                 });
 
             $agendasPorMes = Agenda::select(

@@ -3,63 +3,65 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\View\View;
 
 class ColaboradorController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', User::class);
 
         $query = User::query();
         if ($request->filled('nome')) {
-            $query->where('nome', 'like', '%'.$request->nome.'%');
+            $query->where('nome', 'like', '%'.$request->string('nome')->toString().'%');
         }
         if ($request->filled('funcao')) {
-            $query->where('funcao', $request->funcao);
+            $query->where('funcao', $request->string('funcao'));
         }
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $request->string('status'));
         }
         $colaboradores = $query->latest()->paginate(10)->withQueryString();
 
         return view('colaboradores.index', compact('colaboradores'));
     }
 
-    public function create()
+    public function create(): View
     {
         $this->authorize('create', User::class);
-        $colaborador = new User;
+        $colaborador = new User();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
 
         return view('colaboradores.create', compact('colaborador', 'techLeads'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', User::class);
         $request->validate($this->getValidationRules($request));
         DB::transaction(function () use ($request) {
-            $colaborador = User::create($this->getData($request));
+            $colaborador = User::create($this->getData($request, true));
             if ($request->has('tech_leads')) {
-                $colaborador->techLeads()->sync($request->input('tech_leads'));
+                $colaborador->techLeads()->sync((array) $request->input('tech_leads'));
             }
         });
 
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador criado com sucesso.');
     }
 
-    public function show(User $colaborador)
+    public function show(User $colaborador): View
     {
         $this->authorize('view', $colaborador);
 
         return view('colaboradores.show', compact('colaborador'));
     }
 
-    public function edit(User $colaborador)
+    public function edit(User $colaborador): View
     {
         $this->authorize('update', $colaborador);
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
@@ -67,7 +69,7 @@ class ColaboradorController extends Controller
         return view('colaboradores.edit', compact('colaborador', 'techLeads'));
     }
 
-    public function update(Request $request, User $colaborador)
+    public function update(Request $request, User $colaborador): RedirectResponse
     {
         $this->authorize('update', $colaborador);
         $request->validate($this->getValidationRules($request, $colaborador->id));
@@ -80,7 +82,7 @@ class ColaboradorController extends Controller
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador atualizado com sucesso.');
     }
 
-    public function toggleStatus(User $colaborador)
+    public function toggleStatus(User $colaborador): RedirectResponse
     {
         $this->authorize('toggleStatus', $colaborador);
         $novoStatus = $colaborador->status === 'Ativo' ? 'Inativo' : 'Ativo';
@@ -90,13 +92,15 @@ class ColaboradorController extends Controller
         return redirect()->route('colaboradores.index')->with('success', $mensagem);
     }
 
-    private function getValidationRules(Request $request, $id = null)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getValidationRules(Request $request, ?int $id = null): array
     {
         $rules = [
             'nome' => ['required', 'string', 'max:255'],
             'sobrenome' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,'.$id],
-            // Corrigido para aceitar 'administrativo' do formulário
             'funcao' => ['required', 'string', 'in:consultor,techlead,administrativo,coordenador_operacoes,coordenador_tecnico,comercial'],
             'tipo_contrato' => ['nullable', 'string'],
             'data_nascimento' => ['nullable', 'date'],
@@ -126,24 +130,26 @@ class ColaboradorController extends Controller
         return $rules;
     }
 
-    private function getData(Request $request, $isCreate = true)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getData(Request $request, bool $isCreate = true): array
     {
         $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);
 
-        // Adicionado para converter o valor do formulário para o valor do banco de dados
         if (isset($data['funcao']) && $data['funcao'] === 'administrativo') {
             $data['funcao'] = 'admin';
         }
 
         if ($isCreate) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = Hash::make((string) $request->input('password'));
         } elseif ($request->filled('password')) {
-            $data['password'] = Hash::make($request->password);
+            $data['password'] = Hash::make((string) $request->input('password'));
         } else {
             unset($data['password']);
         }
 
-        $data['dados_empresa_prestador'] = in_array($request->tipo_contrato, ['PJ Mensal', 'PJ Horista']) ? $request->dados_empresa_prestador : null;
+        $data['dados_empresa_prestador'] = in_array($request->input('tipo_contrato'), ['PJ Mensal', 'PJ Horista']) ? $request->input('dados_empresa_prestador') : null;
 
         return $data;
     }

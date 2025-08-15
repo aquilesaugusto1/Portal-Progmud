@@ -4,27 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Models\Agenda;
 use App\Models\Apontamento;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use LogicException;
 
 class ApontamentoController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $this->authorize('viewAny', Apontamento::class);
 
         return view('apontamentos.index');
     }
 
-    public function events(Request $request)
+    public function events(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Apontamento::class);
 
-        $start = Carbon::parse($request->start)->toDateTimeString();
-        $end = Carbon::parse($request->end)->toDateTimeString();
         $user = Auth::user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
+        $start = Carbon::parse((string) $request->input('start'))->toDateTimeString();
+        $end = Carbon::parse((string) $request->input('end'))->toDateTimeString();
 
         $query = Agenda::with(['consultor', 'contrato.empresaParceira', 'apontamento'])
             ->whereBetween('data_hora', [$start, $end]);
@@ -41,7 +50,7 @@ class ApontamentoController extends Controller
         return response()->json($this->formatEvents($agendas));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'agenda_id' => 'required|exists:agendas,id',
@@ -72,14 +81,17 @@ class ApontamentoController extends Controller
         $apontamento->horas_gastas = round($fim->diffInMinutes($inicio) / 60, 2);
         $apontamento->descricao = $validated['descricao'];
         $apontamento->status = 'Pendente';
-        $apontamento->faturavel = $request->has('faturavel');
+        $apontamento->faturavel = $request->boolean('faturavel');
         $apontamento->motivo_rejeicao = null;
 
         if ($request->hasFile('anexo')) {
             if ($apontamento->caminho_anexo) {
                 Storage::disk('public')->delete($apontamento->caminho_anexo);
             }
-            $apontamento->caminho_anexo = $request->file('anexo')->store('anexos', 'public');
+            $path = $request->file('anexo')->store('anexos', 'public');
+            if ($path !== false) {
+                $apontamento->caminho_anexo = $path;
+            }
         }
 
         $apontamento->save();
@@ -87,9 +99,13 @@ class ApontamentoController extends Controller
         return response()->json(['message' => 'Apontamento salvo e enviado para aprovação!']);
     }
 
-    private function formatEvents($agendas)
+    /**
+     * @param  Collection<int, Agenda>  $agendas
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function formatEvents(Collection $agendas): Collection
     {
-        return $agendas->map(function ($agenda) {
+        return $agendas->map(function (Agenda $agenda) {
             $apontamento = $agenda->apontamento;
             $status = 'Não Apontado';
             $color = '#6B7280'; // Cinza

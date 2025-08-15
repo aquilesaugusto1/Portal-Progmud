@@ -5,23 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\Contrato;
 use App\Models\EmpresaParceira;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ContratoController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Contrato::class);
         $query = Contrato::with(['empresaParceira', 'usuarios']);
         if ($request->filled('cliente_id')) {
-            $query->where('cliente_id', $request->cliente_id);
+            $query->where('cliente_id', $request->input('cliente_id'));
         }
         if ($request->filled('status')) {
-            $query->where('status', $request->status);
+            $query->where('status', $request->input('status'));
         }
         $contratos = $query->latest()->paginate(10)->withQueryString();
         $clientes = EmpresaParceira::where('status', 'Ativo')->get();
@@ -29,10 +31,10 @@ class ContratoController extends Controller
         return view('contratos.index', compact('contratos', 'clientes'));
     }
 
-    public function create()
+    public function create(): View
     {
         $this->authorize('create', Contrato::class);
-        $contrato = new Contrato;
+        $contrato = new Contrato();
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
@@ -41,7 +43,7 @@ class ContratoController extends Controller
         return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Contrato::class);
         $validatedData = $request->validate($this->getValidationRules());
@@ -54,18 +56,21 @@ class ContratoController extends Controller
             }
 
             if ($request->hasFile('documento_baseline')) {
-                $preparedData['documento_baseline_path'] = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+                $path = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+                if (is_string($path)) {
+                    $preparedData['documento_baseline_path'] = $path;
+                }
             }
 
             $contrato = Contrato::create($preparedData);
             $this->syncUsuarios($contrato, $request);
-            $this->atualizarHistoricoTechLeads($contrato, [], $request->input('tech_leads', []));
+            $this->atualizarHistoricoTechLeads($contrato, [], (array) $request->input('tech_leads', []));
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato criado com sucesso.');
     }
 
-    public function show(Contrato $contrato)
+    public function show(Contrato $contrato): View
     {
         $this->authorize('view', $contrato);
         $contrato->load(['empresaParceira', 'usuarios', 'creator', 'updater']);
@@ -73,7 +78,7 @@ class ContratoController extends Controller
         return view('contratos.show', compact('contrato'));
     }
 
-    public function edit(Contrato $contrato)
+    public function edit(Contrato $contrato): View
     {
         $this->authorize('update', $contrato);
         $contrato->load(['usuarios']);
@@ -85,7 +90,7 @@ class ContratoController extends Controller
         return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
     }
 
-    public function update(Request $request, Contrato $contrato)
+    public function update(Request $request, Contrato $contrato): RedirectResponse
     {
         $this->authorize('update', $contrato);
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
@@ -99,18 +104,21 @@ class ContratoController extends Controller
                 if ($contrato->documento_baseline_path) {
                     Storage::disk('public')->delete($contrato->documento_baseline_path);
                 }
-                $preparedData['documento_baseline_path'] = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+                $path = $request->file('documento_baseline')->store('contratos/baseline_docs', 'public');
+                if (is_string($path)) {
+                    $preparedData['documento_baseline_path'] = $path;
+                }
             }
 
             $contrato->update($preparedData);
             $this->syncUsuarios($contrato, $request);
-            $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, $request->input('tech_leads', []));
+            $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, (array) $request->input('tech_leads', []));
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato atualizado com sucesso.');
     }
 
-    public function toggleStatus(Contrato $contrato)
+    public function toggleStatus(Contrato $contrato): RedirectResponse
     {
         $this->authorize('toggleStatus', $contrato);
         $novoStatus = $contrato->status === 'Ativo' ? 'Inativo' : 'Ativo';
@@ -120,7 +128,10 @@ class ContratoController extends Controller
         return back()->with('success', $mensagem);
     }
 
-    private function getValidationRules($id = null)
+    /**
+     * @return array<string, mixed>
+     */
+    private function getValidationRules(?int $id = null): array
     {
         $permiteAntecipar = request()->input('permite_antecipar_baseline');
 
@@ -153,9 +164,13 @@ class ContratoController extends Controller
         ];
     }
 
-    private function prepareData(Request $request, array $validatedData)
+    /**
+     * @param  array<string, mixed>  $validatedData
+     * @return array<string, mixed>
+     */
+    private function prepareData(Request $request, array $validatedData): array
     {
-        $validatedData['permite_antecipar_baseline'] = $request->has('permite_antecipar_baseline');
+        $validatedData['permite_antecipar_baseline'] = $request->boolean('permite_antecipar_baseline');
 
         if (! in_array('Outro', $validatedData['produtos'])) {
             $validatedData['especifique_outro'] = null;
@@ -164,28 +179,31 @@ class ContratoController extends Controller
         return $validatedData;
     }
 
-    private function syncUsuarios(Contrato $contrato, Request $request)
+    private function syncUsuarios(Contrato $contrato, Request $request): void
     {
         $contrato->usuarios()->detach();
-        if ($request->has('coordenadores')) {
-            foreach ($request->coordenadores as $id) {
-                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'coordenador']);
-            }
+        $coordenadores = (array) $request->input('coordenadores', []);
+        foreach ($coordenadores as $id) {
+            $contrato->usuarios()->attach($id, ['funcao_contrato' => 'coordenador']);
         }
-        if ($request->has('tech_leads')) {
-            foreach ($request->tech_leads as $id) {
-                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'tech_lead']);
-            }
+
+        $techLeads = (array) $request->input('tech_leads', []);
+        foreach ($techLeads as $id) {
+            $contrato->usuarios()->attach($id, ['funcao_contrato' => 'tech_lead']);
         }
-        if ($request->has('consultores')) {
-            foreach ($request->consultores as $id) {
-                $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
-            }
+
+        $consultores = (array) $request->input('consultores', []);
+        foreach ($consultores as $id) {
+            $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
         }
         $contrato->touch();
     }
 
-    private function atualizarHistoricoTechLeads(Contrato $contrato, array $techLeadsAntigos, array $techLeadsNovos)
+    /**
+     * @param  array<int, int|string>  $techLeadsAntigos
+     * @param  array<int, int|string>  $techLeadsNovos
+     */
+    private function atualizarHistoricoTechLeads(Contrato $contrato, array $techLeadsAntigos, array $techLeadsNovos): void
     {
         $hoje = now();
         $userId = Auth::id();

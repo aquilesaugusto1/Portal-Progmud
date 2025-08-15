@@ -5,43 +5,45 @@ namespace App\Http\Controllers;
 use App\Models\Contrato;
 use App\Services\RelatorioService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log; // Adicionado para usar o Log
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\Response;
 
 class RelatorioController extends Controller
 {
-    protected $relatorioService;
+    protected RelatorioService $relatorioService;
 
     public function __construct(RelatorioService $relatorioService)
     {
         $this->relatorioService = $relatorioService;
     }
 
-    public function index()
+    public function index(): View
     {
         return view('relatorios.index');
     }
 
-    public function show(string $tipo)
+    public function show(string $tipo): View
     {
-        // Log para depuração do método show
         Log::info('Acessando RelatorioController@show', ['tipo' => $tipo]);
 
         switch ($tipo) {
             case 'historico-techleads':
                 $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
-                
-                // Log para ver os dados que a view inicial recebe
                 Log::info('Dados para a view inicial (show):', $dadosFiltro);
 
                 return view('relatorios.historico-techleads', $dadosFiltro);
 
             case 'alocacao-consultores':
                 $dadosFiltro = $this->relatorioService->getFiltrosAlocacao();
+
                 return view('relatorios.alocacao-consultores', $dadosFiltro);
 
             case 'visao-geral-contratos':
                 $dadosFiltro = $this->relatorioService->getFiltrosContratos();
+
                 return view('relatorios.visao-geral-contratos', $dadosFiltro);
 
             default:
@@ -49,11 +51,10 @@ class RelatorioController extends Controller
         }
     }
 
-    public function gerar(Request $request)
+    public function gerar(Request $request): View|RedirectResponse|Response
     {
         $tipo = $request->input('tipo_relatorio');
-        
-        // Log para depuração do método gerar
+
         Log::info('Acessando RelatorioController@gerar', ['tipo' => $tipo, 'request_data' => $request->all()]);
 
         switch ($tipo) {
@@ -70,19 +71,17 @@ class RelatorioController extends Controller
                     $dadosParaPdf = array_merge($dadosRelatorio, ['contrato' => $contrato]);
                     Log::info('Dados enviados para o PDF:', $dadosParaPdf);
                     $pdf = Pdf::loadView('relatorios.pdf.historico-techleads', $dadosParaPdf);
+
                     return $pdf->download('relatorio_historico_techleads_'.now()->format('Y-m-d').'.pdf');
                 }
 
                 $dadosFiltro = $this->relatorioService->getFiltrosHistoricoTechLeads();
-                
+
                 $dadosParaView = array_merge($dadosRelatorio, $dadosFiltro, ['filtros' => $filtros, 'contrato' => $contrato]);
 
-                // Log final antes de renderizar a view HTML
                 Log::info('Dados finais enviados para a view (gerar):', $dadosParaView);
 
                 return view('relatorios.historico-techleads', $dadosParaView);
-
-            // ... (o restante do seu switch case permanece o mesmo)
 
             case 'alocacao-consultores':
                 $filtros = $request->validate([

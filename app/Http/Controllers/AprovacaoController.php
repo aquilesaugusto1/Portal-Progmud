@@ -3,18 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\Apontamento;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
+use LogicException;
 
 class AprovacaoController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $this->authorize('viewAny', Apontamento::class);
 
         $user = Auth::user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
         $query = Apontamento::with(['consultor', 'contrato.empresaParceira'])
             ->where('status', 'Pendente');
 
@@ -28,7 +36,7 @@ class AprovacaoController extends Controller
         return view('aprovacoes.index', compact('apontamentos'));
     }
 
-    public function aprovar(Request $request, Apontamento $apontamento)
+    public function aprovar(Request $request, Apontamento $apontamento): RedirectResponse
     {
         $this->authorize('approve', $apontamento);
 
@@ -36,21 +44,17 @@ class AprovacaoController extends Controller
 
         try {
             DB::transaction(function () use ($apontamento) {
-                /** @var \App\Models\Apontamento $apontamento */
-                // 1. Atualiza o status do apontamento
                 $apontamento->status = 'Aprovado';
-                $apontamento->aprovado_por_id = Auth::id();
+                $apontamento->aprovado_por_id = (int) Auth::id();
                 $apontamento->data_aprovacao = now();
                 $apontamento->motivo_rejeicao = null;
                 $apontamento->save();
 
-                // 2. Atualiza o status da agenda relacionada
                 if ($apontamento->agenda) {
                     $apontamento->agenda->status = 'Realizada';
                     $apontamento->agenda->save();
                 }
 
-                // 3. Se for faturável, deduz as horas do contrato
                 if ($apontamento->faturavel && $apontamento->contrato && $apontamento->contrato->baseline_horas_mes !== null) {
                     $horasASubtrair = abs($apontamento->horas_gastas);
                     $apontamento->contrato->decrement('baseline_horas_mes', $horasASubtrair);
@@ -70,7 +74,7 @@ class AprovacaoController extends Controller
         }
     }
 
-    public function rejeitar(Request $request, Apontamento $apontamento)
+    public function rejeitar(Request $request, Apontamento $apontamento): RedirectResponse
     {
         $this->authorize('approve', $apontamento);
 
@@ -79,7 +83,7 @@ class AprovacaoController extends Controller
         $apontamento->status = 'Rejeitado';
         $apontamento->faturavel = false;
         $apontamento->motivo_rejeicao = $validated['motivo_rejeicao'];
-        $apontamento->aprovado_por_id = Auth::id();
+        $apontamento->aprovado_por_id = (int) Auth::id();
         $apontamento->data_aprovacao = now();
         $apontamento->save();
 

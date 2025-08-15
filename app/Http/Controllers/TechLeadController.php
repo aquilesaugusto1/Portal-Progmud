@@ -4,25 +4,27 @@ namespace App\Http\Controllers;
 
 use App\Models\Consultor;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\View\View;
 
 class TechLeadController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $techLeads = User::where('funcao', 'techlead')->latest()->paginate(10);
 
         return view('techleads.index', compact('techLeads'));
     }
 
-    public function create()
+    public function create(): View
     {
         return view('techleads.create');
     }
 
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'nome' => ['required', 'string', 'max:255'],
@@ -31,9 +33,9 @@ class TechLeadController extends Controller
         ]);
 
         User::create([
-            'nome' => $request->nome,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'nome' => $request->string('nome'),
+            'email' => $request->string('email'),
+            'password' => Hash::make((string) $request->input('password')),
             'funcao' => 'techlead',
         ]);
 
@@ -41,14 +43,14 @@ class TechLeadController extends Controller
             ->with('success', 'Tech Lead criado com sucesso.');
     }
 
-    public function show(User $techlead)
+    public function show(User $techlead): View
     {
         $techlead->load('consultoresLiderados');
 
         return view('techleads.show', compact('techlead'));
     }
 
-    public function edit(User $techlead)
+    public function edit(User $techlead): View
     {
         $consultores = Consultor::all();
         $techlead->load('consultoresLiderados');
@@ -56,7 +58,7 @@ class TechLeadController extends Controller
         return view('techleads.edit', compact('techlead', 'consultores'));
     }
 
-    public function update(Request $request, User $techlead)
+    public function update(Request $request, User $techlead): RedirectResponse
     {
         $request->validate([
             'nome' => ['required', 'string', 'max:255'],
@@ -67,13 +69,13 @@ class TechLeadController extends Controller
 
         $techlead->update($request->only('nome', 'email'));
 
-        $techlead->consultoresLiderados()->sync($request->input('consultores', []));
+        $techlead->consultoresLiderados()->sync((array) $request->input('consultores', []));
 
         return redirect()->route('techleads.index')
             ->with('success', 'Tech Lead atualizado com sucesso.');
     }
 
-    public function destroy(User $techlead)
+    public function destroy(User $techlead): RedirectResponse
     {
         $techlead->consultoresLiderados()->detach();
         $techlead->delete();

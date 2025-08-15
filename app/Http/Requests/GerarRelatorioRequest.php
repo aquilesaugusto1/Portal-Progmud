@@ -17,14 +17,13 @@ class GerarRelatorioRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
             'data_inicio' => 'required|date',
             'data_fim' => 'required|date|after_or_equal:data_inicio',
-            // CORREÇÃO: A validação agora aponta para a tabela 'usuarios', que é a tabela correta para os usuários no seu sistema.
             'colaborador_id' => 'nullable|exists:usuarios,id',
             'contrato_id' => 'nullable|exists:contratos,id',
             'empresa_id' => 'nullable|exists:empresas_parceiras,id',
@@ -35,6 +34,8 @@ class GerarRelatorioRequest extends FormRequest
 
     /**
      * Get custom messages for validator errors.
+     *
+     * @return array<string, string>
      */
     public function messages(): array
     {

@@ -7,6 +7,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
+use LogicException;
 
 class PasswordController extends Controller
 {
@@ -20,7 +21,12 @@ class PasswordController extends Controller
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        $request->user()->update([
+        $user = $request->user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
+        $user->update([
             'password' => Hash::make($validated['password']),
         ]);
 

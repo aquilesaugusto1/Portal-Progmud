@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
+use LogicException;
 
 class ConfirmablePasswordController extends Controller
 {
@@ -24,9 +25,14 @@ class ConfirmablePasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
         if (! Auth::guard('web')->validate([
-            'email' => $request->user()->email,
-            'password' => $request->password,
+            'email' => $user->email,
+            'password' => (string) $request->input('password'),
         ])) {
             throw ValidationException::withMessages([
                 'password' => __('auth.password'),
