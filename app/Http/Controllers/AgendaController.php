@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\AgendaMail;
+use App\Mail\NotificacaoAgendaMail; // Alterado aqui
 use App\Models\Agenda;
 use App\Models\Contrato;
 use App\Models\User;
@@ -20,7 +20,6 @@ use LogicException;
 
 class AgendaController extends Controller
 {
-    // ... (os métodos index, formatarParaCalendario, create, show, getFilteredConsultantsForContract e edit continuam iguais) ...
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Agenda::class);
@@ -121,18 +120,16 @@ class AgendaController extends Controller
 
         $agenda = Agenda::create($validated);
 
-        // --- LOG DE DEBUG ---
         Log::info('Tentando enviar e-mail de nova agenda.', [
             'agenda_id' => $agenda->id,
             'destinatario_email' => $agenda->consultor->email,
         ]);
 
         try {
-            Mail::to($agenda->consultor->email)->send(new AgendaMail($agenda, 'criada'));
-            // --- LOG DE SUCESSO ---
+            // Alterado aqui para usar a nova classe
+            Mail::to($agenda->consultor->email)->send(new NotificacaoAgendaMail($agenda, 'criada'));
             Log::info('E-mail de nova agenda enviado com sucesso para: '.$agenda->consultor->email);
         } catch (Exception $e) {
-            // --- LOG DE ERRO ---
             Log::error('Falha ao enviar e-mail de nova agenda.', [
                 'agenda_id' => $agenda->id,
                 'mensagem_erro' => $e->getMessage(),
@@ -208,18 +205,16 @@ class AgendaController extends Controller
         }
         $agenda->update($validated);
 
-        // --- LOG DE DEBUG ---
         Log::info('Tentando enviar e-mail de atualização de agenda.', [
             'agenda_id' => $agenda->id,
             'destinatario_email' => $agenda->consultor->email,
         ]);
 
         try {
-            Mail::to($agenda->consultor->email)->send(new AgendaMail($agenda, 'atualizada'));
-            // --- LOG DE SUCESSO ---
+            // Alterado aqui para usar a nova classe
+            Mail::to($agenda->consultor->email)->send(new NotificacaoAgendaMail($agenda, 'atualizada'));
             Log::info('E-mail de atualização de agenda enviado com sucesso para: '.$agenda->consultor->email);
         } catch (Exception $e) {
-            // --- LOG DE ERRO ---
             Log::error('Falha ao enviar e-mail de atualização de agenda.', [
                 'agenda_id' => $agenda->id,
                 'mensagem_erro' => $e->getMessage(),
