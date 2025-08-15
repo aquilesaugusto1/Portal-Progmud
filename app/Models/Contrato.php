@@ -30,6 +30,7 @@ class Contrato extends Model
         'baseline_horas_original',
         'permite_antecipar_baseline',
         'documento_baseline_path',
+        'possui_engenharia_valores', // Adicionado
     ];
 
     protected $casts = [
@@ -39,6 +40,7 @@ class Contrato extends Model
         'permite_antecipar_baseline' => 'boolean',
         'baseline_horas_mes' => 'decimal:2',
         'baseline_horas_original' => 'decimal:2',
+        'possui_engenharia_valores' => 'boolean', // Adicionado
     ];
 
     /**

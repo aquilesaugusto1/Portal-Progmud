@@ -69,6 +69,11 @@
                                 <span class="font-medium text-slate-600">Permite Antecipar Baseline:</span>
                                 <span class="text-slate-800">{{ $contrato->permite_antecipar_baseline ? 'Sim' : 'Não' }}</span>
                             </div>
+                            <!-- CAMPO ADICIONADO -->
+                            <div class="flex justify-between border-b py-2">
+                                <span class="font-medium text-slate-600">Possui Engenharia de Valores:</span>
+                                <span class="text-slate-800">{{ $contrato->possui_engenharia_valores ? 'Sim' : 'Não' }}</span>
+                            </div>
                             @if($contrato->documento_baseline_path)
                             <div class="flex justify-between border-b py-2">
                                 <span class="font-medium text-slate-600">Documento de Comprovação:</span>

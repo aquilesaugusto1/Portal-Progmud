@@ -151,6 +151,7 @@ class ContratoController extends Controller
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
+            'possui_engenharia_valores' => ['nullable', 'boolean'], // Adicionado
             'documento_baseline' => [
                 'nullable',
                 Rule::requiredIf($permiteAntecipar == '1' || $permiteAntecipar === true),
@@ -174,6 +175,7 @@ class ContratoController extends Controller
     private function prepareData(Request $request, array $validatedData): array
     {
         $validatedData['permite_antecipar_baseline'] = $request->boolean('permite_antecipar_baseline');
+        $validatedData['possui_engenharia_valores'] = $request->boolean('possui_engenharia_valores'); // Adicionado
 
         /** @var array<int, string> $produtos */
         $produtos = $validatedData['produtos'];

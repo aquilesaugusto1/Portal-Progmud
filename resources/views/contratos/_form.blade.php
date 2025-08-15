@@ -128,7 +128,7 @@
             <x-text-input id="especifique_outro" name="especifique_outro" type="text" class="mt-1 block w-full" :value="old('especifique_outro', $contrato->especifique_outro ?? '')" />
         </div>
         <hr class="my-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
              <div>
                 <x-input-label for="baseline_horas_mes" value="Baseline (Horas/mês)" />
                 <x-text-input id="baseline_horas_mes" name="baseline_horas_mes" type="number" step="0.01" class="mt-1 block w-full" :value="old('baseline_horas_mes', $contrato->baseline_horas_mes ?? '')" />
@@ -137,6 +137,13 @@
                 <label class="flex items-center">
                     <input type="checkbox" name="permite_antecipar_baseline" id="permite_antecipar_baseline" value="1" class="form-checkbox rounded" @checked(old('permite_antecipar_baseline', $contrato->permite_antecipar_baseline ?? false))>
                     <span class="ml-2 text-sm text-slate-600">Permite antecipar baseline?</span>
+                </label>
+            </div>
+            <!-- CAMPO ADICIONADO -->
+            <div class="pt-6">
+                <label class="flex items-center">
+                    <input type="checkbox" name="possui_engenharia_valores" id="possui_engenharia_valores" value="1" class="form-checkbox rounded" @checked(old('possui_engenharia_valores', $contrato->possui_engenharia_valores ?? false))>
+                    <span class="ml-2 text-sm text-slate-600">Possui engenharia de valores?</span>
                 </label>
             </div>
         </div>
