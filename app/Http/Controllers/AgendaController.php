@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -58,9 +59,9 @@ class AgendaController extends Controller
 
     /**
      * @param  Collection<int, Agenda>  $agendas
-     * @return Collection<int, array<string, mixed>>
+     * @return SupportCollection<int, array{id: int, title: string, start: string, color: string, extendedProps: array{assunto: string, consultor: string, cliente: string, url: string}}>
      */
-    private function formatarParaCalendario(Collection $agendas): Collection
+    private function formatarParaCalendario(Collection $agendas): SupportCollection
     {
         return $agendas->map(function (Agenda $agenda) {
             $color = '#3B82F6';
@@ -75,13 +76,13 @@ class AgendaController extends Controller
 
             return [
                 'id' => $agenda->id,
-                'title' => $agenda->consultor->nome ?? 'Consultor N/A',
+                'title' => $agenda->consultor?->nome ?? 'Consultor N/A',
                 'start' => $agenda->data_hora->toIso8601String(),
                 'color' => $color,
                 'extendedProps' => [
                     'assunto' => $agenda->assunto,
-                    'consultor' => $agenda->consultor->nome ?? 'N/A',
-                    'cliente' => $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A',
+                    'consultor' => $agenda->consultor?->nome ?? 'N/A',
+                    'cliente' => $agenda->contrato?->empresaParceira?->nome_empresa ?? 'N/A',
                     'url' => route('agendas.show', $agenda),
                 ],
             ];
@@ -92,7 +93,7 @@ class AgendaController extends Controller
     {
         $this->authorize('create', Agenda::class);
         $contratos = Contrato::with('empresaParceira')->where('status', 'Ativo')->orderBy('numero_contrato')->get();
-        $consultores = collect();
+        $consultores = new Collection();
 
         return view('agendas.create', compact('consultores', 'contratos'));
     }
@@ -135,7 +136,7 @@ class AgendaController extends Controller
     private function getFilteredConsultantsForContract(?Contrato $contrato, User $user): Collection
     {
         if (! $contrato) {
-            return collect();
+            return new Collection();
         }
 
         $query = User::where('funcao', 'consultor')->where('status', 'Ativo');
@@ -148,7 +149,7 @@ class AgendaController extends Controller
             $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
 
             if ($lideradosIds->isEmpty()) {
-                return collect();
+                return new Collection();
             }
             $query->whereIn('usuarios.id', $lideradosIds);
         }

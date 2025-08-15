@@ -5,7 +5,11 @@ namespace App\Models;
 use App\Traits\Userstamps;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @method static \Database\Factories\EmpresaParceiraFactory factory(...$parameters)
+ */
 class EmpresaParceira extends Model
 {
     use HasFactory, Userstamps;
@@ -37,8 +41,9 @@ class EmpresaParceira extends Model
 
     /**
      * Get the contracts for the partner company.
+     * @return HasMany<Contrato>
      */
-    public function contratos()
+    public function contratos(): HasMany
     {
         return $this->hasMany(Contrato::class, 'cliente_id');
     }

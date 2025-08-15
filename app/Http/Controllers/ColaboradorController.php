@@ -43,12 +43,12 @@ class ColaboradorController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', User::class);
-        $request->validate($this->getValidationRules($request));
-        DB::transaction(function () use ($request) {
+        $validated = $request->validate($this->getValidationRules($request));
+
+        DB::transaction(function () use ($request, $validated) {
             $colaborador = User::create($this->getData($request, true));
-            if ($request->has('tech_leads')) {
-                $colaborador->techLeads()->sync((array) $request->input('tech_leads'));
-            }
+            $techLeads = $validated['tech_leads'] ?? [];
+            $colaborador->techLeads()->sync($techLeads);
         });
 
         return redirect()->route('colaboradores.index')->with('success', 'Colaborador criado com sucesso.');
@@ -72,10 +72,11 @@ class ColaboradorController extends Controller
     public function update(Request $request, User $colaborador): RedirectResponse
     {
         $this->authorize('update', $colaborador);
-        $request->validate($this->getValidationRules($request, $colaborador->id));
-        DB::transaction(function () use ($request, $colaborador) {
+        $validated = $request->validate($this->getValidationRules($request, $colaborador->id));
+
+        DB::transaction(function () use ($request, $colaborador, $validated) {
             $colaborador->update($this->getData($request, false));
-            $techLeads = $request->input('tech_leads', []);
+            $techLeads = $validated['tech_leads'] ?? [];
             $colaborador->techLeads()->sync($techLeads);
         });
 
@@ -142,9 +143,9 @@ class ColaboradorController extends Controller
         }
 
         if ($isCreate) {
-            $data['password'] = Hash::make((string) $request->input('password'));
+            $data['password'] = Hash::make($request->string('password')->toString());
         } elseif ($request->filled('password')) {
-            $data['password'] = Hash::make((string) $request->input('password'));
+            $data['password'] = Hash::make($request->string('password')->toString());
         } else {
             unset($data['password']);
         }

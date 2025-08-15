@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @method static \Database\Factories\ApontamentoFactory factory(...$parameters)
+ */
 class Apontamento extends Model
 {
     use HasFactory;
@@ -47,6 +50,7 @@ class Apontamento extends Model
 
     /**
      * Get the agenda for the time entry.
+     * @return BelongsTo<Agenda, Apontamento>
      */
     public function agenda(): BelongsTo
     {
@@ -55,6 +59,7 @@ class Apontamento extends Model
 
     /**
      * Get the consultant for the time entry.
+     * @return BelongsTo<User, Apontamento>
      */
     public function consultor(): BelongsTo
     {
@@ -63,6 +68,7 @@ class Apontamento extends Model
 
     /**
      * Get the contract for the time entry.
+     * @return BelongsTo<Contrato, Apontamento>
      */
     public function contrato(): BelongsTo
     {
@@ -71,6 +77,7 @@ class Apontamento extends Model
 
     /**
      * Get the user who approved the time entry.
+     * @return BelongsTo<User, Apontamento>
      */
     public function aprovador(): BelongsTo
     {

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read \App\Models\User $usuario
+ * @method static \Database\Factories\ConsultorFactory factory(...$parameters)
  */
 class Consultor extends Model
 {
@@ -25,21 +26,33 @@ class Consultor extends Model
         'status',
     ];
 
+    /**
+     * @return BelongsTo<User, Consultor>
+     */
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'usuario_id');
     }
 
+    /**
+     * @return BelongsToMany<User>
+     */
     public function techLeads(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'consultor_tech_lead', 'consultor_id', 'tech_lead_id');
     }
 
+    /**
+     * @return HasMany<Agenda>
+     */
     public function agendas(): HasMany
     {
         return $this->hasMany(Agenda::class);
     }
 
+    /**
+     * @return HasMany<Apontamento>
+     */
     public function apontamentos(): HasMany
     {
         return $this->hasMany(Apontamento::class);

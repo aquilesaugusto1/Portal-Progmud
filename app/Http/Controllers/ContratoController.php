@@ -64,7 +64,8 @@ class ContratoController extends Controller
 
             $contrato = Contrato::create($preparedData);
             $this->syncUsuarios($contrato, $request);
-            $this->atualizarHistoricoTechLeads($contrato, [], (array) $request->input('tech_leads', []));
+            $techLeadsNovos = $validatedData['tech_leads'] ?? [];
+            $this->atualizarHistoricoTechLeads($contrato, [], $techLeadsNovos);
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato criado com sucesso.');
@@ -96,6 +97,7 @@ class ContratoController extends Controller
         $validatedData = $request->validate($this->getValidationRules($contrato->id));
 
         DB::transaction(function () use ($request, $contrato, $validatedData) {
+            /** @var array<int, int|string> $techLeadsAntigos */
             $techLeadsAntigos = $contrato->techLeads()->pluck('usuarios.id')->toArray();
 
             $preparedData = $this->prepareData($request, $validatedData);
@@ -112,7 +114,8 @@ class ContratoController extends Controller
 
             $contrato->update($preparedData);
             $this->syncUsuarios($contrato, $request);
-            $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, (array) $request->input('tech_leads', []));
+            $techLeadsNovos = $validatedData['tech_leads'] ?? [];
+            $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, $techLeadsNovos);
         });
 
         return redirect()->route('contratos.index')->with('success', 'Contrato atualizado com sucesso.');
@@ -172,7 +175,9 @@ class ContratoController extends Controller
     {
         $validatedData['permite_antecipar_baseline'] = $request->boolean('permite_antecipar_baseline');
 
-        if (! in_array('Outro', $validatedData['produtos'])) {
+        /** @var array<int, string> $produtos */
+        $produtos = $validatedData['produtos'];
+        if (! in_array('Outro', $produtos)) {
             $validatedData['especifique_outro'] = null;
         }
 

@@ -33,9 +33,9 @@ class TechLeadController extends Controller
         ]);
 
         User::create([
-            'nome' => $request->string('nome'),
-            'email' => $request->string('email'),
-            'password' => Hash::make((string) $request->input('password')),
+            'nome' => $request->string('nome')->toString(),
+            'email' => $request->string('email')->toString(),
+            'password' => Hash::make($request->string('password')->toString()),
             'funcao' => 'techlead',
         ]);
 

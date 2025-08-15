@@ -54,6 +54,7 @@ class EmailController extends Controller
             'recado' => 'nullable|string|max:2000',
         ]);
 
+        /** @var User $consultor */
         $consultor = User::findOrFail($validated['consultor_id']);
 
         if ($user->isTechLead() && ! $user->consultoresLiderados()->where('usuarios.id', $consultor->id)->exists()) {

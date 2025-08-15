@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -32,8 +33,8 @@ class ApontamentoController extends Controller
             throw new LogicException('User not authenticated.');
         }
 
-        $start = Carbon::parse((string) $request->input('start'))->toDateTimeString();
-        $end = Carbon::parse((string) $request->input('end'))->toDateTimeString();
+        $start = Carbon::parse($request->string('start')->toString())->toDateTimeString();
+        $end = Carbon::parse($request->string('end')->toString())->toDateTimeString();
 
         $query = Agenda::with(['consultor', 'contrato.empresaParceira', 'apontamento'])
             ->whereBetween('data_hora', [$start, $end]);
@@ -61,6 +62,7 @@ class ApontamentoController extends Controller
             'faturavel' => 'nullable|boolean',
         ]);
 
+        /** @var Agenda $agenda */
         $agenda = Agenda::findOrFail($validated['agenda_id']);
         $apontamento = Apontamento::firstOrNew(['agenda_id' => $agenda->id]);
 
@@ -101,9 +103,9 @@ class ApontamentoController extends Controller
 
     /**
      * @param  Collection<int, Agenda>  $agendas
-     * @return Collection<int, array<string, mixed>>
+     * @return SupportCollection<int, array{id: int, title: string|null, start: Carbon, color: string, extendedProps: array{consultor: string|null, assunto: string, contrato: string, status: string, hora_inicio: string, hora_fim: string, descricao: string, faturavel: bool, anexo_url: string|null, motivo_rejeicao: string|null}}>
      */
-    private function formatEvents(Collection $agendas): Collection
+    private function formatEvents(Collection $agendas): SupportCollection
     {
         return $agendas->map(function (Agenda $agenda) {
             $apontamento = $agenda->apontamento;
@@ -133,13 +135,13 @@ class ApontamentoController extends Controller
 
             return [
                 'id' => $agenda->id,
-                'title' => $agenda->contrato->empresaParceira->nome_empresa,
+                'title' => $agenda->contrato?->empresaParceira?->nome_empresa,
                 'start' => $agenda->data_hora,
                 'color' => $color,
                 'extendedProps' => [
-                    'consultor' => $agenda->consultor->nome,
+                    'consultor' => $agenda->consultor?->nome,
                     'assunto' => $agenda->assunto,
-                    'contrato' => ($agenda->contrato->empresaParceira->nome_empresa ?? 'Cliente N/A').' - '.($agenda->contrato->numero_contrato ?? 'Contrato N/A'),
+                    'contrato' => ($agenda->contrato?->empresaParceira?->nome_empresa ?? 'Cliente N/A').' - '.($agenda->contrato?->numero_contrato ?? 'Contrato N/A'),
                     'status' => $status,
                     'hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
                     'hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',

@@ -39,7 +39,7 @@ class ImportController extends Controller
     {
         $request->validate(['sheet_name' => 'required|string']);
         $path = (string) $request->session()->get('import_file_path');
-        $sheetName = (string) $request->input('sheet_name');
+        $sheetName = $request->string('sheet_name')->toString();
 
         if (! $path || ! file_exists(storage_path('app/'.$path))) {
             return redirect()->route('imports.create')->with('error', 'Arquivo de importação expirou. Por favor, envie novamente.');

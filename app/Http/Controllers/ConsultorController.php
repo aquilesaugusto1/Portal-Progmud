@@ -29,7 +29,7 @@ class ConsultorController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
-        $request->validate([
+        $validated = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
@@ -38,27 +38,26 @@ class ConsultorController extends Controller
             'tech_leads.*' => ['exists:usuarios,id'],
         ]);
 
-        DB::transaction(function () use ($request) {
+        DB::transaction(function () use ($request, $validated) {
             $user = User::create([
-                'nome' => $request->string('nome'),
-                'email' => $request->string('email'),
-                'password' => Hash::make((string) $request->input('password')),
+                'nome' => $request->string('nome')->toString(),
+                'email' => $request->string('email')->toString(),
+                'password' => Hash::make($request->string('password')->toString()),
                 'funcao' => 'consultor',
             ]);
 
             $consultor = new Consultor([
-                'nome' => $request->string('nome'),
-                'email' => $request->string('email'),
-                'telefone' => $request->string('telefone'),
+                'nome' => $request->string('nome')->toString(),
+                'email' => $request->string('email')->toString(),
+                'telefone' => $request->string('telefone')->toString(),
                 'status' => 'Ativo',
             ]);
 
             $consultor->usuario()->associate($user);
             $consultor->save();
 
-            if ($request->has('tech_leads')) {
-                $consultor->techLeads()->sync((array) $request->input('tech_leads'));
-            }
+            $techLeads = $validated['tech_leads'] ?? [];
+            $consultor->techLeads()->sync($techLeads);
         });
 
         return redirect()->route('consultores.index')
@@ -84,7 +83,7 @@ class ConsultorController extends Controller
     {
         $consultor->load('usuario');
 
-        $request->validate([
+        $validated = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:usuarios,email,'.$consultor->usuario->id],
             'telefone' => ['nullable', 'string', 'max:20'],
@@ -93,20 +92,21 @@ class ConsultorController extends Controller
             'tech_leads.*' => ['exists:usuarios,id'],
         ]);
 
-        DB::transaction(function () use ($request, $consultor) {
+        DB::transaction(function () use ($request, $consultor, $validated) {
             $consultor->usuario->update([
-                'nome' => $request->string('nome'),
-                'email' => $request->string('email'),
+                'nome' => $request->string('nome')->toString(),
+                'email' => $request->string('email')->toString(),
             ]);
 
             $consultor->update([
-                'nome' => $request->string('nome'),
-                'email' => $request->string('email'),
-                'telefone' => $request->string('telefone'),
-                'status' => $request->string('status'),
+                'nome' => $request->string('nome')->toString(),
+                'email' => $request->string('email')->toString(),
+                'telefone' => $request->string('telefone')->toString(),
+                'status' => $request->string('status')->toString(),
             ]);
 
-            $consultor->techLeads()->sync((array) $request->input('tech_leads', []));
+            $techLeads = $validated['tech_leads'] ?? [];
+            $consultor->techLeads()->sync($techLeads);
         });
 
         return redirect()->route('consultores.index')
@@ -120,9 +120,7 @@ class ConsultorController extends Controller
         DB::transaction(function () use ($consultor) {
             $user = $consultor->usuario;
             $consultor->delete();
-            if ($user) {
-                $user->delete();
-            }
+            $user->delete();
         });
 
         return redirect()->route('consultores.index')

@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @method static \Database\Factories\AgendaFactory factory(...$parameters)
+ */
 class Agenda extends Model
 {
     use HasFactory;
@@ -36,6 +39,7 @@ class Agenda extends Model
 
     /**
      * Get the consultant for the agenda.
+     * @return BelongsTo<User, Agenda>
      */
     public function consultor(): BelongsTo
     {
@@ -44,6 +48,7 @@ class Agenda extends Model
 
     /**
      * Get the contract for the agenda.
+     * @return BelongsTo<Contrato, Agenda>
      */
     public function contrato(): BelongsTo
     {
@@ -52,6 +57,7 @@ class Agenda extends Model
 
     /**
      * Get the time entry for the agenda.
+     * @return HasOne<Apontamento, Agenda>
      */
     public function apontamento(): HasOne
     {

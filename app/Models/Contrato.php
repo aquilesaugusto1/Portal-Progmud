@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @method static \Database\Factories\ContratoFactory factory(...$parameters)
+ */
 class Contrato extends Model
 {
     use HasFactory, Userstamps;
@@ -37,11 +40,17 @@ class Contrato extends Model
         'baseline_horas_original' => 'decimal:2',
     ];
 
+    /**
+     * @return BelongsTo<EmpresaParceira, Contrato>
+     */
     public function empresaParceira(): BelongsTo
     {
         return $this->belongsTo(EmpresaParceira::class, 'cliente_id');
     }
 
+    /**
+     * @return BelongsToMany<User>
+     */
     public function usuarios(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'contrato_usuario', 'contrato_id', 'usuario_id')
@@ -49,16 +58,25 @@ class Contrato extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return BelongsToMany<User>
+     */
     public function coordenadores(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'coordenador');
     }
 
+    /**
+     * @return BelongsToMany<User>
+     */
     public function techLeads(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'tech_lead');
     }
 
+    /**
+     * @return BelongsToMany<User>
+     */
     public function consultores(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'consultor');

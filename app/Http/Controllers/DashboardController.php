@@ -66,6 +66,7 @@ class DashboardController extends Controller
             $dadosGrafico = [];
 
             foreach ($periodo as $date) {
+                /** @var \Carbon\Carbon $date */
                 $mes = $date->format('Y-m');
                 $dadosGrafico[$mes] = ['Realizada' => 0, 'Agendada' => 0, 'Cancelada' => 0];
             }
@@ -78,10 +79,13 @@ class DashboardController extends Controller
             }
 
             foreach ($dadosGrafico as $mes => $status) {
-                $chartLabels[] = Carbon::createFromFormat('Y-m', $mes)->format('M/y');
-                $chartRealizadas[] = $status['Realizada'];
-                $chartAgendadas[] = $status['Agendada'];
-                $chartCanceladas[] = $status['Cancelada'];
+                $carbonDate = Carbon::createFromFormat('Y-m', $mes);
+                if ($carbonDate) {
+                    $chartLabels[] = $carbonDate->format('M/y');
+                    $chartRealizadas[] = $status['Realizada'];
+                    $chartAgendadas[] = $status['Agendada'];
+                    $chartCanceladas[] = $status['Cancelada'];
+                }
             }
 
         } else {

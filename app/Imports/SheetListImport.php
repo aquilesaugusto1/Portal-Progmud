@@ -20,9 +20,14 @@ class SheetListImport implements SkipsUnknownSheets, WithMultipleSheets
         return [];
     }
 
-    public function onUnknownSheet(string $sheetName): void
+    /**
+     * @param mixed $sheetName
+     */
+    public function onUnknownSheet($sheetName): void
     {
-        $this->sheetNames[] = $sheetName;
+        if (is_string($sheetName)) {
+            $this->sheetNames[] = $sheetName;
+        }
     }
 
     /**

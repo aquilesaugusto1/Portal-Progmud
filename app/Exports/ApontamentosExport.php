@@ -65,9 +65,9 @@ class ApontamentosExport implements FromCollection, WithHeadings, WithMapping
     {
         return [
             \Carbon\Carbon::parse($apontamento->data_apontamento)->format('d/m/Y'),
-            $apontamento->consultor->nome,
-            $apontamento->contrato->empresaParceira->nome_empresa,
-            $apontamento->contrato->id,
+            $apontamento->consultor?->nome,
+            $apontamento->contrato?->empresaParceira?->nome_empresa,
+            $apontamento->contrato?->id,
             $apontamento->descricao,
             number_format($apontamento->horas_gastas, 2, ',', '.'),
             $apontamento->status,
