@@ -44,13 +44,7 @@ class DashboardController extends Controller
                     $query->where('data_apontamento', '>=', now()->subDays(30));
                 }], 'horas_gastas')
                 ->get()
-                ->sortByDesc('apontamentos_sum_horas_gastas')
-                ->map(function (User $consultor) {
-                    return [
-                        'usuario' => $consultor,
-                        'horas_30_dias' => $consultor->apontamentos_sum_horas_gastas ?? 0,
-                    ];
-                });
+                ->sortByDesc('apontamentos_sum_horas_gastas');
 
             $agendasPorMes = Agenda::select(
                 DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'),

@@ -27,7 +27,7 @@ class AprovacaoController extends Controller
             ->where('status', 'Pendente');
 
         if ($user->isTechLead()) {
-            $consultorIds = $user->consultoresLiderados()->pluck('users.id');
+            $consultorIds = $user->consultoresLiderados()->allRelatedIds();
             $query->whereIn('consultor_id', $consultorIds);
         }
 

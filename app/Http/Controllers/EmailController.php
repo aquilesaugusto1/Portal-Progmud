@@ -25,7 +25,7 @@ class EmailController extends Controller
         $query = User::where('funcao', 'consultor')->where('status', 'Ativo');
 
         if ($user->isTechLead()) {
-            $consultoresLideradosIds = $user->consultoresLiderados()->pluck('id');
+            $consultoresLideradosIds = $user->consultoresLiderados()->allRelatedIds();
             $query->whereIn('id', $consultoresLideradosIds);
         }
 
