@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Traits\Userstamps;
+use Database\Factories\ContratoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * @method static \Database\Factories\ContratoFactory factory(...$parameters)
+ * @method static ContratoFactory factory(...$parameters)
  */
 class Contrato extends Model
 {
@@ -49,7 +50,7 @@ class Contrato extends Model
     }
 
     /**
-     * @return BelongsToMany<User>
+     * @return BelongsToMany<User, Contrato>
      */
     public function usuarios(): BelongsToMany
     {
@@ -59,7 +60,7 @@ class Contrato extends Model
     }
 
     /**
-     * @return BelongsToMany<User>
+     * @return BelongsToMany<User, Contrato>
      */
     public function coordenadores(): BelongsToMany
     {
@@ -67,7 +68,7 @@ class Contrato extends Model
     }
 
     /**
-     * @return BelongsToMany<User>
+     * @return BelongsToMany<User, Contrato>
      */
     public function techLeads(): BelongsToMany
     {
@@ -75,7 +76,7 @@ class Contrato extends Model
     }
 
     /**
-     * @return BelongsToMany<User>
+     * @return BelongsToMany<User, Contrato>
      */
     public function consultores(): BelongsToMany
     {

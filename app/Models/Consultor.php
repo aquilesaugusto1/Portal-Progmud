@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ConsultorFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property-read \App\Models\User $usuario
- * @method static \Database\Factories\ConsultorFactory factory(...$parameters)
+ * @method static ConsultorFactory factory(...$parameters)
  */
 class Consultor extends Model
 {
@@ -35,7 +36,7 @@ class Consultor extends Model
     }
 
     /**
-     * @return BelongsToMany<User>
+     * @return BelongsToMany<User, Consultor>
      */
     public function techLeads(): BelongsToMany
     {
@@ -43,7 +44,7 @@ class Consultor extends Model
     }
 
     /**
-     * @return HasMany<Agenda>
+     * @return HasMany<Agenda, Consultor>
      */
     public function agendas(): HasMany
     {
@@ -51,7 +52,7 @@ class Consultor extends Model
     }
 
     /**
-     * @return HasMany<Apontamento>
+     * @return HasMany<Apontamento, Consultor>
      */
     public function apontamentos(): HasMany
     {

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use Database\Factories\ApontamentoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * @method static \Database\Factories\ApontamentoFactory factory(...$parameters)
+ * @method static ApontamentoFactory factory(...$parameters)
  */
 class Apontamento extends Model
 {

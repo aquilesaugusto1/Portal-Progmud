@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\Userstamps;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,6 +11,9 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @method static UserFactory factory(...$parameters)
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, Userstamps;
@@ -57,26 +61,41 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return HasOne<Consultor, User>
+     */
     public function consultor(): HasOne
     {
         return $this->hasOne(Consultor::class, 'usuario_id');
     }
 
+    /**
+     * @return BelongsToMany<User, User>
+     */
     public function techLeads(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'consultor_id', 'tech_lead_id');
     }
 
+    /**
+     * @return BelongsToMany<User, User>
+     */
     public function consultoresLiderados(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'colaborador_tech_lead', 'tech_lead_id', 'consultor_id');
     }
 
+    /**
+     * @return HasMany<Apontamento, User>
+     */
     public function apontamentos(): HasMany
     {
         return $this->hasMany(Apontamento::class, 'consultor_id');
     }
 
+    /**
+     * @return BelongsToMany<Contrato, User>
+     */
     public function contratos(): BelongsToMany
     {
         return $this->belongsToMany(Contrato::class, 'contrato_usuario', 'usuario_id', 'contrato_id')
@@ -84,22 +103,22 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-    public function isAdmin()
+    public function isAdmin(): bool
     {
         return $this->funcao === 'admin';
     }
 
-    public function isCoordenador()
+    public function isCoordenador(): bool
     {
-        return str_contains($this->funcao, 'coordenador');
+        return str_contains((string) $this->funcao, 'coordenador');
     }
 
-    public function isTechLead()
+    public function isTechLead(): bool
     {
         return $this->funcao === 'techlead';
     }
 
-    public function isConsultor()
+    public function isConsultor(): bool
     {
         return $this->funcao === 'consultor';
     }

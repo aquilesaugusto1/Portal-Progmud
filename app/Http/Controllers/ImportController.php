@@ -38,10 +38,10 @@ class ImportController extends Controller
     public function showMapping(Request $request, SpreadsheetAnalyzer $analyzer): View|RedirectResponse
     {
         $request->validate(['sheet_name' => 'required|string']);
-        $path = (string) $request->session()->get('import_file_path');
+        $path = $request->session()->get('import_file_path', '');
         $sheetName = $request->string('sheet_name')->toString();
 
-        if (! $path || ! file_exists(storage_path('app/'.$path))) {
+        if (! is_string($path) || ! file_exists(storage_path('app/'.$path))) {
             return redirect()->route('imports.create')->with('error', 'Arquivo de importação expirou. Por favor, envie novamente.');
         }
 
@@ -68,12 +68,12 @@ class ImportController extends Controller
     public function processMapping(Request $request): RedirectResponse
     {
         $request->validate(['mappings' => 'required|array']);
-        $path = (string) $request->session()->pull('import_file_path');
-        $sheetName = (string) $request->session()->pull('import_sheet_name');
+        $path = $request->session()->pull('import_file_path', '');
+        $sheetName = $request->session()->pull('import_sheet_name', '');
         $headerRowIndex = $request->session()->pull('import_header_row_index');
         $mappings = (array) $request->input('mappings');
 
-        if (! $path || ! $sheetName || $headerRowIndex === null) {
+        if (! is_string($path) || ! is_string($sheetName) || ! is_numeric($headerRowIndex)) {
             return redirect()->route('imports.create')->with('error', 'Sessão de importação expirou. Por favor, comece novamente.');
         }
 

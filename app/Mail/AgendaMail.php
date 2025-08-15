@@ -37,8 +37,11 @@ class AgendaMail extends Mailable
 
     public function envelope(): Envelope
     {
+        $address = config('mail.from.address');
+        $name = config('mail.from.name');
+
         return new Envelope(
-            from: new Address((string) config('mail.from.address'), (string) config('mail.from.name')),
+            from: new Address(is_string($address) ? $address : '', is_string($name) ? $name : ''),
             subject: 'Sua Agenda de Atividades da Semana',
         );
     }

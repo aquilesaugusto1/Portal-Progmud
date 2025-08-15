@@ -14,7 +14,7 @@ class CnpjValido implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (! $this->isCnpj($value)) {
+        if (! is_string($value) || ! $this->isCnpj($value)) {
             $fail('O campo :attribute não é um CNPJ válido.');
         }
     }
@@ -22,14 +22,17 @@ class CnpjValido implements ValidationRule
     /**
      * Valida um número de CNPJ.
      */
-    private function isCnpj(?string $cnpj): bool
+    private function isCnpj(string $cnpj): bool
     {
         if (empty($cnpj)) {
             return false;
         }
 
         // Remove caracteres não numéricos
-        $cnpj = preg_replace('/[^0-9]/', '', (string) $cnpj);
+        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+        if ($cnpj === null) {
+            return false;
+        }
 
         // Verifica se o CNPJ tem 14 dígitos
         if (strlen($cnpj) != 14) {

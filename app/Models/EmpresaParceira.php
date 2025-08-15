@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Traits\Userstamps;
+use Database\Factories\EmpresaParceiraFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @method static \Database\Factories\EmpresaParceiraFactory factory(...$parameters)
+ * @method static EmpresaParceiraFactory factory(...$parameters)
  */
 class EmpresaParceira extends Model
 {
@@ -41,7 +42,7 @@ class EmpresaParceira extends Model
 
     /**
      * Get the contracts for the partner company.
-     * @return HasMany<Contrato>
+     * @return HasMany<Contrato, EmpresaParceira>
      */
     public function contratos(): HasMany
     {

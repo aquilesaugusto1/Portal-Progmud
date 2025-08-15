@@ -7,6 +7,9 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class SpreadsheetAnalyzer
 {
+    /**
+     * @return array{0: array<int, mixed>, 1: int}
+     */
     public function analyze(string $filePath, string $sheetName): array
     {
         $spreadsheet = IOFactory::load($filePath);
@@ -16,11 +19,17 @@ class SpreadsheetAnalyzer
             return [[], -1];
         }
 
-        $rows = new Collection($worksheet->toArray(null, true, true, true));
+        /** @var array<int, array<string, mixed>> $sheetData */
+        $sheetData = $worksheet->toArray(null, true, true, true);
+        $rows = new Collection($sheetData);
 
         return $this->findHeaderRow($rows);
     }
 
+    /**
+     * @param  Collection<int, array<string, mixed>>  $rows
+     * @return array{0: array<int, mixed>, 1: int}
+     */
     private function findHeaderRow(Collection $rows): array
     {
         $bestGuessIndex = -1;
@@ -41,7 +50,9 @@ class SpreadsheetAnalyzer
         }
 
         if ($bestGuessIndex !== -1) {
-            $headerValues = array_values($rows[$bestGuessIndex]->filter()->toArray());
+            /** @var array<string, mixed> $headerRow */
+            $headerRow = $rows->get($bestGuessIndex, []);
+            $headerValues = array_values((new Collection($headerRow))->filter()->all());
             $zeroBasedIndex = $bestGuessIndex - 1;
 
             return [$headerValues, $zeroBasedIndex];

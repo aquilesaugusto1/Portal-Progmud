@@ -2,10 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\SugestaoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @method static SugestaoFactory factory(...$parameters)
+ */
 class Sugestao extends Model
 {
     use HasFactory;
@@ -27,6 +31,7 @@ class Sugestao extends Model
 
     /**
      * Get the user that owns the suggestion.
+     * @return BelongsTo<User, Sugestao>
      */
     public function usuario(): BelongsTo
     {
