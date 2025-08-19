@@ -14,7 +14,12 @@ class SugestaoController extends Controller
     {
         $this->authorize('viewAny', Sugestao::class);
 
+        $user = Auth::user();
         $query = Sugestao::with('usuario')->latest();
+
+        if ($user && !$user->isAdmin()) {
+            $query->where('usuario_id', $user->id);
+        }
 
         if ($request->filled('status')) {
             $query->where('status', $request->string('status'));

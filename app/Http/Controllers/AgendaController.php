@@ -73,9 +73,16 @@ class AgendaController extends Controller
                     break;
             }
 
+            $title = sprintf(
+                '%s / %s #%s',
+                $agenda->consultor?->nome ?? 'N/A',
+                $agenda->contrato?->empresaParceira?->nome_empresa ?? 'N/A',
+                $agenda->contrato?->id ?? ''
+            );
+
             return [
                 'id' => $agenda->id,
-                'title' => $agenda->consultor?->nome ?? 'Consultor N/A',
+                'title' => $title,
                 'start' => $agenda->data_hora->toIso8601String(),
                 'color' => $color,
                 'extendedProps' => [
