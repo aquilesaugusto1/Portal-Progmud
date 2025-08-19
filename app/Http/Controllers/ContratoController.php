@@ -18,7 +18,16 @@ class ContratoController extends Controller
     public function index(Request $request): View
     {
         $this->authorize('viewAny', Contrato::class);
+        
+        $user = Auth::user();
         $query = Contrato::with(['empresaParceira', 'usuarios']);
+
+        if ($user && ($user->isConsultor() || $user->isTechLead())) {
+            $query->whereHas('usuarios', function ($q) use ($user) {
+                $q->where('usuarios.id', $user->id);
+            });
+        }
+
         if ($request->filled('cliente_id')) {
             $query->where('cliente_id', $request->input('cliente_id'));
         }
@@ -131,9 +140,6 @@ class ContratoController extends Controller
         return back()->with('success', $mensagem);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function getValidationRules(?int $id = null): array
     {
         $permiteAntecipar = request()->input('permite_antecipar_baseline');
@@ -151,7 +157,7 @@ class ContratoController extends Controller
             'contato_principal' => ['nullable', 'string', 'max:255'],
             'baseline_horas_mes' => ['nullable', 'numeric', 'min:0'],
             'permite_antecipar_baseline' => ['nullable', 'boolean'],
-            'possui_engenharia_valores' => ['nullable', 'boolean'], // Adicionado
+            'possui_engenharia_valores' => ['nullable', 'boolean'],
             'documento_baseline' => [
                 'nullable',
                 Rule::requiredIf($permiteAntecipar == '1' || $permiteAntecipar === true),
@@ -168,14 +174,10 @@ class ContratoController extends Controller
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $validatedData
-     * @return array<string, mixed>
-     */
     private function prepareData(Request $request, array $validatedData): array
     {
         $validatedData['permite_antecipar_baseline'] = $request->boolean('permite_antecipar_baseline');
-        $validatedData['possui_engenharia_valores'] = $request->boolean('possui_engenharia_valores'); // Adicionado
+        $validatedData['possui_engenharia_valores'] = $request->boolean('possui_engenharia_valores');
 
         /** @var array<int, string> $produtos */
         $produtos = $validatedData['produtos'];
@@ -206,10 +208,6 @@ class ContratoController extends Controller
         $contrato->touch();
     }
 
-    /**
-     * @param  array<int, int|string>  $techLeadsAntigos
-     * @param  array<int, int|string>  $techLeadsNovos
-     */
     private function atualizarHistoricoTechLeads(Contrato $contrato, array $techLeadsAntigos, array $techLeadsNovos): void
     {
         $hoje = now();

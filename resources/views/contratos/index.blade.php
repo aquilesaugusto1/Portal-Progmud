@@ -46,23 +46,30 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                                @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nº Contrato</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Originais</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Horas</th>
+                                @endif
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
+                                @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
                                 <th scope="col" class="relative px-6 py-3"><span class="sr-only">Ações</span></th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @forelse ($contratos as $contrato)
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $contrato->empresaParceira->nome_empresa }}</td>
+                                    @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->numero_contrato ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->baseline_horas_original ? number_format($contrato->baseline_horas_original, 2) . 'h' : 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">{{ $contrato->baseline_horas_mes ? number_format($contrato->baseline_horas_mes, 2) . 'h' : 'N/A' }}</td>
+                                    @endif
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $contrato->status }}</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->data_inicio->format('d/m/Y') }}</td>
+                                    @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('contratos.show', $contrato) }}" class="text-indigo-600 hover:text-indigo-900">Ver</a>
                                         @can('update', $contrato)
@@ -76,9 +83,10 @@
                                             </form>
                                         @endcan
                                     </td>
+                                    @endif
                                 </tr>
                             @empty
-                                <tr><td colspan="7" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
+                                <tr><td colspan="{{ (!Auth::user()->isConsultor() && !Auth::user()->isTechLead()) ? 7 : 3 }}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
