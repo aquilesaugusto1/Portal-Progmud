@@ -1,12 +1,10 @@
 <x-app-layout>
     @push('styles')
-    {{-- Adiciona os estilos do FullCalendar --}}
     <style>
         #calendar {
             max-width: 1100px;
             margin: 0 auto;
         }
-        /* Estilo para o switch 'Faturável' */
         .toggle-switch {
             position: relative;
             display: inline-block;
@@ -41,10 +39,20 @@
             border-radius: 50%;
         }
         input:checked + .slider {
-            background-color: #4f46e5; /* Indigo */
+            background-color: #4f46e5;
         }
         input:checked + .slider:before {
             transform: translateX(22px);
+        }
+        .fc-event-dot {
+            background-color: #ef4444 !important;
+        }
+        .legend-dot {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
         }
     </style>
     @endpush
@@ -52,12 +60,27 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+
+                <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4 text-sm text-slate-600">
+                    <div class="flex items-center">
+                        <span class="legend-dot" style="background-color: #3b82f6;"></span> Agendada (Pendente)
+                    </div>
+                    <div class="flex items-center">
+                        <span class="legend-dot" style="background-color: #22c55e;"></span> Apontamento Aprovado
+                    </div>
+                    <div class="flex items-center">
+                        <span class="legend-dot" style="background-color: #f97316;"></span> Apontamento Pendente
+                    </div>
+                    <div class="flex items-center">
+                        <span class="legend-dot" style="background-color: #ef4444;"></span> Apontamento Rejeitado
+                    </div>
+                </div>
+
                 <div id="calendar"></div>
             </div>
         </div>
     </div>
 
-    <!-- Modal de Apontamento -->
     <div id="apontamentoModal" class="fixed z-50 inset-0 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
@@ -68,11 +91,11 @@
                     @csrf
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="flex justify-between items-center">
-                             <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Lançar Apontamento</h3>
-                             <button type="button" id="closeModalButton" class="text-gray-400 hover:text-gray-500">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Lançar Apontamento</h3>
+                            <button type="button" id="closeModalButton" class="text-gray-400 hover:text-gray-500">
                                 <span class="sr-only">Fechar</span>
                                 <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                             </button>
+                            </button>
                         </div>
                         
                         <div class="mt-4 space-y-4">
@@ -186,7 +209,7 @@
                     document.getElementById('hora_inicio').value = props.hora_inicio;
                     document.getElementById('hora_fim').value = props.hora_fim;
                     document.getElementById('descricao').value = props.descricao;
-                    document.getElementById('faturavel').checked = props.faturavel !== false; // Default to true
+                    document.getElementById('faturavel').checked = props.faturavel !== false;
                     document.getElementById('anexo_existente').innerHTML = props.anexo_url ? `<a href="${props.anexo_url}" target="_blank" class="text-indigo-600 hover:underline">Ver anexo atual</a>` : '';
                     
                     const anexoInput = document.getElementById('anexo');

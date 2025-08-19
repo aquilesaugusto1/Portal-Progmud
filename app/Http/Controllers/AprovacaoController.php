@@ -23,7 +23,7 @@ class AprovacaoController extends Controller
             throw new LogicException('User not authenticated.');
         }
 
-        $query = Apontamento::with(['consultor', 'contrato.empresaParceira'])
+        $query = Apontamento::with(['consultor', 'contrato.empresaParceira', 'agenda'])
             ->where('status', 'Pendente');
 
         if ($user->isTechLead()) {
