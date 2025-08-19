@@ -56,15 +56,6 @@
                                 <input type="datetime-local" name="data_hora" id="data_hora" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('data_hora') }}" required>
                             </div>
 
-                            <div>
-                                <label for="status" class="block font-medium text-sm text-gray-700">Status *</label>
-                                <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="Agendada" @selected(old('status', 'Agendada') == 'Agendada')>Agendada</option>
-                                    <option value="Realizada" @selected(old('status') == 'Realizada')>Realizada</option>
-                                    <option value="Cancelada" @selected(old('status') == 'Cancelada')>Cancelada</option>
-                                </select>
-                            </div>
-
                             <div class="md:col-span-2">
                                 <label for="descricao" class="block font-medium text-sm text-gray-700">Descrição</label>
                                 <textarea name="descricao" id="descricao" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">{{ old('descricao') }}</textarea>
