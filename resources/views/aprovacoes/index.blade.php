@@ -22,7 +22,7 @@
                                     <div>
                                         <p class="font-bold text-lg text-slate-800">{{ $apontamento->consultor->name }}</p>
                                         <p class="text-sm text-slate-600">
-                                            Para <strong>{{ $apontamento->contrato->empresaParceira->nome_fantasia ?? 'Cliente não encontrado' }}</strong>
+                                            Para <strong>{{ $apontamento->contrato->empresaParceira->nome_empresa ?? 'Cliente não encontrado' }}</strong>
                                         </p>
                                         <p class="text-xs text-slate-500">Enviado em: {{ $apontamento->created_at->format('d/m/Y H:i') }}</p>
                                     </div>

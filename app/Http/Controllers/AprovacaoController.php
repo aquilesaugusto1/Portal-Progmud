@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use LogicException;
+use App\Mail\ApontamentoRejeitadoMail;
+use Illuminate\Support\Facades\Mail;
 
 class AprovacaoController extends Controller
 {
@@ -80,12 +82,20 @@ class AprovacaoController extends Controller
 
         $validated = $request->validate(['motivo_rejeicao' => 'required|string|max:500']);
 
+        $apontamento->load(['consultor', 'contrato.empresaParceira', 'agenda']);
+
         $apontamento->status = 'Rejeitado';
         $apontamento->faturavel = false;
         $apontamento->motivo_rejeicao = $validated['motivo_rejeicao'];
         $apontamento->aprovado_por_id = (int) Auth::id();
         $apontamento->data_aprovacao = now();
         $apontamento->save();
+
+        try {
+            Mail::to($apontamento->consultor->email)->send(new ApontamentoRejeitadoMail($apontamento));
+        } catch (\Exception $e) {
+            Log::error('Falha ao enviar e-mail de rejeição de apontamento: ' . $e->getMessage());
+        }
 
         return redirect()->route('aprovacoes.index')->with('success', 'Apontamento rejeitado com sucesso.');
     }
