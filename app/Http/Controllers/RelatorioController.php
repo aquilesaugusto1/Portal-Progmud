@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\ValidationException;
 
 class RelatorioController extends Controller
 {
@@ -45,6 +47,9 @@ class RelatorioController extends Controller
                 $dadosFiltro = $this->relatorioService->getFiltrosContratos();
 
                 return view('relatorios.visao-geral-contratos', $dadosFiltro);
+            
+            case 'planilha-semanal':
+                return view('relatorios.planilha-semanal');
 
             default:
                 abort(404);
@@ -58,6 +63,16 @@ class RelatorioController extends Controller
         Log::info('Acessando RelatorioController@gerar', ['tipo' => $tipo, 'request_data' => $request->all()]);
 
         switch ($tipo) {
+            case 'planilha-semanal':
+                $filtros = $request->validate([
+                    'data_selecionada' => 'required|date',
+                    'formato' => 'required|in:html',
+                ]);
+
+                $dadosRelatorio = $this->relatorioService->gerarRelatorioPlanilhaSemanal($filtros);
+
+                return view('relatorios.planilha-semanal', array_merge($dadosRelatorio, ['filtros' => $filtros]));
+
             case 'historico-techleads':
                 $filtros = $request->validate([
                     'contrato_id' => 'required|exists:contratos,id',
@@ -130,6 +145,44 @@ class RelatorioController extends Controller
 
             default:
                 return redirect()->route('relatorios.index')->with('error', 'Tipo de relatório inválido.');
+        }
+    }
+
+    public function detalhesApontamentos(Request $request): JsonResponse
+    {
+        Log::info('Iniciando busca de detalhes de apontamentos.', $request->all());
+
+        try {
+            $validatedData = $request->validate([
+                'consultor_id' => 'required|integer|exists:usuarios,id',
+                'data_inicio' => 'required|date',
+                'data_fim' => 'required|date',
+            ]);
+
+            Log::info('Validação bem-sucedida.');
+
+            $detalhes = $this->relatorioService->getDetalhesApontamentosPorConsultor(
+                (int) $validatedData['consultor_id'],
+                $validatedData['data_inicio'],
+                $validatedData['data_fim']
+            );
+
+            Log::info('Busca de detalhes concluída com sucesso.', ['count' => $detalhes->count()]);
+            return response()->json($detalhes);
+
+        } catch (ValidationException $e) {
+            Log::error('Erro de validação ao buscar detalhes de apontamentos.', [
+                'errors' => $e->errors(),
+                'request' => $request->all()
+            ]);
+            return response()->json(['message' => 'Dados inválidos.', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::critical('Erro inesperado ao buscar detalhes de apontamentos.', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+            return response()->json(['message' => 'Ocorreu um erro interno no servidor.'], 500);
         }
     }
 }

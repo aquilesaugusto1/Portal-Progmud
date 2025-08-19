@@ -9,6 +9,19 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
+                <!-- Card: Planilha Semanal de Horas -->
+                <a href="{{ route('relatorios.show', 'planilha-semanal') }}" class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow duration-300">
+                    <div class="bg-blue-100 text-blue-600 rounded-full p-4 mb-4">
+                        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900">Planilha Semanal de Horas</h3>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Veja um resumo de horas apontadas por contrato, distribuídas nos dias de uma semana específica.
+                    </p>
+                </a>
+
                 <!-- Card: Histórico de Tech Leads -->
                 <a href="{{ route('relatorios.show', 'historico-techleads') }}" class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6 flex flex-col items-center text-center hover:shadow-lg transition-shadow duration-300">
                     <div class="bg-purple-100 text-purple-600 rounded-full p-4 mb-4">

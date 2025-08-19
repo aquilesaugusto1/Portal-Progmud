@@ -8,12 +8,10 @@ use App\Models\Contrato;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class RelatorioService
 {
-    /**
-     * @return array{consultores: \Illuminate\Database\Eloquent\Collection<int, User>}
-     */
     public function getFiltrosAlocacao(): array
     {
         $consultoresPJ = User::where('funcao', 'consultor')
@@ -25,10 +23,6 @@ class RelatorioService
         return ['consultores' => $consultoresPJ];
     }
 
-    /**
-     * @param  array{data_inicio: string, data_fim: string, consultores_id: array<int, int>}  $filtros
-     * @return array{resultados: array<int, array<string, mixed>>, dias_uteis: int}
-     */
     public function gerarRelatorioAlocacao(array $filtros): array
     {
         $inicioPeriodo = Carbon::parse($filtros['data_inicio'])->startOfDay();
@@ -42,6 +36,7 @@ class RelatorioService
 
         foreach ($consultores as $consultor) {
             $horasApontadas = Apontamento::where('consultor_id', $consultor->id)
+                ->where('status', 'Aprovado')
                 ->whereBetween('data_apontamento', [$inicioPeriodo, $fimPeriodo])
                 ->sum('horas_gastas');
 
@@ -80,10 +75,6 @@ class RelatorioService
         return $diasUteis;
     }
 
-    /**
-     * @param  array<int, int>  $anos
-     * @return array<int, string>
-     */
     private function getFeriados(array $anos): array
     {
         $feriados = [];
@@ -106,9 +97,6 @@ class RelatorioService
         return $feriados;
     }
 
-    /**
-     * @return array{contratos: \Illuminate\Database\Eloquent\Collection<int, Contrato>}
-     */
     public function getFiltrosContratos(): array
     {
         $contratos = Contrato::where('status', 'Ativo')->with('empresaParceira')->orderBy('numero_contrato')->get();
@@ -116,10 +104,6 @@ class RelatorioService
         return compact('contratos');
     }
 
-    /**
-     * @param  array{contratos_id: array<int, int>}  $filtros
-     * @return array{resultados: array<int, array<string, mixed>>}
-     */
     public function gerarRelatorioContratos(array $filtros): array
     {
         $contratos = Contrato::with('empresaParceira')->whereIn('id', $filtros['contratos_id'])->get();
@@ -142,9 +126,6 @@ class RelatorioService
         return ['resultados' => $resultados];
     }
 
-    /**
-     * @return array{contratos: \Illuminate\Database\Eloquent\Collection<int, Contrato>}
-     */
     public function getFiltrosHistoricoTechLeads(): array
     {
         $contratos = Contrato::where('status', 'Ativo')->with('empresaParceira')->orderBy('numero_contrato')->get();
@@ -152,10 +133,6 @@ class RelatorioService
         return compact('contratos');
     }
 
-    /**
-     * @param  array{contrato_id: int|string}  $filtros
-     * @return array{contrato: Contrato, historico: \Illuminate\Support\Collection<int, \stdClass>}
-     */
     public function gerarRelatorioHistoricoTechLeads(array $filtros): array
     {
         $contrato = Contrato::with('empresaParceira')->findOrFail($filtros['contrato_id']);
@@ -170,6 +147,83 @@ class RelatorioService
         return [
             'contrato' => $contrato,
             'historico' => $historico,
+        ];
+    }
+
+    public function getDetalhesApontamentosPorConsultor(int $consultorId, string $dataInicio, string $dataFim): Collection
+    {
+        return Apontamento::with(['contrato.empresaParceira', 'agenda'])
+            ->where('consultor_id', $consultorId)
+            ->where('status', 'Aprovado')
+            ->whereBetween('data_apontamento', [
+                Carbon::parse($dataInicio)->startOfDay(),
+                Carbon::parse($dataFim)->endOfDay()
+            ])
+            ->orderBy('data_apontamento', 'desc')
+            ->get();
+    }
+
+    public function gerarRelatorioPlanilhaSemanal(array $filtros): array
+    {
+        $dataSelecionada = Carbon::parse($filtros['data_selecionada']);
+        $inicioSemana = $dataSelecionada->copy()->startOfWeek(Carbon::MONDAY);
+        $fimSemana = $dataSelecionada->copy()->endOfWeek(Carbon::SUNDAY);
+
+        $periodo = [
+            'inicio' => $inicioSemana,
+            'fim' => $fimSemana,
+            'dias' => [],
+        ];
+        $diasDaSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+        for ($i = 0; $i < 7; $i++) {
+            $dia = $inicioSemana->copy()->addDays($i);
+            $periodo['dias'][] = [
+                'nome' => $diasDaSemana[$dia->dayOfWeek],
+                'data' => $dia->format('d/m'),
+                'data_iso' => $dia->format('Y-m-d'),
+            ];
+        }
+
+        $apontamentos = Apontamento::with('contrato.empresaParceira')
+            ->where('status', 'Aprovado')
+            ->whereBetween('data_apontamento', [$inicioSemana, $fimSemana])
+            ->get();
+
+        $resultados = [];
+        $totaisPorDia = array_fill_keys(array_column($periodo['dias'], 'data_iso'), 0);
+        $totalGeral = 0;
+
+        foreach ($apontamentos as $apontamento) {
+            if (!$apontamento->contrato) {
+                continue;
+            }
+            $contratoId = $apontamento->contrato->id;
+            $dataApontamento = Carbon::parse($apontamento->data_apontamento)->format('Y-m-d');
+            $horas = (float) $apontamento->horas_gastas;
+
+            if (!isset($resultados[$contratoId])) {
+                $resultados[$contratoId] = [
+                    'contrato_nome' => $apontamento->contrato->empresaParceira->nome_empresa . ' - ' . $apontamento->contrato->numero_contrato,
+                    'horas_por_dia' => [],
+                    'total_horas' => 0,
+                ];
+            }
+
+            if (!isset($resultados[$contratoId]['horas_por_dia'][$dataApontamento])) {
+                $resultados[$contratoId]['horas_por_dia'][$dataApontamento] = 0;
+            }
+            $resultados[$contratoId]['horas_por_dia'][$dataApontamento] += $horas;
+            $resultados[$contratoId]['total_horas'] += $horas;
+
+            $totaisPorDia[$dataApontamento] += $horas;
+            $totalGeral += $horas;
+        }
+
+        return [
+            'resultados' => $resultados,
+            'periodo' => $periodo,
+            'totais_por_dia' => $totaisPorDia,
+            'total_geral' => $totalGeral,
         ];
     }
 }

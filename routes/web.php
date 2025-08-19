@@ -36,8 +36,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::get('/api/agendas', [ApontamentoController::class, 'events'])->name('api.agendas');
 
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
-    Route::get('/relatorios/{tipo}', [RelatorioController::class, 'show'])->name('relatorios.show');
     Route::post('/relatorios/gerar', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');
+    Route::get('/relatorios/detalhes-apontamentos', [RelatorioController::class, 'detalhesApontamentos'])->name('relatorios.detalhesApontamentos');
+    Route::get('/relatorios/{tipo}', [RelatorioController::class, 'show'])->name('relatorios.show');
 
     Route::get('/api/contratos/{contratoId}/consultores', [AgendaController::class, 'getConsultoresPorContrato'])->name('api.contratos.consultores');
     Route::resource('agendas', AgendaController::class);
