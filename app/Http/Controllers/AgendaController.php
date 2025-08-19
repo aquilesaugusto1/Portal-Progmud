@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Mail\NotificacaoAgendaMail; // Alterado aqui
+use App\Mail\NotificacaoAgendaMail;
 use App\Models\Agenda;
 use App\Models\Contrato;
 use App\Models\User;
@@ -106,7 +106,6 @@ class AgendaController extends Controller
             'assunto' => 'required|string|max:255',
             'data_hora' => 'required|date',
             'descricao' => 'nullable|string',
-            'status' => 'required|string|in:Agendada,Realizada,Cancelada',
         ]);
 
         $user = Auth::user();
@@ -114,10 +113,11 @@ class AgendaController extends Controller
             throw new LogicException('User not authenticated.');
         }
 
-        if ($user->isTechLead() && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
-            return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para consultores que você lidera.'])->withInput();
+        if ($user->isTechLead() && $validated['consultor_id'] != $user->id && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
+            return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para seus liderados ou para si mesmo.'])->withInput();
         }
-
+        
+        $validated['status'] = 'Agendada';
         $agenda = Agenda::create($validated);
 
         Log::info('Tentando enviar e-mail de nova agenda.', [
@@ -126,7 +126,6 @@ class AgendaController extends Controller
         ]);
 
         try {
-            // Alterado aqui para usar a nova classe
             Mail::to($agenda->consultor->email)->send(new NotificacaoAgendaMail($agenda, 'criada'));
             Log::info('E-mail de nova agenda enviado com sucesso para: '.$agenda->consultor->email);
         } catch (Exception $e) {
@@ -152,22 +151,29 @@ class AgendaController extends Controller
             return new Collection();
         }
 
-        $query = User::where('funcao', 'consultor')->where('status', 'Ativo');
-
-        $query->whereHas('contratos', function ($q) use ($contrato) {
+        $consultoresQuery = User::where('funcao', 'consultor')->where('status', 'Ativo');
+        $consultoresQuery->whereHas('contratos', function ($q) use ($contrato) {
             $q->where('contratos.id', $contrato->id);
         });
 
         if ($user->isTechLead()) {
             $lideradosIds = $user->consultoresLiderados()->pluck('usuarios.id');
-
-            if ($lideradosIds->isEmpty()) {
-                return new Collection();
+            if ($lideradosIds->isNotEmpty()) {
+                $consultoresQuery->whereIn('usuarios.id', $lideradosIds);
+            } else {
+                 return new Collection();
             }
-            $query->whereIn('usuarios.id', $lideradosIds);
+        }
+        
+        $consultores = $consultoresQuery->orderBy('nome')->get();
+
+        if ($user->isTechLead() && $user->contratos->contains($contrato->id)) {
+            if (!$consultores->contains('id', $user->id)) {
+                $consultores->prepend($user);
+            }
         }
 
-        return $query->orderBy('nome')->get();
+        return $consultores;
     }
 
     public function edit(Agenda $agenda): View
@@ -200,7 +206,7 @@ class AgendaController extends Controller
             throw new LogicException('User not authenticated.');
         }
 
-        if ($user->isTechLead() && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
+        if ($user->isTechLead() && $validated['consultor_id'] != $user->id && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
             return back()->withErrors(['consultor_id' => 'Você só pode atribuir agendas a este consultor.'])->withInput();
         }
         $agenda->update($validated);
@@ -211,7 +217,6 @@ class AgendaController extends Controller
         ]);
 
         try {
-            // Alterado aqui para usar a nova classe
             Mail::to($agenda->consultor->email)->send(new NotificacaoAgendaMail($agenda, 'atualizada'));
             Log::info('E-mail de atualização de agenda enviado com sucesso para: '.$agenda->consultor->email);
         } catch (Exception $e) {

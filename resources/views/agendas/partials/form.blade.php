@@ -36,6 +36,8 @@
         <input type="datetime-local" name="data_hora" id="data_hora" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('data_hora', isset($agenda) ? $agenda->data_hora->format('Y-m-d\TH:i') : '') }}" required>
     </div>
 
+    {{-- Este bloco só será exibido se a variável $agenda existir (ou seja, na tela de edição) --}}
+    @if (isset($agenda))
     <div>
         <label for="status" class="block font-medium text-sm text-gray-700">Status</label>
         <select name="status" id="status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
@@ -44,6 +46,7 @@
             <option value="Cancelada" {{ old('status', $agenda->status ?? '') == 'Cancelada' ? 'selected' : '' }}>Cancelada</option>
         </select>
     </div>
+    @endif
 
     <div class="md:col-span-2">
         <label for="descricao" class="block font-medium text-sm text-gray-700">Descrição</label>
