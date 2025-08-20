@@ -8,7 +8,7 @@ Aqui estão os detalhes:
 - **Cliente:** {{ $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A' }}
 - **Contrato:** {{ $agenda->contrato->numero_contrato ?? 'N/A' }}
 - **Assunto:** {{ $agenda->assunto }}
-- **Data e Hora:** {{ $agenda->data_hora->format('d/m/Y \à\s H:i') }}
+- **Data e Hora:** {{ $agenda->data->format('d/m/Y') }} às {{ \Carbon\Carbon::parse($agenda->hora_inicio)->format('H:i') }}
 - **Status:** {{ $agenda->status }}
 
 @if($agenda->descricao)

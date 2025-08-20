@@ -8,7 +8,8 @@ Aqui está um resumo da sua agenda de atividades para o período selecionado.
 @foreach($agendas as $agenda)
 <x-mail::panel>
 **Assunto:** {{ $agenda->assunto }}<br>
-**Data e Hora:** {{ $agenda->data_hora->format('d/m/Y \à\s H:i') }}<br>
+{{-- CORREÇÃO: Usando as novas colunas 'data' e 'hora_inicio' --}}
+**Data e Hora:** {{ $agenda->data->format('d/m/Y') }} às {{ \Carbon\Carbon::parse($agenda->hora_inicio)->format('H:i') }}<br>
 **Cliente:** {{ $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A' }}<br>
 **Contrato:** {{ $agenda->contrato->numero_contrato ?? 'N/A' }}<br>
 **Status:** {{ $agenda->status }}

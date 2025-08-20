@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log; // Importe a classe Log
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
@@ -62,10 +62,13 @@ class EmailController extends Controller
             return back()->withErrors(['consultor_id' => 'Você não tem permissão para enviar agendas para este consultor.'])->withInput();
         }
 
+        // --- CORREÇÃO AQUI ---
+        // Trocado 'data_hora' pela nova coluna 'data' e ajustado o orderBy.
         $agendas = Agenda::with('contrato.empresaParceira')
             ->where('consultor_id', $consultor->id)
-            ->whereBetween('data_hora', [$validated['data_inicio'], $validated['data_fim']])
-            ->orderBy('data_hora')
+            ->whereBetween('data', [$validated['data_inicio'], $validated['data_fim']])
+            ->orderBy('data')
+            ->orderBy('hora_inicio')
             ->get();
 
         if ($agendas->isEmpty()) {
@@ -74,7 +77,6 @@ class EmailController extends Controller
 
         $recado = $validated['recado'] ?? 'Segue a sua agenda para o período selecionado.';
 
-        // --- LOG DE DEBUG ---
         Log::info('Tentando enviar resumo de agendas.', [
             'remetente_id' => $user->id,
             'remetente_nome' => $user->nome,
@@ -87,14 +89,12 @@ class EmailController extends Controller
 
         try {
             Mail::to($consultor->email)->send(new ResumoAgendasMail($agendas, $recado, $user));
-            // --- LOG DE SUCESSO ---
             Log::info('E-mail de resumo de agendas enviado com sucesso para: '.$consultor->email);
         } catch (\Exception $e) {
-            // --- LOG DE ERRO ---
             Log::error('Falha ao enviar e-mail de resumo de agendas.', [
                 'destinatario' => $consultor->email,
                 'mensagem_erro' => $e->getMessage(),
-                'stack_trace' => $e->getTraceAsString(), // Log completo do erro
+                'stack_trace' => $e->getTraceAsString(),
             ]);
             report($e);
 
