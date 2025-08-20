@@ -27,8 +27,9 @@
                         <ul class="space-y-3">
                             @forelse($consultoresAtivos as $consultor)
                                 <li class="flex justify-between items-center text-sm">
-                                    <span class="font-medium text-slate-700">{{ $consultor['nome'] }}</span>
-                                    <span class="font-bold text-indigo-600">{{ number_format($consultor['horas_30_dias'], 1) }}h</span>
+                                    <span class="font-medium text-slate-700">{{ $consultor->nome }}</span>
+                                    {{-- CORREÇÃO: Usando a variável correta 'apontamentos_sum_horas_gastas' --}}
+                                    <span class="font-bold text-indigo-600">{{ number_format($consultor->apontamentos_sum_horas_gastas ?? 0, 1) }}h</span>
                                 </li>
                             @empty
                                 <p class="text-sm text-slate-500">Sem apontamentos nos últimos 30 dias.</p>
@@ -98,12 +99,14 @@
                             <div>
                                 <p class="font-semibold text-slate-800">{{ $agenda->assunto }}</p>
                                 <p class="text-sm text-slate-500">
-                                    {{ $agenda->consultor->nome }} para <strong>{{ $agenda->contrato->cliente->nome_empresa ?? 'N/A' }}</strong> (Contrato: #{{ $agenda->contrato->numero_contrato ?? $agenda->contrato->id }})
+                                    {{-- CORREÇÃO: Acessando empresaParceira corretamente --}}
+                                    Para <strong>{{ $agenda->contrato->empresaParceira->nome_empresa ?? 'N/A' }}</strong> (Contrato: #{{ $agenda->contrato->numero_contrato ?? $agenda->contrato->id }})
                                 </p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold text-slate-800">{{ $agenda->data_hora ? $agenda->data_hora->format('d/m/Y') : 'N/A' }}</p>
-                                <p class="text-sm text-slate-500">{{ $agenda->data_hora ? $agenda->data_hora->format('H:i') : '' }}</p>
+                                {{-- CORREÇÃO: Usando as novas colunas 'data' e 'hora_inicio' --}}
+                                <p class="font-bold text-slate-800">{{ $agenda->data ? $agenda->data->format('d/m/Y') : 'N/A' }}</p>
+                                <p class="text-sm text-slate-500">{{ $agenda->hora_inicio ? \Carbon\Carbon::parse($agenda->hora_inicio)->format('H:i') : '' }}</p>
                             </div>
                         </div>
                     @empty

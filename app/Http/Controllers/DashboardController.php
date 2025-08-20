@@ -39,9 +39,12 @@ class DashboardController extends Controller
                 'Clientes' => EmpresaParceira::count(),
             ];
 
+            // --- CORREÇÃO AQUI ---
+            // Adicionado o filtro para somar apenas apontamentos 'Aprovado'
             $consultoresAtivos = User::where('funcao', 'consultor')
                 ->withSum(['apontamentos' => function ($query) {
-                    $query->where('data_apontamento', '>=', now()->subDays(30));
+                    $query->where('status', 'Aprovado')
+                          ->where('data_apontamento', '>=', now()->subDays(30));
                 }], 'horas_gastas')
                 ->get()
                 ->sortByDesc('apontamentos_sum_horas_gastas');
