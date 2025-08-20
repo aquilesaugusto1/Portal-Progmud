@@ -101,7 +101,6 @@ class ApontamentoController extends Controller
         $apontamento->descricao = $validated['descricao'];
         $apontamento->status = 'Pendente';
         $apontamento->motivo_rejeicao = null;
-        // A linha $apontamento->faturavel foi REMOVIDA
 
         if ($request->hasFile('anexo')) {
             if ($apontamento->caminho_anexo) {

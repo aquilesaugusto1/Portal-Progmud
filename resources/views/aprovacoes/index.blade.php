@@ -28,7 +28,12 @@
                                     </div>
                                     <div class="text-right flex-shrink-0 ml-4">
                                         <p class="text-2xl font-bold text-indigo-600">{{ number_format($apontamento->horas_gastas, 1) }}h</p>
-                                        <p class="text-xs font-semibold {{ $apontamento->faturavel ? 'text-emerald-600' : 'text-amber-600' }}">{{ $apontamento->faturavel ? 'Faturável' : 'Não Faturável' }}</p>
+                                        {{-- CORREÇÃO: Acessando o 'faturavel' a partir da agenda relacionada --}}
+                                        @if($apontamento->agenda)
+                                            <p class="text-xs font-semibold {{ $apontamento->agenda->faturavel ? 'text-emerald-600' : 'text-amber-600' }}">
+                                                {{ $apontamento->agenda->faturavel ? 'Faturável' : 'Não Faturável' }}
+                                            </p>
+                                        @endif
                                     </div>
                                 </div>
 
@@ -37,7 +42,7 @@
                                     <p class="text-sm text-slate-600 whitespace-pre-wrap">{{ $apontamento->descricao }}</p>
                                     @if($apontamento->caminho_anexo)
                                         <a href="{{ Storage::url($apontamento->caminho_anexo) }}" target="_blank" class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">
-                                            Visualizar Anexo (PDF)
+                                            Visualizar Anexo
                                         </a>
                                     @endif
                                 </div>
