@@ -47,11 +47,11 @@ class DashboardController extends Controller
                 ->sortByDesc('apontamentos_sum_horas_gastas');
 
             $agendasPorMes = Agenda::select(
-                DB::raw('DATE_FORMAT(data_hora, "%Y-%m") as mes'),
+                DB::raw('DATE_FORMAT(data, "%Y-%m") as mes'),
                 'status',
                 DB::raw('count(*) as total')
             )
-                ->where('data_hora', '>=', now()->subMonths(5)->startOfMonth())
+                ->where('data', '>=', now()->subMonths(5)->startOfMonth())
                 ->groupBy('mes', 'status')
                 ->orderBy('mes', 'asc')
                 ->get();
@@ -84,15 +84,16 @@ class DashboardController extends Controller
 
         } else {
             $stats = [
-                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('data_hora', today())->count(),
+                'Minhas Agendas Hoje' => Agenda::where('consultor_id', $user->id)->whereDate('data', today())->count(),
                 'Meus Contratos' => $user->contratos()->count(),
                 'Apontamentos Pendentes' => Apontamento::where('consultor_id', $user->id)->where('status', 'Pendente')->count(),
             ];
 
             $ultimas_agendas = Agenda::where('consultor_id', $user->id)
                 ->with(['contrato.empresaParceira'])
-                ->where('data_hora', '>=', today())
-                ->orderBy('data_hora', 'asc')
+                ->where('data', '>=', today())
+                ->orderBy('data', 'asc')
+                ->orderBy('hora_inicio', 'asc')
                 ->limit(5)
                 ->get();
         }

@@ -25,8 +25,12 @@ class Agenda extends Model
         'contrato_id',
         'assunto',
         'descricao',
-        'data_hora',
+        'data',
+        'hora_inicio',
+        'hora_fim',
         'status',
+        'faturavel',
+        'tipo_periodo',
     ];
 
     /**
@@ -35,7 +39,8 @@ class Agenda extends Model
      * @var array<string, string>
      */
     protected $casts = [
-        'data_hora' => 'datetime',
+        'data' => 'date',
+        'faturavel' => 'boolean',
     ];
 
     /**
