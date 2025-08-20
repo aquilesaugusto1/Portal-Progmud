@@ -31,9 +31,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/apontamentos', [ApontamentoController::class, 'index'])->name('apontamentos.index');
+    Route::get('/apontamentos/create', [ApontamentoController::class, 'create'])->name('apontamentos.create');
     Route::post('/apontamentos', [ApontamentoController::class, 'store'])->name('apontamentos.store');
     Route::delete('/apontamentos/{apontamento}', [ApontamentoController::class, 'destroy'])->name('apontamentos.destroy');
     Route::get('/api/agendas', [ApontamentoController::class, 'events'])->name('api.agendas');
+    Route::get('/api/agendas/{agenda}/details', [ApontamentoController::class, 'getAgendaDetails'])->name('api.agendas.details');
 
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');
     Route::post('/relatorios/gerar', [RelatorioController::class, 'gerar'])->name('relatorios.gerar');

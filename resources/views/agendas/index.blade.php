@@ -85,7 +85,7 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($agendas as $agenda)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $agenda->data_hora ? $agenda->data_hora->format('d/m/Y H:i') : 'N/A' }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $agenda->data ? $agenda->data->format('d/m/Y') : 'N/A' }} {{ $agenda->hora_inicio }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $agenda->assunto }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $agenda->consultor->nome ?? 'N/A' }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full @switch($agenda->status) @case('Agendada') bg-blue-100 text-blue-800 @break @case('Realizada') bg-green-100 text-green-800 @break @case('Cancelada') bg-red-100 text-red-800 @break @default bg-gray-100 text-gray-800 @endswitch">{{ $agenda->status }}</span></td>
@@ -108,6 +108,20 @@
             <div id="calendario-view" class="hidden">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                     <div id="calendar"></div>
+                    <div class="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-2">
+                        <div class="flex items-center">
+                            <span class="h-4 w-4 rounded-full bg-blue-500 mr-2"></span>
+                            <span class="text-sm text-gray-600">Agendada</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="h-4 w-4 rounded-full bg-green-500 mr-2"></span>
+                            <span class="text-sm text-gray-600">Realizada</span>
+                        </div>
+                        <div class="flex items-center">
+                            <span class="h-4 w-4 rounded-full bg-red-500 mr-2"></span>
+                            <span class="text-sm text-gray-600">Cancelada</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -149,10 +163,15 @@ document.addEventListener('DOMContentLoaded', function() {
         calendarioView.classList.remove('hidden');
         listaBtn.classList.remove('active');
         calendarioBtn.classList.add('active');
-        if (!calendar.isRendered) {
-            calendar.render();
-        }
+        calendar.render();
     });
+
+    // Garante que o calendário seja renderizado se for a view padrão (ou se houver um hash na URL)
+    if (!listaView.classList.contains('hidden')) {
+        // A lista é a padrão, nada a fazer
+    } else {
+        calendar.render();
+    }
 });
 </script>
 @endpush

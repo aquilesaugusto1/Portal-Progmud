@@ -54,6 +54,10 @@
                 </div>
                 <div><x-input-label for="cargo" :value="__('Cargo')" /><x-text-input id="cargo" name="cargo" type="text" class="mt-1 block w-full" :value="old('cargo', $colaborador->cargo ?? '')" /></div>
                 <div>
+                    <x-input-label for="data_inicio_contrato" :value="__('Data de Início do Contrato')" />
+                    <x-text-input id="data_inicio_contrato" name="data_inicio_contrato" type="date" class="mt-1 block w-full" :value="old('data_inicio_contrato', isset($colaborador) ? $colaborador->data_inicio_contrato?->format('Y-m-d') : '')" />
+                </div>
+                <div>
                     <x-input-label for="select-techleads" :value="__('Subordinado a (Tech Leads)')" />
                     <select name="tech_leads[]" id="select-techleads" multiple>
                         @php
@@ -91,6 +95,10 @@
                     </select>
                 </div>
                 <div>
+                    <x-input-label for="data_fim_contrato" :value="__('Data de Fim do Contrato')" />
+                    <x-text-input id="data_fim_contrato" name="data_fim_contrato" type="date" class="mt-1 block w-full" :value="old('data_fim_contrato', isset($colaborador) ? $colaborador->data_fim_contrato?->format('Y-m-d') : '')" />
+                </div>
+                <div>
                     <x-input-label for="nivel" :value="__('Nível')" />
                     <select name="nivel" id="nivel" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                         <option value="">Selecione...</option>
@@ -113,10 +121,20 @@
     
     <div>
         <h3 class="text-lg font-medium text-gray-900 border-b pb-2 mb-4">Dados Bancários</h3>
-        <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div><x-input-label for="banco" :value="__('Banco')" /><x-text-input id="banco" name="dados_bancarios[banco]" type="text" class="mt-1 block w-full" :value="old('dados_bancarios.banco', $colaborador->dados_bancarios['banco'] ?? '')" /></div>
             <div><x-input-label for="agencia" :value="__('Agência')" /><x-text-input id="agencia" name="dados_bancarios[agencia]" type="text" class="mt-1 block w-full" :value="old('dados_bancarios.agencia', $colaborador->dados_bancarios['agencia'] ?? '')" /></div>
             <div><x-input-label for="conta" :value="__('Conta')" /><x-text-input id="conta" name="dados_bancarios[conta]" type="text" class="mt-1 block w-full" :value="old('dados_bancarios.conta', $colaborador->dados_bancarios['conta'] ?? '')" /></div>
+            <div>
+                <x-input-label for="tipo_chave_pix" :value="__('Tipo de Chave PIX')" />
+                <select name="dados_bancarios[tipo_chave_pix]" id="tipo_chave_pix" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+                    <option value="">Selecione...</option>
+                    @foreach(['CPF', 'CNPJ', 'Celular', 'E-mail', 'Aleatória'] as $tipo)
+                        <option value="{{ $tipo }}" @selected(old('dados_bancarios.tipo_chave_pix', $colaborador->dados_bancarios['tipo_chave_pix'] ?? '') == $tipo)>{{ $tipo }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="md:col-span-2"><x-input-label for="chave_pix" :value="__('Chave PIX')" /><x-text-input id="chave_pix" name="dados_bancarios[chave_pix]" type="text" class="mt-1 block w-full" :value="old('dados_bancarios.chave_pix', $colaborador->dados_bancarios['chave_pix'] ?? '')" /></div>
         </div>
     </div>
 

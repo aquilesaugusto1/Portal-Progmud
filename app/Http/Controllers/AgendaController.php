@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -25,7 +26,7 @@ class AgendaController extends Controller
         $this->authorize('viewAny', Agenda::class);
 
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             throw new LogicException('User not authenticated.');
         }
 
@@ -50,7 +51,7 @@ class AgendaController extends Controller
 
         $calendarQuery = clone $query;
 
-        $agendas = $query->latest('data_hora')->paginate(15)->withQueryString();
+        $agendas = $query->latest('data')->paginate(15)->withQueryString();
 
         $eventosDoCalendario = $this->formatarParaCalendario($calendarQuery->get());
 
@@ -63,13 +64,13 @@ class AgendaController extends Controller
     private function formatarParaCalendario(Collection $agendas): SupportCollection
     {
         return $agendas->map(function (Agenda $agenda) {
-            $color = '#3B82F6';
+            $color = '#3B82F6'; // Azul padrão para 'Agendada'
             switch ($agenda->status) {
                 case 'Realizada':
-                    $color = '#10B981';
+                    $color = '#10B981'; // Verde
                     break;
                 case 'Cancelada':
-                    $color = '#EF4444';
+                    $color = '#EF4444'; // Vermelho
                     break;
             }
 
@@ -80,10 +81,13 @@ class AgendaController extends Controller
                 $agenda->contrato?->id ?? ''
             );
 
+            $startDateTime = Carbon::parse($agenda->data->toDateString().' '.$agenda->hora_inicio);
+
             return [
                 'id' => $agenda->id,
                 'title' => $title,
-                'start' => $agenda->data_hora->toIso8601String(),
+                'start' => $startDateTime->toIso8601String(),
+                'end' => $agenda->hora_fim ? $startDateTime->copy()->setTimeFromTimeString($agenda->hora_fim)->toIso8601String() : null,
                 'color' => $color,
                 'extendedProps' => [
                     'assunto' => $agenda->assunto,
@@ -107,13 +111,8 @@ class AgendaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $this->authorize('create', Agenda::class);
-        $validated = $request->validate([
-            'consultor_id' => 'required|exists:usuarios,id',
-            'contrato_id' => 'required|exists:contratos,id',
-            'assunto' => 'required|string|max:255',
-            'data_hora' => 'required|date',
-            'descricao' => 'nullable|string',
-        ]);
+
+        $validated = $this->getValidatedData($request);
 
         $user = Auth::user();
         if (! $user) {
@@ -123,7 +122,7 @@ class AgendaController extends Controller
         if ($user->isTechLead() && $validated['consultor_id'] != $user->id && ! $user->consultoresLiderados()->where('usuarios.id', $validated['consultor_id'])->exists()) {
             return back()->withErrors(['consultor_id' => 'Você só pode criar agendas para seus liderados ou para si mesmo.'])->withInput();
         }
-        
+
         $validated['status'] = 'Agendada';
         $agenda = Agenda::create($validated);
 
@@ -168,14 +167,14 @@ class AgendaController extends Controller
             if ($lideradosIds->isNotEmpty()) {
                 $consultoresQuery->whereIn('usuarios.id', $lideradosIds);
             } else {
-                 return new Collection();
+                return new Collection();
             }
         }
-        
+
         $consultores = $consultoresQuery->orderBy('nome')->get();
 
         if ($user->isTechLead() && $user->contratos->contains($contrato->id)) {
-            if (!$consultores->contains('id', $user->id)) {
+            if (! $consultores->contains('id', $user->id)) {
                 $consultores->prepend($user);
             }
         }
@@ -200,14 +199,7 @@ class AgendaController extends Controller
     public function update(Request $request, Agenda $agenda): RedirectResponse
     {
         $this->authorize('update', $agenda);
-        $validated = $request->validate([
-            'consultor_id' => 'required|exists:usuarios,id',
-            'contrato_id' => 'required|exists:contratos,id',
-            'assunto' => 'required|string|max:255',
-            'data_hora' => 'required|date',
-            'descricao' => 'nullable|string',
-            'status' => 'required|string|in:Agendada,Realizada,Cancelada',
-        ]);
+        $validated = $this->getValidatedData($request);
         $user = Auth::user();
         if (! $user) {
             throw new LogicException('User not authenticated.');
@@ -265,5 +257,33 @@ class AgendaController extends Controller
 
             return response()->json(['message' => 'Ocorreu um erro no servidor.'], 500);
         }
+    }
+
+    private function getValidatedData(Request $request): array
+    {
+        $validated = $request->validate([
+            'consultor_id' => 'required|exists:usuarios,id',
+            'contrato_id' => 'required|exists:contratos,id',
+            'assunto' => 'required|string|max:255',
+            'data' => 'required|date',
+            'descricao' => 'nullable|string',
+            'faturavel' => 'sometimes|boolean',
+            'tipo_periodo' => 'required|string|in:Período Inteiro,Meio Período,Personalizado',
+            'hora_inicio' => 'required|date_format:H:i',
+            'hora_fim' => 'required_if:tipo_periodo,Meio Período,Personalizado|nullable|date_format:H:i|after:hora_inicio',
+            'status' => 'sometimes|string|in:Agendada,Realizada,Cancelada',
+        ]);
+
+        if (isset($validated['faturavel'])) {
+            $validated['faturavel'] = filter_var($validated['faturavel'], FILTER_VALIDATE_BOOLEAN);
+        } else {
+            $validated['faturavel'] = false;
+        }
+
+        if ($validated['tipo_periodo'] === 'Período Inteiro') {
+            $validated['hora_fim'] = Carbon::createFromFormat('H:i', $validated['hora_inicio'])->addHours(9)->format('H:i');
+        }
+
+        return $validated;
     }
 }

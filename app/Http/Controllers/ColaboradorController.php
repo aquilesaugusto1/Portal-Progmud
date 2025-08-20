@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use Illuminate\Support\Carbon;
 
 class ColaboradorController extends Controller
 {
@@ -86,16 +87,21 @@ class ColaboradorController extends Controller
     public function toggleStatus(User $colaborador): RedirectResponse
     {
         $this->authorize('toggleStatus', $colaborador);
+
         $novoStatus = $colaborador->status === 'Ativo' ? 'Inativo' : 'Ativo';
-        $colaborador->update(['status' => $novoStatus]);
+        $data = ['status' => $novoStatus];
+
+        if ($novoStatus === 'Inativo') {
+            $data['data_fim_contrato'] = Carbon::today();
+        }
+
+        $colaborador->update($data);
+
         $mensagem = $novoStatus === 'Ativo' ? 'Colaborador habilitado.' : 'Colaborador desabilitado.';
 
         return redirect()->route('colaboradores.index')->with('success', $mensagem);
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function getValidationRules(Request $request, ?int $id = null): array
     {
         $rules = [
@@ -116,6 +122,8 @@ class ColaboradorController extends Controller
             'status' => ['required', 'string'],
             'cargo' => ['nullable', 'string', 'max:255'],
             'nivel' => ['nullable', 'string'],
+            'data_inicio_contrato' => ['nullable', 'date'],
+            'data_fim_contrato' => ['nullable', 'date', 'after_or_equal:data_inicio_contrato'],
             'tech_leads' => ['nullable', 'array'],
             'tech_leads.*' => ['exists:usuarios,id'],
             'dados_empresa_prestador.razao_social' => ['nullable', 'string', 'max:255'],
@@ -123,6 +131,8 @@ class ColaboradorController extends Controller
             'dados_bancarios.banco' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.agencia' => ['nullable', 'string', 'max:255'],
             'dados_bancarios.conta' => ['nullable', 'string', 'max:255'],
+            'dados_bancarios.tipo_chave_pix' => ['nullable', 'string', 'max:255'],
+            'dados_bancarios.chave_pix' => ['nullable', 'string', 'max:255'],
         ];
         if (! $id || $request->filled('password')) {
             $rules['password'] = ['required', 'confirmed', Rules\Password::defaults()];
@@ -131,9 +141,6 @@ class ColaboradorController extends Controller
         return $rules;
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function getData(Request $request, bool $isCreate = true): array
     {
         $data = $request->except(['_token', '_method', 'password_confirmation', 'tech_leads']);

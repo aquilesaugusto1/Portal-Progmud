@@ -57,13 +57,18 @@ class AprovacaoController extends Controller
                     $apontamento->agenda->save();
                 }
 
-                if ($apontamento->faturavel && $apontamento->contrato && $apontamento->contrato->baseline_horas_mes !== null) {
-                    $horasASubtrair = abs($apontamento->horas_gastas);
-                    $apontamento->contrato->decrement('baseline_horas_mes', $horasASubtrair);
+                if ($apontamento->agenda && $apontamento->agenda->faturavel && $apontamento->contrato && $apontamento->contrato->baseline_horas_mes !== null) {
+                    $horasASubtrair = $apontamento->agenda->tipo_periodo === 'Período Inteiro'
+                        ? 8
+                        : abs($apontamento->horas_gastas);
+                    
+                    if ($horasASubtrair > 0) {
+                        $apontamento->contrato->decrement('baseline_horas_mes', $horasASubtrair);
+                    }
                 }
             });
 
-            $message = $apontamento->faturavel
+            $message = ($apontamento->agenda && $apontamento->agenda->faturavel)
                 ? 'Apontamento aprovado e faturado com sucesso!'
                 : 'Apontamento aprovado com sucesso (horas não faturadas).';
 
@@ -85,7 +90,6 @@ class AprovacaoController extends Controller
         $apontamento->load(['consultor', 'contrato.empresaParceira', 'agenda']);
 
         $apontamento->status = 'Rejeitado';
-        $apontamento->faturavel = false;
         $apontamento->motivo_rejeicao = $validated['motivo_rejeicao'];
         $apontamento->aprovado_por_id = (int) Auth::id();
         $apontamento->data_aprovacao = now();

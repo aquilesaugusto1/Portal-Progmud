@@ -24,6 +24,24 @@ class ApontamentoController extends Controller
         return view('apontamentos.index');
     }
 
+    public function create(): View
+    {
+        $this->authorize('create', Apontamento::class);
+        $user = Auth::user();
+        if (! $user) {
+            throw new LogicException('User not authenticated.');
+        }
+
+        $agendas = Agenda::where('consultor_id', $user->id)
+            ->whereDoesntHave('apontamento')
+            ->where('status', '!=', 'Cancelada')
+            ->with('contrato.empresaParceira')
+            ->latest('data')
+            ->get();
+
+        return view('apontamentos.create', compact('agendas'));
+    }
+
     public function events(Request $request): JsonResponse
     {
         $this->authorize('viewAny', Apontamento::class);
@@ -33,11 +51,11 @@ class ApontamentoController extends Controller
             throw new LogicException('User not authenticated.');
         }
 
-        $start = Carbon::parse($request->string('start')->toString())->toDateTimeString();
-        $end = Carbon::parse($request->string('end')->toString())->toDateTimeString();
+        $start = Carbon::parse($request->string('start')->toString())->toDateString();
+        $end = Carbon::parse($request->string('end')->toString())->toDateString();
 
         $query = Agenda::with(['consultor', 'contrato.empresaParceira', 'apontamento'])
-            ->whereBetween('data_hora', [$start, $end]);
+            ->whereBetween('data', [$start, $end]);
 
         if ($user->isConsultor()) {
             $query->where('consultor_id', $user->id);
@@ -59,7 +77,6 @@ class ApontamentoController extends Controller
             'hora_fim' => 'required|date_format:H:i|after:hora_inicio',
             'descricao' => 'required|string|max:2000',
             'anexo' => ['nullable', 'file', 'mimes:pdf,jpg,png,jpeg', 'max:2048'],
-            'faturavel' => 'nullable|boolean',
         ]);
 
         /** @var Agenda $agenda */
@@ -77,13 +94,12 @@ class ApontamentoController extends Controller
 
         $apontamento->consultor_id = $agenda->consultor_id;
         $apontamento->contrato_id = $agenda->contrato_id;
-        $apontamento->data_apontamento = $agenda->data_hora;
+        $apontamento->data_apontamento = $agenda->data;
         $apontamento->hora_inicio = $validated['hora_inicio'];
         $apontamento->hora_fim = $validated['hora_fim'];
         $apontamento->horas_gastas = round($fim->diffInMinutes($inicio) / 60, 2);
         $apontamento->descricao = $validated['descricao'];
         $apontamento->status = 'Pendente';
-        $apontamento->faturavel = $request->boolean('faturavel');
         $apontamento->motivo_rejeicao = null;
 
         if ($request->hasFile('anexo')) {
@@ -101,10 +117,17 @@ class ApontamentoController extends Controller
         return response()->json(['message' => 'Apontamento salvo e enviado para aprovação!']);
     }
 
-    /**
-     * @param  Collection<int, Agenda>  $agendas
-     * @return SupportCollection<int, array{id: int, title: string|null, start: Carbon, color: string, extendedProps: array{consultor: string|null, assunto: string, contrato: string, status: string, hora_inicio: string, hora_fim: string, descricao: string, faturavel: bool, anexo_url: string|null, motivo_rejeicao: string|null}}>
-     */
+    public function getAgendaDetails(Agenda $agenda): JsonResponse
+    {
+        $this->authorize('view', $agenda);
+
+        return response()->json([
+            'data' => $agenda->data->format('Y-m-d'),
+            'hora_inicio' => $agenda->hora_inicio,
+            'hora_fim' => $agenda->hora_fim,
+        ]);
+    }
+
     private function formatEvents(Collection $agendas): SupportCollection
     {
         return $agendas->map(function (Agenda $agenda) {
@@ -119,14 +142,14 @@ class ApontamentoController extends Controller
                 $status = $apontamento->status;
                 switch ($status) {
                     case 'Pendente':
-                        $color = '#F59E0B';
-                        break; // Amarelo
+                        $color = '#F59E0B'; // Amarelo
+                        break;
                     case 'Aprovado':
-                        $color = '#10B981';
-                        break; // Verde
+                        $color = '#10B981'; // Verde
+                        break;
                     case 'Rejeitado':
-                        $color = '#EF4444';
-                        break; // Vermelho
+                        $color = '#EF4444'; // Vermelho
+                        break;
                 }
             } else {
                 $status = 'Agendada';
@@ -136,17 +159,19 @@ class ApontamentoController extends Controller
             return [
                 'id' => $agenda->id,
                 'title' => $agenda->contrato?->empresaParceira?->nome_empresa,
-                'start' => $agenda->data_hora,
+                'start' => $agenda->data->format('Y-m-d').'T'.$agenda->hora_inicio,
+                'end' => $agenda->data->format('Y-m-d').'T'.$agenda->hora_fim,
                 'color' => $color,
                 'extendedProps' => [
                     'consultor' => $agenda->consultor?->nome,
                     'assunto' => $agenda->assunto,
                     'contrato' => ($agenda->contrato?->empresaParceira?->nome_empresa ?? 'Cliente N/A').' - '.($agenda->contrato?->numero_contrato ?? 'Contrato N/A'),
                     'status' => $status,
-                    'hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
-                    'hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
+                    'agenda_hora_inicio' => $agenda->hora_inicio,
+                    'agenda_hora_fim' => $agenda->hora_fim,
+                    'apontamento_hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
+                    'apontamento_hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
                     'descricao' => $apontamento->descricao ?? '',
-                    'faturavel' => $apontamento->faturavel ?? true,
                     'anexo_url' => $apontamento && $apontamento->caminho_anexo ? Storage::url($apontamento->caminho_anexo) : null,
                     'motivo_rejeicao' => $apontamento->motivo_rejeicao ?? null,
                 ],
