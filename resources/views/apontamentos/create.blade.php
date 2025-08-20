@@ -40,10 +40,12 @@
                             </div>
                             <div>
                                 <x-input-label for="hora_inicio" :value="__('Hora de Início')" />
+                                {{-- CORREÇÃO: Removido readonly e bg-gray-100 para permitir edição --}}
                                 <input type="time" name="hora_inicio" id="hora_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_inicio') }}" required>
                             </div>
                             <div>
                                 <x-input-label for="hora_fim" :value="__('Hora de Fim')" />
+                                {{-- CORREÇÃO: Removido readonly e bg-gray-100 para permitir edição --}}
                                 <input type="time" name="hora_fim" id="hora_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_fim') }}" required>
                             </div>
                             <div class="md:col-span-2">
