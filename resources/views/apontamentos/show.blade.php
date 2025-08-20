@@ -9,7 +9,8 @@
                     <div class="space-y-6">
                         <div>
                             <h3 class="text-md font-bold text-gray-600 uppercase">Cliente</h3>
-                            <p>{{ $apontamento->agenda->empresaParceira->nome_empresa }}</p>
+                            {{-- CORREÇÃO: Acessando o cliente através do contrato --}}
+                            <p>{{ $apontamento->contrato->empresaParceira->nome_empresa ?? 'Cliente não encontrado' }}</p>
                         </div>
                         <div>
                             <h3 class="text-md font-bold text-gray-600 uppercase">Consultor</h3>
@@ -25,7 +26,12 @@
                         </div>
                         <div>
                             <h3 class="text-md font-bold text-gray-600 uppercase">Status da Fatura</h3>
-                            <p>{{ $apontamento->faturado ? 'Faturado' : 'Não Faturado' }}</p>
+                            {{-- CORREÇÃO: Buscando o status 'faturavel' da agenda relacionada --}}
+                            @if($apontamento->agenda)
+                                <p>{{ $apontamento->agenda->faturavel ? 'Faturável' : 'Não Faturável' }}</p>
+                            @else
+                                <p>Agenda não encontrada</p>
+                            @endif
                         </div>
                         <div class="col-span-2">
                              <h3 class="text-md font-bold text-gray-600 uppercase">Descrição das Atividades</h3>

@@ -34,7 +34,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::get('/apontamentos/create', [ApontamentoController::class, 'create'])->name('apontamentos.create');
     Route::post('/apontamentos', [ApontamentoController::class, 'store'])->name('apontamentos.store');
     Route::delete('/apontamentos/{apontamento}', [ApontamentoController::class, 'destroy'])->name('apontamentos.destroy');
-    Route::get('/api/agendas', [ApontamentoController::class, 'events'])->name('api.agendas');
+    
+    // CORREÇÃO: Renomeando a rota da API para o nome correto que o calendário espera.
+    Route::get('/api/apontamentos/events', [ApontamentoController::class, 'events'])->name('api.apontamentos.events');
     Route::get('/api/agendas/{agenda}/details', [ApontamentoController::class, 'getAgendaDetails'])->name('api.agendas.details');
 
     Route::get('/relatorios', [RelatorioController::class, 'index'])->name('relatorios.index');

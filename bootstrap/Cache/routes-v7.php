@@ -71,7 +71,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::DOzZncx97xllfcXB',
+            '_route' => 'generated::3XvyA2KDdAGie7JV',
           ),
           1 => NULL,
           2 => 
@@ -91,7 +91,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::h1fjg4czWyMdB2xO',
+            '_route' => 'generated::KMr5P5OX2lY5F3jQ',
           ),
           1 => NULL,
           2 => 
@@ -249,13 +249,33 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      '/api/agendas' => 
+      '/apontamentos/create' => 
       array (
         0 => 
         array (
           0 => 
           array (
-            '_route' => 'api.agendas',
+            '_route' => 'apontamentos.create',
+          ),
+          1 => NULL,
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      '/api/apontamentos/events' => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'api.apontamentos.events',
           ),
           1 => NULL,
           2 => 
@@ -687,7 +707,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::U8MdNvPSEUiL4I55',
+            '_route' => 'generated::ubJtdzCo1CWiAfhN',
           ),
           1 => NULL,
           2 => 
@@ -817,7 +837,7 @@ app('router')->setCompiledRoutes(
         array (
           0 => 
           array (
-            '_route' => 'generated::Tt2wfy2zQvFxwy86',
+            '_route' => 'generated::dS9ti18GS8lT3hGX',
           ),
           1 => NULL,
           2 => 
@@ -871,7 +891,7 @@ app('router')->setCompiledRoutes(
     ),
     2 => 
     array (
-      0 => '{^(?|/a(?|p(?|ontamentos/([^/]++)(*:35)|i/contratos/([^/]++)/consultores(*:74)|rovacoes/([^/]++)/(?|aprovar(*:109)|rejeitar(*:125)))|gendas/([^/]++)(?|(*:153)|/edit(*:166)|(*:174)))|/re(?|latorios/([^/]++)(*:207)|set\\-password/([^/]++)(*:237))|/s(?|ugestoes/([^/]++)(*:268)|torage/(.*)(*:287))|/empresas/([^/]++)(?|(*:317)|/(?|edit(*:333)|toggle\\-status(*:355))|(*:364))|/co(?|ntratos/([^/]++)(?|(*:398)|/(?|edit(*:414)|toggle\\-status(*:436))|(*:445))|laboradores/([^/]++)(?|(*:477)|/(?|edit(*:493)|toggle\\-status(*:515))|(*:524)))|/verify\\-email/([^/]++)/([^/]++)(*:566))/?$}sDu',
+      0 => '{^(?|/a(?|p(?|ontamentos/([^/]++)(*:35)|i/(?|agendas/([^/]++)/details(*:71)|contratos/([^/]++)/consultores(*:108))|rovacoes/([^/]++)/(?|aprovar(*:145)|rejeitar(*:161)))|gendas/([^/]++)(?|(*:189)|/edit(*:202)|(*:210)))|/re(?|latorios/([^/]++)(*:243)|set\\-password/([^/]++)(*:273))|/s(?|ugestoes/([^/]++)(*:304)|torage/(.*)(*:323))|/empresas/([^/]++)(?|(*:353)|/(?|edit(*:369)|toggle\\-status(*:391))|(*:400))|/co(?|ntratos/([^/]++)(?|(*:434)|/(?|edit(*:450)|toggle\\-status(*:472))|(*:481))|laboradores/([^/]++)(?|(*:513)|/(?|edit(*:529)|toggle\\-status(*:551))|(*:560)))|/verify\\-email/([^/]++)/([^/]++)(*:602))/?$}sDu',
     ),
     3 => 
     array (
@@ -897,7 +917,30 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      74 => 
+      71 => 
+      array (
+        0 => 
+        array (
+          0 => 
+          array (
+            '_route' => 'api.agendas.details',
+          ),
+          1 => 
+          array (
+            0 => 'agenda',
+          ),
+          2 => 
+          array (
+            'GET' => 0,
+            'HEAD' => 1,
+          ),
+          3 => NULL,
+          4 => false,
+          5 => false,
+          6 => NULL,
+        ),
+      ),
+      108 => 
       array (
         0 => 
         array (
@@ -920,7 +963,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      109 => 
+      145 => 
       array (
         0 => 
         array (
@@ -942,7 +985,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      125 => 
+      161 => 
       array (
         0 => 
         array (
@@ -964,7 +1007,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      153 => 
+      189 => 
       array (
         0 => 
         array (
@@ -987,7 +1030,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      166 => 
+      202 => 
       array (
         0 => 
         array (
@@ -1010,7 +1053,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      174 => 
+      210 => 
       array (
         0 => 
         array (
@@ -1052,7 +1095,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      207 => 
+      243 => 
       array (
         0 => 
         array (
@@ -1075,7 +1118,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      237 => 
+      273 => 
       array (
         0 => 
         array (
@@ -1098,7 +1141,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      268 => 
+      304 => 
       array (
         0 => 
         array (
@@ -1121,7 +1164,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      287 => 
+      323 => 
       array (
         0 => 
         array (
@@ -1144,7 +1187,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      317 => 
+      353 => 
       array (
         0 => 
         array (
@@ -1167,7 +1210,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      333 => 
+      369 => 
       array (
         0 => 
         array (
@@ -1190,7 +1233,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      355 => 
+      391 => 
       array (
         0 => 
         array (
@@ -1212,7 +1255,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      364 => 
+      400 => 
       array (
         0 => 
         array (
@@ -1235,7 +1278,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      398 => 
+      434 => 
       array (
         0 => 
         array (
@@ -1258,7 +1301,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      414 => 
+      450 => 
       array (
         0 => 
         array (
@@ -1281,7 +1324,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      436 => 
+      472 => 
       array (
         0 => 
         array (
@@ -1303,7 +1346,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      445 => 
+      481 => 
       array (
         0 => 
         array (
@@ -1326,7 +1369,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      477 => 
+      513 => 
       array (
         0 => 
         array (
@@ -1349,7 +1392,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      493 => 
+      529 => 
       array (
         0 => 
         array (
@@ -1372,7 +1415,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      515 => 
+      551 => 
       array (
         0 => 
         array (
@@ -1394,7 +1437,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      524 => 
+      560 => 
       array (
         0 => 
         array (
@@ -1417,7 +1460,7 @@ app('router')->setCompiledRoutes(
           6 => NULL,
         ),
       ),
-      566 => 
+      602 => 
       array (
         0 => 
         array (
@@ -1565,7 +1608,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::DOzZncx97xllfcXB' => 
+    'generated::3XvyA2KDdAGie7JV' => 
     array (
       'methods' => 
       array (
@@ -1593,8 +1636,8 @@ app('router')->setCompiledRoutes(
                     return response(\\Illuminate\\Support\\Facades\\View::file(\'C:\\\\Users\\\\aquil\\\\Agen-main\\\\vendor\\\\laravel\\\\framework\\\\src\\\\Illuminate\\\\Foundation\\\\Configuration\'.\'/../resources/health-up.blade.php\', [
                         \'exception\' => $exception,
                     ]), status: $exception ? 500 : 200);
-                }";s:5:"scope";s:54:"Illuminate\\Foundation\\Configuration\\ApplicationBuilder";s:4:"this";N;s:4:"self";s:32:"00000000000006560000000000000000";}}',
-        'as' => 'generated::DOzZncx97xllfcXB',
+                }";s:5:"scope";s:54:"Illuminate\\Foundation\\Configuration\\ApplicationBuilder";s:4:"this";N;s:4:"self";s:32:"00000000000003630000000000000000";}}',
+        'as' => 'generated::3XvyA2KDdAGie7JV',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1610,7 +1653,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::h1fjg4czWyMdB2xO' => 
+    'generated::KMr5P5OX2lY5F3jQ' => 
     array (
       'methods' => 
       array (
@@ -1626,13 +1669,13 @@ app('router')->setCompiledRoutes(
         ),
         'uses' => 'O:55:"Laravel\\SerializableClosure\\UnsignedSerializableClosure":1:{s:12:"serializable";O:46:"Laravel\\SerializableClosure\\Serializers\\Native":5:{s:3:"use";a:0:{}s:8:"function";s:44:"function () {
     return \\view(\'welcome\');
-}";s:5:"scope";s:37:"Illuminate\\Routing\\RouteFileRegistrar";s:4:"this";N;s:4:"self";s:32:"00000000000006580000000000000000";}}',
+}";s:5:"scope";s:37:"Illuminate\\Routing\\RouteFileRegistrar";s:4:"this";N;s:4:"self";s:32:"00000000000003650000000000000000";}}',
         'namespace' => NULL,
         'prefix' => '',
         'where' => 
         array (
         ),
-        'as' => 'generated::h1fjg4czWyMdB2xO',
+        'as' => 'generated::KMr5P5OX2lY5F3jQ',
       ),
       'fallback' => false,
       'defaults' => 
@@ -1921,6 +1964,46 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
+    'apontamentos.create' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'apontamentos/create',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'verified',
+          3 => 'App\\Http\\Middleware\\VerificarTermoAceite',
+        ),
+        'uses' => 'App\\Http\\Controllers\\ApontamentoController@create',
+        'controller' => 'App\\Http\\Controllers\\ApontamentoController@create',
+        'namespace' => NULL,
+        'prefix' => '',
+        'where' => 
+        array (
+        ),
+        'as' => 'apontamentos.create',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
     'apontamentos.store' => 
     array (
       'methods' => 
@@ -1999,14 +2082,14 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'api.agendas' => 
+    'api.apontamentos.events' => 
     array (
       'methods' => 
       array (
         0 => 'GET',
         1 => 'HEAD',
       ),
-      'uri' => 'api/agendas',
+      'uri' => 'api/apontamentos/events',
       'action' => 
       array (
         'middleware' => 
@@ -2023,7 +2106,47 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'api.agendas',
+        'as' => 'api.apontamentos.events',
+      ),
+      'fallback' => false,
+      'defaults' => 
+      array (
+      ),
+      'wheres' => 
+      array (
+      ),
+      'bindingFields' => 
+      array (
+      ),
+      'lockSeconds' => NULL,
+      'waitSeconds' => NULL,
+      'withTrashed' => false,
+    ),
+    'api.agendas.details' => 
+    array (
+      'methods' => 
+      array (
+        0 => 'GET',
+        1 => 'HEAD',
+      ),
+      'uri' => 'api/agendas/{agenda}/details',
+      'action' => 
+      array (
+        'middleware' => 
+        array (
+          0 => 'web',
+          1 => 'auth',
+          2 => 'verified',
+          3 => 'App\\Http\\Middleware\\VerificarTermoAceite',
+        ),
+        'uses' => 'App\\Http\\Controllers\\ApontamentoController@getAgendaDetails',
+        'controller' => 'App\\Http\\Controllers\\ApontamentoController@getAgendaDetails',
+        'namespace' => NULL,
+        'prefix' => '',
+        'where' => 
+        array (
+        ),
+        'as' => 'api.agendas.details',
       ),
       'fallback' => false,
       'defaults' => 
@@ -3752,7 +3875,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::U8MdNvPSEUiL4I55' => 
+    'generated::ubJtdzCo1CWiAfhN' => 
     array (
       'methods' => 
       array (
@@ -3773,7 +3896,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::U8MdNvPSEUiL4I55',
+        'as' => 'generated::ubJtdzCo1CWiAfhN',
       ),
       'fallback' => false,
       'defaults' => 
@@ -4093,7 +4216,7 @@ app('router')->setCompiledRoutes(
       'waitSeconds' => NULL,
       'withTrashed' => false,
     ),
-    'generated::Tt2wfy2zQvFxwy86' => 
+    'generated::dS9ti18GS8lT3hGX' => 
     array (
       'methods' => 
       array (
@@ -4114,7 +4237,7 @@ app('router')->setCompiledRoutes(
         'where' => 
         array (
         ),
-        'as' => 'generated::Tt2wfy2zQvFxwy86',
+        'as' => 'generated::dS9ti18GS8lT3hGX',
       ),
       'fallback' => false,
       'defaults' => 
@@ -4220,7 +4343,7 @@ app('router')->setCompiledRoutes(
                         $config,
                         $isProduction
                     ))($request, $path);
-                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"000000000000065a0000000000000000";}}',
+                }";s:5:"scope";s:47:"Illuminate\\Filesystem\\FilesystemServiceProvider";s:4:"this";N;s:4:"self";s:32:"00000000000003670000000000000000";}}',
         'as' => 'storage.local',
       ),
       'fallback' => false,

@@ -1,59 +1,8 @@
 <x-app-layout>
     @push('styles')
     <style>
-        #calendar {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-        }
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 28px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider {
-            background-color: #4f46e5;
-        }
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
-        .fc-event-dot {
-            background-color: #ef4444 !important;
-        }
-        .legend-dot {
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-        }
+        #calendar { max-width: 1100px; margin: 0 auto; }
+        .legend-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
     </style>
     @endpush
 
@@ -62,18 +11,10 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
 
                 <div class="flex flex-wrap justify-center gap-x-6 gap-y-2 mb-4 text-sm text-slate-600">
-                    <div class="flex items-center">
-                        <span class="legend-dot" style="background-color: #3b82f6;"></span> Agendada (Pendente)
-                    </div>
-                    <div class="flex items-center">
-                        <span class="legend-dot" style="background-color: #22c55e;"></span> Apontamento Aprovado
-                    </div>
-                    <div class="flex items-center">
-                        <span class="legend-dot" style="background-color: #f97316;"></span> Apontamento Pendente
-                    </div>
-                    <div class="flex items-center">
-                        <span class="legend-dot" style="background-color: #ef4444;"></span> Apontamento Rejeitado
-                    </div>
+                    <div class="flex items-center"><span class="legend-dot" style="background-color: #3b82f6;"></span> Agendada (Pendente)</div>
+                    <div class="flex items-center"><span class="legend-dot" style="background-color: #10B981;"></span> Apontamento Aprovado</div>
+                    <div class="flex items-center"><span class="legend-dot" style="background-color: #F59E0B;"></span> Apontamento Pendente</div>
+                    <div class="flex items-center"><span class="legend-dot" style="background-color: #ef4444;"></span> Apontamento Rejeitado</div>
                 </div>
 
                 <div id="calendar"></div>
@@ -81,6 +22,7 @@
         </div>
     </div>
 
+    {{-- Modal para Lançar/Editar Apontamento --}}
     <div id="apontamentoModal" class="fixed z-50 inset-0 overflow-y-auto hidden">
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
@@ -132,18 +74,11 @@
                             </div>
                             
                             <div>
-                                <label for="anexo" class="block text-sm font-medium text-gray-700">Anexo (PDF Obrigatório) *</label>
-                                <input type="file" name="anexo" id="anexo" accept=".pdf" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required>
+                                <label for="anexo" class="block text-sm font-medium text-gray-700">Anexo (Opcional)</label>
+                                <input type="file" name="anexo" id="anexo" accept=".pdf,.jpg,.jpeg,.png" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
                                 <div id="anexo_existente" class="mt-2 text-sm"></div>
                             </div>
 
-                            <div class="flex items-center justify-between">
-                                <label for="faturavel" class="block text-sm font-medium text-gray-700">Faturável?</label>
-                                <label class="toggle-switch">
-                                    <input type="checkbox" id="faturavel" name="faturavel" value="1" checked>
-                                    <span class="slider"></span>
-                                </label>
-                            </div>
                         </div>
                     </div>
                     <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
@@ -197,7 +132,8 @@
                 initialView: 'dayGridMonth',
                 locale: 'pt-br',
                 buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' },
-                events: '{{ route("api.agendas") }}',
+                // CORREÇÃO: Usando a rota correta que definimos
+                events: '{{ route("api.apontamentos.events") }}',
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
                     
@@ -206,10 +142,12 @@
                     document.getElementById('modal_consultor').textContent = props.consultor;
                     document.getElementById('modal_assunto').textContent = props.assunto;
                     document.getElementById('modal_contrato').textContent = props.contrato;
-                    document.getElementById('hora_inicio').value = props.hora_inicio;
-                    document.getElementById('hora_fim').value = props.hora_fim;
+                    
+                    // CORREÇÃO: Preencher com as horas do apontamento se existirem, senão com as da agenda
+                    document.getElementById('hora_inicio').value = props.apontamento_hora_inicio || props.agenda_hora_inicio;
+                    document.getElementById('hora_fim').value = props.apontamento_hora_fim || props.agenda_hora_fim;
+
                     document.getElementById('descricao').value = props.descricao;
-                    document.getElementById('faturavel').checked = props.faturavel !== false;
                     document.getElementById('anexo_existente').innerHTML = props.anexo_url ? `<a href="${props.anexo_url}" target="_blank" class="text-indigo-600 hover:underline">Ver anexo atual</a>` : '';
                     
                     const anexoInput = document.getElementById('anexo');
@@ -265,7 +203,7 @@
                     return response.json();
                 })
                 .then(result => {
-                    alert('Sucesso: ' + result.message);
+                    alert(result.message);
                     hideModal();
                     calendar.refetchEvents();
                 })
