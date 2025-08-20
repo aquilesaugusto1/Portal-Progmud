@@ -40,8 +40,10 @@ class RelatorioService
                 ->whereBetween('data_apontamento', [$inicioPeriodo, $fimPeriodo])
                 ->sum('horas_gastas');
 
+            // --- CORREÇÃO AQUI ---
+            // Trocado 'data_hora' pela nova coluna 'data'
             $numeroDeAgendas = Agenda::where('consultor_id', $consultor->id)
-                ->whereBetween('data_hora', [$inicioPeriodo, $fimPeriodo])
+                ->whereBetween('data', [$inicioPeriodo, $fimPeriodo])
                 ->where('status', '!=', 'Cancelada')
                 ->count();
 
