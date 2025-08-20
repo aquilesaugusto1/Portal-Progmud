@@ -5,7 +5,8 @@
                 <div class="flex justify-between items-start mb-6">
                     <div>
                         <h1 class="text-2xl md:text-3xl text-slate-800 font-bold">{{ $agenda->assunto }}</h1>
-                        <span class="text-sm text-slate-500">Agendado para {{ $agenda->data_hora->format('d/m/Y \à\s H:i') }}</span>
+                        {{-- CORREÇÃO: Usando as novas colunas 'data' e 'hora_inicio' --}}
+                        <span class="text-sm text-slate-500">Agendado para {{ $agenda->data->format('d/m/Y') }} às {{ \Carbon\Carbon::parse($agenda->hora_inicio)->format('H:i') }}</span>
                     </div>
                     <div class="px-3 py-1 text-xs font-semibold rounded-full {{ 
                         match($agenda->status) {
