@@ -159,16 +159,17 @@ class ApontamentoController extends Controller
             return [
                 'id' => $agenda->id,
                 'title' => $agenda->contrato?->empresaParceira?->nome_empresa,
-                'start' => $agenda->data->format('Y-m-d').'T'.$agenda->hora_inicio,
-                'end' => $agenda->data->format('Y-m-d').'T'.$agenda->hora_fim,
+                'start' => $agenda->data->format('Y-m-d').'T'.Carbon::parse($agenda->hora_inicio)->format('H:i:s'),
+                'end' => $agenda->data->format('Y-m-d').'T'.Carbon::parse($agenda->hora_fim)->format('H:i:s'),
                 'color' => $color,
                 'extendedProps' => [
                     'consultor' => $agenda->consultor?->nome,
                     'assunto' => $agenda->assunto,
                     'contrato' => ($agenda->contrato?->empresaParceira?->nome_empresa ?? 'Cliente N/A').' - '.($agenda->contrato?->numero_contrato ?? 'Contrato N/A'),
                     'status' => $status,
-                    'agenda_hora_inicio' => $agenda->hora_inicio,
-                    'agenda_hora_fim' => $agenda->hora_fim,
+                    // CORREÇÃO: Formatando as horas para HH:MM antes de enviar para a view
+                    'agenda_hora_inicio' => $agenda->hora_inicio ? Carbon::parse($agenda->hora_inicio)->format('H:i') : null,
+                    'agenda_hora_fim' => $agenda->hora_fim ? Carbon::parse($agenda->hora_fim)->format('H:i') : null,
                     'apontamento_hora_inicio' => $apontamento ? Carbon::parse($apontamento->hora_inicio)->format('H:i') : '',
                     'apontamento_hora_fim' => $apontamento ? Carbon::parse($apontamento->hora_fim)->format('H:i') : '',
                     'descricao' => $apontamento->descricao ?? '',
