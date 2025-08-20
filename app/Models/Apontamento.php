@@ -32,7 +32,7 @@ class Apontamento extends Model
         'descricao',
         'caminho_anexo',
         'status',
-        'faturavel',
+        // 'faturavel' REMOVIDO INTENCIONALMENTE
         'aprovado_por_id',
         'data_aprovacao',
         'motivo_rejeicao',
@@ -45,7 +45,7 @@ class Apontamento extends Model
      */
     protected $casts = [
         'data_apontamento' => 'date',
-        'faturavel' => 'boolean',
+        // 'faturavel' => 'boolean', REMOVIDO INTENCIONALMENTE
         'data_aprovacao' => 'datetime',
     ];
 
