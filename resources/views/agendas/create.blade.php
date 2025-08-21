@@ -66,7 +66,7 @@
                             <div>
                                 <x-input-label for="tipo_periodo" :value="__('Tipo de Período')" />
                                 <select name="tipo_periodo" id="tipo_periodo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="Período Inteiro" @selected(old('tipo_periodo') == 'Período Inteiro')>Período Inteiro (9h)</option>
+                                    <option value="Período Inteiro" @selected(old('tipo_periodo') == 'Período Inteiro')>Período Integral</option>
                                     <option value="Meio Período" @selected(old('tipo_periodo') == 'Meio Período')>Meio Período</option>
                                     <option value="Personalizado" @selected(old('tipo_periodo') == 'Personalizado')>Personalizado</option>
                                 </select>
@@ -147,32 +147,38 @@
             fetchConsultores(contratoSelect.value, oldConsultorId);
         }
 
-        // Lógica para o período
+        // --- LÓGICA DE HORÁRIO CORRIGIDA ---
+        const dataInput = document.getElementById('data');
         const tipoPeriodoSelect = document.getElementById('tipo_periodo');
         const horaInicioInput = document.getElementById('hora_inicio');
         const horaFimInput = document.getElementById('hora_fim');
 
-        function atualizarHoraFim() {
-            if (tipoPeriodoSelect.value === 'Período Inteiro' && horaInicioInput.value) {
+        // Ação ao mudar a DATA
+        dataInput.addEventListener('change', function() {
+            if (this.value) { // Se uma data for selecionada
+                tipoPeriodoSelect.value = 'Período Inteiro';
+                horaInicioInput.value = '09:00';
+                horaFimInput.value = '18:00';
                 horaFimInput.disabled = true;
-                const [horas, minutos] = horaInicioInput.value.split(':').map(Number);
-                const dataInicio = new Date();
-                dataInicio.setHours(horas, minutos, 0, 0);
-                dataInicio.setHours(dataInicio.getHours() + 9);
-                
-                const horasFim = String(dataInicio.getHours()).padStart(2, '0');
-                const minutosFim = String(dataInicio.getMinutes()).padStart(2, '0');
-                
-                horaFimInput.value = `${horasFim}:${minutosFim}`;
+            }
+        });
+
+        // Ação ao mudar o TIPO DE PERÍODO
+        tipoPeriodoSelect.addEventListener('change', function() {
+            if (this.value === 'Período Inteiro') {
+                horaFimInput.disabled = true;
+                // Garante o horário padrão ao selecionar "Período Inteiro"
+                horaInicioInput.value = '09:00';
+                horaFimInput.value = '18:00';
             } else {
                 horaFimInput.disabled = false;
             }
+        });
+
+        // Verifica o estado inicial ao carregar a página
+        if (tipoPeriodoSelect.value === 'Período Inteiro') {
+            horaFimInput.disabled = true;
         }
-
-        tipoPeriodoSelect.addEventListener('change', atualizarHoraFim);
-        horaInicioInput.addEventListener('change', atualizarHoraFim);
-
-        atualizarHoraFim();
     });
     </script>
     @endpush

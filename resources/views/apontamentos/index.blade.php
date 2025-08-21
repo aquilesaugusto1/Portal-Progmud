@@ -56,11 +56,13 @@
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
                                 <div>
                                     <label for="hora_inicio" class="block text-sm font-medium text-gray-700">Início</label>
-                                    <input type="time" name="hora_inicio" id="hora_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                    {{-- CAMPO ALTERADO: Adicionado 'readonly' e classe de estilo --}}
+                                    <input type="time" name="hora_inicio" id="hora_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
                                 </div>
                                 <div>
                                     <label for="hora_fim" class="block text-sm font-medium text-gray-700">Fim</label>
-                                    <input type="time" name="hora_fim" id="hora_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
+                                    {{-- CAMPO ALTERADO: Adicionado 'readonly' e classe de estilo --}}
+                                    <input type="time" name="hora_fim" id="hora_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100" readonly>
                                 </div>
                                 <div class="bg-gray-100 p-2 rounded-md text-center">
                                     <label class="block text-sm font-medium text-gray-700">Duração</label>
@@ -123,16 +125,16 @@
                     }
                 }
             }
-
-            horaInicioInput.addEventListener('change', calcularDuracao);
-            horaFimInput.addEventListener('change', calcularDuracao);
+            
+            // JÁ QUE OS CAMPOS NÃO MUDAM, NÃO PRECISAMOS MAIS DESTES EVENTOS
+            // horaInicioInput.addEventListener('change', calcularDuracao);
+            // horaFimInput.addEventListener('change', calcularDuracao);
 
             const calendar = new FullCalendar.Calendar(calendarEl, {
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
                 initialView: 'dayGridMonth',
                 locale: 'pt-br',
                 buttonText: { today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' },
-                // CORREÇÃO: Usando a rota correta que definimos
                 events: '{{ route("api.apontamentos.events") }}',
                 eventClick: function(info) {
                     const props = info.event.extendedProps;
@@ -143,7 +145,6 @@
                     document.getElementById('modal_assunto').textContent = props.assunto;
                     document.getElementById('modal_contrato').textContent = props.contrato;
                     
-                    // CORREÇÃO: Preencher com as horas do apontamento se existirem, senão com as da agenda
                     document.getElementById('hora_inicio').value = props.apontamento_hora_inicio || props.agenda_hora_inicio;
                     document.getElementById('hora_fim').value = props.apontamento_hora_fim || props.agenda_hora_fim;
 

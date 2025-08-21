@@ -74,7 +74,7 @@
                             <div>
                                 <x-input-label for="tipo_periodo" :value="__('Tipo de Período')" />
                                 <select name="tipo_periodo" id="tipo_periodo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="Período Inteiro" @selected(old('tipo_periodo', $agenda->tipo_periodo ?? '') == 'Período Inteiro')>Período Inteiro (9h)</option>
+                                    <option value="Período Inteiro" @selected(old('tipo_periodo', $agenda->tipo_periodo ?? '') == 'Período Inteiro')>Período Integral</option>
                                     <option value="Meio Período" @selected(old('tipo_periodo', $agenda->tipo_periodo ?? '') == 'Meio Período')>Meio Período</option>
                                     <option value="Personalizado" @selected(old('tipo_periodo', $agenda->tipo_periodo ?? '') == 'Personalizado')>Personalizado</option>
                                 </select>
