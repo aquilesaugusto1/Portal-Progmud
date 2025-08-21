@@ -60,13 +60,13 @@
                             
                             <div>
                                 <x-input-label for="data" :value="__('Data')" />
-                                <input type="date" name="data" id="data" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('data') }}" required>
+                                <input type="date" name="data" id="data" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('data', now()->format('Y-m-d')) }}" required>
                             </div>
 
                             <div>
                                 <x-input-label for="tipo_periodo" :value="__('Tipo de Período')" />
                                 <select name="tipo_periodo" id="tipo_periodo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" required>
-                                    <option value="Período Inteiro" @selected(old('tipo_periodo') == 'Período Inteiro')>Período Integral</option>
+                                    <option value="Período Inteiro" @selected(old('tipo_periodo', 'Período Inteiro') == 'Período Inteiro')>Período Integral</option>
                                     <option value="Meio Período" @selected(old('tipo_periodo') == 'Meio Período')>Meio Período</option>
                                     <option value="Personalizado" @selected(old('tipo_periodo') == 'Personalizado')>Personalizado</option>
                                 </select>
@@ -74,12 +74,12 @@
 
                             <div>
                                 <x-input-label for="hora_inicio" :value="__('Hora de Início')" />
-                                <input type="time" name="hora_inicio" id="hora_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_inicio') }}" required>
+                                <input type="time" name="hora_inicio" id="hora_inicio" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_inicio', '09:00') }}" required>
                             </div>
 
                             <div>
                                 <x-input-label for="hora_fim" :value="__('Hora de Fim')" />
-                                <input type="time" name="hora_fim" id="hora_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_fim') }}">
+                                <input type="time" name="hora_fim" id="hora_fim" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="{{ old('hora_fim', '18:00') }}">
                             </div>
 
                             <div class="md:col-span-2">
@@ -147,30 +147,21 @@
             fetchConsultores(contratoSelect.value, oldConsultorId);
         }
 
-        // --- LÓGICA DE HORÁRIO CORRIGIDA ---
-        const dataInput = document.getElementById('data');
+        // --- LÓGICA DE HORÁRIO FINAL ---
         const tipoPeriodoSelect = document.getElementById('tipo_periodo');
         const horaInicioInput = document.getElementById('hora_inicio');
         const horaFimInput = document.getElementById('hora_fim');
 
-        // Ação ao mudar a DATA
-        dataInput.addEventListener('change', function() {
-            if (this.value) { // Se uma data for selecionada
-                tipoPeriodoSelect.value = 'Período Inteiro';
-                horaInicioInput.value = '09:00';
-                horaFimInput.value = '18:00';
-                horaFimInput.disabled = true;
-            }
-        });
-
         // Ação ao mudar o TIPO DE PERÍODO
         tipoPeriodoSelect.addEventListener('change', function() {
             if (this.value === 'Período Inteiro') {
-                horaFimInput.disabled = true;
-                // Garante o horário padrão ao selecionar "Período Inteiro"
                 horaInicioInput.value = '09:00';
                 horaFimInput.value = '18:00';
+                horaFimInput.disabled = true;
             } else {
+                // Limpa os campos para Meio Período e Personalizado
+                horaInicioInput.value = '';
+                horaFimInput.value = '';
                 horaFimInput.disabled = false;
             }
         });
@@ -178,6 +169,8 @@
         // Verifica o estado inicial ao carregar a página
         if (tipoPeriodoSelect.value === 'Período Inteiro') {
             horaFimInput.disabled = true;
+        } else {
+            horaFimInput.disabled = false;
         }
     });
     </script>
