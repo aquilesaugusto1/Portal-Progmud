@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Contrato;
+use App\Models\CpTotvs;
 use App\Models\EmpresaParceira;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -48,8 +49,9 @@ class ContratoController extends Controller
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        $cpTotvs = CpTotvs::where('status', 'Ativo')->orderBy('nome')->get();
 
-        return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
+        return view('contratos.create', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores', 'cpTotvs'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -73,6 +75,7 @@ class ContratoController extends Controller
 
             $contrato = Contrato::create($preparedData);
             $this->syncUsuarios($contrato, $request);
+            $this->syncCpTotvs($contrato, $request);
             $techLeadsNovos = $validatedData['tech_leads'] ?? [];
             $this->atualizarHistoricoTechLeads($contrato, [], $techLeadsNovos);
         });
@@ -83,7 +86,7 @@ class ContratoController extends Controller
     public function show(Contrato $contrato): View
     {
         $this->authorize('view', $contrato);
-        $contrato->load(['empresaParceira', 'usuarios', 'creator', 'updater']);
+        $contrato->load(['empresaParceira', 'usuarios', 'cpTotvs', 'creator', 'updater']);
 
         return view('contratos.show', compact('contrato'));
     }
@@ -91,13 +94,14 @@ class ContratoController extends Controller
     public function edit(Contrato $contrato): View
     {
         $this->authorize('update', $contrato);
-        $contrato->load(['usuarios']);
+        $contrato->load(['usuarios', 'cpTotvs']);
         $clientes = EmpresaParceira::where('status', 'Ativo')->orderBy('nome_empresa')->get();
         $coordenadores = User::whereIn('funcao', ['coordenador_operacoes', 'coordenador_tecnico'])->where('status', 'Ativo')->orderBy('nome')->get();
         $techLeads = User::where('funcao', 'techlead')->where('status', 'Ativo')->orderBy('nome')->get();
         $consultores = User::where('funcao', 'consultor')->where('status', 'Ativo')->orderBy('nome')->get();
+        $cpTotvs = CpTotvs::where('status', 'Ativo')->orderBy('nome')->get();
 
-        return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores'));
+        return view('contratos.edit', compact('contrato', 'clientes', 'coordenadores', 'techLeads', 'consultores', 'cpTotvs'));
     }
 
     public function update(Request $request, Contrato $contrato): RedirectResponse
@@ -123,6 +127,7 @@ class ContratoController extends Controller
 
             $contrato->update($preparedData);
             $this->syncUsuarios($contrato, $request);
+            $this->syncCpTotvs($contrato, $request);
             $techLeadsNovos = $validatedData['tech_leads'] ?? [];
             $this->atualizarHistoricoTechLeads($contrato, $techLeadsAntigos, $techLeadsNovos);
         });
@@ -171,6 +176,8 @@ class ContratoController extends Controller
             'tech_leads.*' => ['exists:usuarios,id'],
             'consultores' => ['nullable', 'array'],
             'consultores.*' => ['exists:usuarios,id'],
+            'cp_totvs' => ['nullable', 'array'],
+            'cp_totvs.*' => ['exists:cp_totvs,id'],
         ];
     }
 
@@ -206,6 +213,12 @@ class ContratoController extends Controller
             $contrato->usuarios()->attach($id, ['funcao_contrato' => 'consultor']);
         }
         $contrato->touch();
+    }
+
+    private function syncCpTotvs(Contrato $contrato, Request $request): void
+    {
+        $cpTotvsIds = $request->input('cp_totvs', []);
+        $contrato->cpTotvs()->sync($cpTotvsIds);
     }
 
     private function atualizarHistoricoTechLeads(Contrato $contrato, array $techLeadsAntigos, array $techLeadsNovos): void

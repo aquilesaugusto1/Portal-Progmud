@@ -23,7 +23,6 @@
 @endif
 
 <div class="space-y-8">
-    <!-- Seção 1: Informações Principais -->
     <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Informações Principais</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -63,7 +62,6 @@
         </div>
     </div>
 
-    <!-- Seção 2: Prazos e Datas -->
      <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Prazos e Datas</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -78,7 +76,6 @@
         </div>
     </div>
 
-    <!-- Seção 3: Equipe do Contrato -->
     <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Equipe do Contrato</h3>
         <div class="space-y-6">
@@ -106,10 +103,17 @@
                     @endforeach
                 </select>
             </div>
+            <div>
+                <x-input-label for="cp_totvs" value="CP TOTVS" />
+                <select name="cp_totvs[]" id="cp_totvs" class="form-select mt-1 block w-full" multiple>
+                    @foreach($cpTotvs as $cp)
+                        <option value="{{ $cp->id }}" @selected(in_array($cp->id, old('cp_totvs', $contrato->cpTotvs->pluck('id')->toArray() ?? [])))>{{ $cp->nome }}</option>
+                    @endforeach
+                </select>
+            </div>
         </div>
     </div>
 
-    <!-- Seção 4: Escopo e Detalhes Financeiros -->
     <div class="p-6 bg-white border border-slate-200 rounded-lg shadow-sm">
         <h3 class="text-lg font-semibold text-slate-800 mb-4">Escopo e Detalhes Financeiros</h3>
         <div>
@@ -139,7 +143,6 @@
                     <span class="ml-2 text-sm text-slate-600">Permite antecipar baseline?</span>
                 </label>
             </div>
-            <!-- CAMPO ADICIONADO -->
             <div class="pt-6">
                 <label class="flex items-center">
                     <input type="checkbox" name="possui_engenharia_valores" id="possui_engenharia_valores" value="1" class="form-checkbox rounded" @checked(old('possui_engenharia_valores', $contrato->possui_engenharia_valores ?? false))>
@@ -148,7 +151,6 @@
             </div>
         </div>
         
-        <!-- NOVO CAMPO DE UPLOAD CONDICIONAL -->
         <div id="documento_baseline_container" class="{{ old('permite_antecipar_baseline', $contrato->permite_antecipar_baseline ?? false) ? '' : 'hidden' }} mt-6">
             <x-input-label for="documento_baseline" value="Documento de Comprovação" />
             <input type="file" name="documento_baseline" id="documento_baseline" class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
@@ -173,6 +175,7 @@
         new TomSelect('#coordenadores',{ create: false, sortField: { field: "text", direction: "asc" } });
         new TomSelect('#tech_leads',{ create: false, sortField: { field: "text", direction: "asc" } });
         new TomSelect('#consultores',{ create: false, sortField: { field: "text", direction: "asc" } });
+        new TomSelect('#cp_totvs',{ create: false, sortField: { field: "text", direction: "asc" } });
 
         const produtosCheckboxes = document.querySelectorAll('input[name="produtos[]"]');
         const especifiqueOutroContainer = document.getElementById('especifique_outro_container');
@@ -197,7 +200,6 @@
         
         baselineCheckbox.addEventListener('change', toggleDocumentoBaseline);
         
-        // Initial checks on page load
         toggleEspecifiqueOutro();
         toggleDocumentoBaseline();
     });

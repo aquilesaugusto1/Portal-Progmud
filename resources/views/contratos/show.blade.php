@@ -69,7 +69,6 @@
                                 <span class="font-medium text-slate-600">Permite Antecipar Baseline:</span>
                                 <span class="text-slate-800">{{ $contrato->permite_antecipar_baseline ? 'Sim' : 'Não' }}</span>
                             </div>
-                            <!-- CAMPO ADICIONADO -->
                             <div class="flex justify-between border-b py-2">
                                 <span class="font-medium text-slate-600">Possui Engenharia de Valores:</span>
                                 <span class="text-slate-800">{{ $contrato->possui_engenharia_valores ? 'Sim' : 'Não' }}</span>
@@ -126,6 +125,16 @@
                                         <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">{{ $consultor->nome }}</span>
                                     @empty
                                         <span class="text-slate-500">Nenhum consultor associado.</span>
+                                    @endforelse
+                                </div>
+                            </div>
+                             <div>
+                                <span class="font-medium text-slate-600">CP(s) TOTVS:</span>
+                                <div class="mt-2 flex flex-wrap gap-2">
+                                    @forelse($contrato->cpTotvs as $cp)
+                                        <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">{{ $cp->nome }}</span>
+                                    @empty
+                                        <span class="text-slate-500">Nenhum CP TOTVS associado.</span>
                                     @endforelse
                                 </div>
                             </div>

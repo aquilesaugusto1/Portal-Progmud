@@ -5,6 +5,7 @@ use App\Http\Controllers\ApontamentoController;
 use App\Http\Controllers\AprovacaoController;
 use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\ContratoController;
+use App\Http\Controllers\CpTotvsController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmpresaParceiraController;
@@ -35,7 +36,6 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::post('/apontamentos', [ApontamentoController::class, 'store'])->name('apontamentos.store');
     Route::delete('/apontamentos/{apontamento}', [ApontamentoController::class, 'destroy'])->name('apontamentos.destroy');
     
-    // CORREÇÃO: Renomeando a rota da API para o nome correto que o calendário espera.
     Route::get('/api/apontamentos/events', [ApontamentoController::class, 'events'])->name('api.apontamentos.events');
     Route::get('/api/agendas/{agenda}/details', [ApontamentoController::class, 'getAgendaDetails'])->name('api.agendas.details');
 
@@ -51,6 +51,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::resource('empresas', EmpresaParceiraController::class)->except(['destroy']);
     Route::resource('contratos', ContratoController::class)->except(['destroy']);
     Route::resource('colaboradores', ColaboradorController::class)->except(['destroy'])->parameters(['colaboradores' => 'colaborador']);
+    Route::resource('cp-totvs', CpTotvsController::class)->except(['destroy']);
 
     Route::middleware('role:admin,coordenador_operacoes,coordenador_tecnico,techlead')->group(function () {
         Route::get('/enviar-agendas', [EmailController::class, 'create'])->name('email.agendas.create');
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\VerificarTermoAceite
     Route::middleware('role:admin')->group(function () {
         Route::patch('colaboradores/{colaborador}/toggle-status', [ColaboradorController::class, 'toggleStatus'])->name('colaboradores.toggleStatus');
         Route::patch('empresas/{empresa}/toggle-status', [EmpresaParceiraController::class, 'toggleStatus'])->name('empresas.toggleStatus');
+        Route::patch('cp-totvs/{cp_totv}/toggle-status', [CpTotvsController::class, 'toggleStatus'])->name('cp-totvs.toggleStatus');
     });
 });
 

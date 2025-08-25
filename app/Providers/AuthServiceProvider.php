@@ -5,12 +5,14 @@ namespace App\Providers;
 use App\Models\Agenda;
 use App\Models\Apontamento;
 use App\Models\Contrato;
+use App\Models\CpTotvs;
 use App\Models\EmpresaParceira;
 use App\Models\User;
 use App\Policies\AgendaPolicy;
 use App\Policies\ApontamentoPolicy;
 use App\Policies\ColaboradorPolicy;
 use App\Policies\ContratoPolicy;
+use App\Policies\CpTotvsPolicy;
 use App\Policies\EmpresaParceiraPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 

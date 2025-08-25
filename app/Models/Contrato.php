@@ -9,9 +9,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
-/**
- * @method static ContratoFactory factory(...$parameters)
- */
 class Contrato extends Model
 {
     use HasFactory, Userstamps;
@@ -30,7 +27,7 @@ class Contrato extends Model
         'baseline_horas_original',
         'permite_antecipar_baseline',
         'documento_baseline_path',
-        'possui_engenharia_valores', // Adicionado
+        'possui_engenharia_valores',
     ];
 
     protected $casts = [
@@ -40,20 +37,14 @@ class Contrato extends Model
         'permite_antecipar_baseline' => 'boolean',
         'baseline_horas_mes' => 'decimal:2',
         'baseline_horas_original' => 'decimal:2',
-        'possui_engenharia_valores' => 'boolean', // Adicionado
+        'possui_engenharia_valores' => 'boolean',
     ];
 
-    /**
-     * @return BelongsTo<EmpresaParceira, Contrato>
-     */
     public function empresaParceira(): BelongsTo
     {
         return $this->belongsTo(EmpresaParceira::class, 'cliente_id');
     }
 
-    /**
-     * @return BelongsToMany<User, Contrato>
-     */
     public function usuarios(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'contrato_usuario', 'contrato_id', 'usuario_id')
@@ -61,27 +52,24 @@ class Contrato extends Model
             ->withTimestamps();
     }
 
-    /**
-     * @return BelongsToMany<User, Contrato>
-     */
     public function coordenadores(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'coordenador');
     }
 
-    /**
-     * @return BelongsToMany<User, Contrato>
-     */
     public function techLeads(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'tech_lead');
     }
 
-    /**
-     * @return BelongsToMany<User, Contrato>
-     */
     public function consultores(): BelongsToMany
     {
         return $this->usuarios()->wherePivot('funcao_contrato', 'consultor');
+    }
+
+    public function cpTotvs(): BelongsToMany
+    {
+        return $this->belongsToMany(CpTotvs::class, 'contrato_cp_totvs', 'contrato_id', 'cp_totvs_id')
+            ->withTimestamps();
     }
 }

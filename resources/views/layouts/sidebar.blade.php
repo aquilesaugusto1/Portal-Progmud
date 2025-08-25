@@ -1,21 +1,11 @@
-<!-- Overlay for mobile -->
 <div x-show="sidebarOpen" class="lg:hidden fixed inset-0 z-30 bg-black/30" @click="sidebarOpen = false" x-cloak></div>
 
-<!-- Sidebar -->
 <div
     class="bg-slate-900 text-slate-300 w-64 flex-shrink-0 flex flex-col fixed inset-y-0 left-0 z-40 transform -translate-x-full transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0"
     :class="{'translate-x-0': sidebarOpen}"
 >
-    <!-- Logo -->
     <div class="flex items-center justify-center h-16 bg-slate-950 flex-shrink-0">
         <a href="{{ route('dashboard') }}" class="flex items-center space-x-3">
-            {{-- 
-                MELHORIA VISUAL: 
-                O ícone agora está dentro de um container com fundo claro e cantos arredondados.
-                Isso cria um efeito de "emblema", que é visualmente mais agradável e profissional
-                do que a imagem solta no fundo escuro. O tamanho do ícone também foi ajustado
-                para evitar distorção.
-            --}}
             <div class="flex items-center justify-center h-10 w-10 rounded-lg bg-slate-800 flex-shrink-0">
                 <img class="h-6 w-6" src="{{ asset('images/favicon.webp') }}" alt="Logo da Progmud">
             </div>
@@ -23,7 +13,6 @@
         </a>
     </div>
 
-    <!-- Links -->
     <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
         <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('dashboard') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
             <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h7.5" /></svg>
@@ -77,6 +66,12 @@
             <a href="{{ route('contratos.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('contratos.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
                 <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
                 Contratos
+            </a>
+        @endcan
+        @can('viewAny', App\Models\CpTotvs::class)
+            <a href="{{ route('cp-totvs.index') }}" class="flex items-center px-4 py-2.5 rounded-lg transition-colors duration-200 {{ request()->routeIs('cp-totvs.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 text-slate-300' }}">
+                <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" /></svg>
+                CP TOTVS
             </a>
         @endcan
     </nav>

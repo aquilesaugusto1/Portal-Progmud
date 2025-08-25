@@ -51,6 +51,7 @@
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Horas Originais</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Saldo Horas</th>
                                 @endif
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CP TOTVS</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Início</th>
                                 @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
@@ -67,6 +68,7 @@
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->baseline_horas_original ? number_format($contrato->baseline_horas_original, 2) . 'h' : 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-bold">{{ $contrato->baseline_horas_mes ? number_format($contrato->baseline_horas_mes, 2) . 'h' : 'N/A' }}</td>
                                     @endif
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->cpTotvs->pluck('nome')->implode(', ') ?: 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $contrato->status === 'Ativo' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">{{ $contrato->status }}</span></td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $contrato->data_inicio->format('d/m/Y') }}</td>
                                     @if(!Auth::user()->isConsultor() && !Auth::user()->isTechLead())
@@ -86,7 +88,7 @@
                                     @endif
                                 </tr>
                             @empty
-                                <tr><td colspan="{{ (!Auth::user()->isConsultor() && !Auth::user()->isTechLead()) ? 7 : 3 }}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
+                                <tr><td colspan="{{ (!Auth::user()->isConsultor() && !Auth::user()->isTechLead()) ? 8 : 4 }}" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">Nenhum contrato encontrado.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
